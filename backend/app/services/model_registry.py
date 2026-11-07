@@ -10,6 +10,12 @@ from ..schemas.models import InputField, ModelInfo, ModelMetrics, RiskThresholds
 
 COOLING_RULE_ID = "cooling-rule-v1"
 INDUSTRIAL_ID = "industrial-failure-v1"
+DRIVE_ID = "drive-failure-v1"
+DRIVE_FEATURES = [
+    ("reallocated_sectors", "count"), ("reported_uncorrectable", "count"), ("command_timeout", "count"),
+    ("pending_sectors", "count"), ("offline_uncorrectable", "count"), ("crc_errors", "count"),
+    ("power_on_hours", "h"), ("temperature_c", "C"),
+]
 
 
 def load_evaluation(path: str) -> tuple[ModelMetrics, RiskThresholds] | None:
@@ -81,4 +87,36 @@ def list_models(settings: Settings) -> list[ModelInfo]:
                 "Score is not a calibrated probability.",
             ],
         ),
+        _drive(settings),
     ]
+
+
+def _drive(settings: Settings) -> ModelInfo:
+    available = Path(settings.drive_model_artifact_path).is_file()
+    evaluation = load_evaluation(settings.drive_metrics_path) if available else None
+    metrics, thresholds = evaluation if evaluation else (None, None)
+    return ModelInfo(
+        detector_id=DRIVE_ID,
+        model_name="drive-failure",
+        model_version="0.1.0",
+        kind="ml",
+        asset_types=["storage_drive"],
+        score_kind="model_score",
+        target="Hard drive records a failure within 30 days (Backblaze Drive Stats)",
+        prediction_horizon_hours=720,
+        # SMART values may be missing on some drive models; the pipeline handles gaps.
+        input_fields=[InputField(name=n, unit=u, required=False) for n, u in DRIVE_FEATURES],
+        risk_thresholds=thresholds,
+        rule_config=None,
+        status="available" if available else "unavailable",
+        evaluation_status="evaluated" if metrics else "not_evaluated",
+        metrics=metrics,
+        source_dataset="Backblaze Drive Stats Q1 2025 (real data-center drives)",
+        model_card_url=None,
+        limitations=[
+            "One quarter of one fleet; other vendors and workloads may differ.",
+            "Score is not a calibrated probability; fleet failure rate is about 0.1% per 30 days.",
+            "Sudden failures with no SMART warning cannot be predicted.",
+        ],
+    )
+

@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     model_artifact_path: str = "ml/artifacts/ai4i/pipeline.joblib"
     # Written by scripts/train_industrial.py; read as-is, never edited by hand.
     industrial_metrics_path: str = "ml/artifacts/metrics/industrial-failure-v1.json"
+    drive_model_artifact_path: str = "ml/artifacts/backblaze/pipeline.joblib"
+    drive_metrics_path: str = "ml/artifacts/metrics/drive-failure-v1.json"
     simulation_enabled: bool = True
 
     @property

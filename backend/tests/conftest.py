@@ -12,6 +12,8 @@ def settings(tmp_path) -> Settings:
         cors_origins="http://localhost:5173",
         model_artifact_path=str(tmp_path / "missing.joblib"),
         industrial_metrics_path=str(tmp_path / "missing.json"),
+        drive_model_artifact_path=str(tmp_path / "missing-drive.joblib"),
+        drive_metrics_path=str(tmp_path / "missing-drive.json"),
     )
 
 

@@ -1,0 +1,31 @@
+{
+  "detector_id": "drive-failure-v1",
+  "model_version": "0.1.0",
+  "features": [
+    "reallocated_sectors",
+    "reported_uncorrectable",
+    "command_timeout",
+    "pending_sectors",
+    "offline_uncorrectable",
+    "crc_errors",
+    "power_on_hours",
+    "temperature_c"
+  ],
+  "units": {
+    "reallocated_sectors": "count",
+    "reported_uncorrectable": "count",
+    "command_timeout": "count",
+    "pending_sectors": "count",
+    "offline_uncorrectable": "count",
+    "crc_errors": "count",
+    "power_on_hours": "h",
+    "temperature_c": "C"
+  },
+  "missing_allowed": true,
+  "risk_thresholds": {
+    "medium": 0.0102,
+    "high": 0.0203
+  },
+  "prediction_horizon_hours": 720,
+  "sklearn_version": "1.8.0"
+}

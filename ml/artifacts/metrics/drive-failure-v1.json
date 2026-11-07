@@ -1,0 +1,125 @@
+{
+  "detector_id": "drive-failure-v1",
+  "model_version": "0.1.0",
+  "chosen_candidate": "logreg_C0.1",
+  "target": "Backblaze drive records failure within 30 days of the observation day",
+  "prediction_horizon_hours": 720,
+  "score_kind": "model_score",
+  "contract_metrics": {
+    "split": "test",
+    "evaluated_at": "2026-11-07T22:08:35Z",
+    "dataset_version": "backblaze-drive-stats-2025Q1",
+    "seed": 42,
+    "n": 40464,
+    "positives": 1915,
+    "threshold": 0.0203,
+    "threshold_selection": "max F1 on validation split (fleet-reweighted)",
+    "precision": 0.0456,
+    "recall": 0.3311,
+    "f1": 0.0801,
+    "pr_auc": 0.1299,
+    "roc_auc": 0.8308,
+    "brier": null,
+    "calibrated": false,
+    "confusion_matrix": {
+      "tp": 634,
+      "fp": 13280,
+      "tn": 1802352,
+      "fn": 1281
+    },
+    "baseline": {
+      "name": "fleet prevalence (no-skill)",
+      "pr_auc": 0.0011,
+      "f1": null
+    },
+    "metrics_file": "ml/artifacts/metrics/drive-failure-v1.json"
+  },
+  "risk_thresholds": {
+    "medium": 0.0102,
+    "high": 0.0203
+  },
+  "medium_threshold_selection": "max F2 on validation split (fleet-reweighted), below the high threshold",
+  "test_at_medium_threshold": {
+    "precision": 0.0442,
+    "recall": 0.423,
+    "f1": 0.0801,
+    "confusion_matrix": {
+      "tp": 810,
+      "fp": 17503,
+      "tn": 1798129,
+      "fn": 1105
+    },
+    "false_alert_rate": 0.0096
+  },
+  "test_false_alert_rate": 0.0073,
+  "evaluation_note": "Non-failing drives were sampled at neg_drive_rate; metrics and confusion-matrix counts are reweighted by 1/neg_drive_rate to estimate the real fleet. n and positives are sampled row counts.",
+  "validation_candidates": {
+    "logreg_C0.1": {
+      "pr_auc": 0.1426
+    },
+    "logreg_C1.0": {
+      "pr_auc": 0.1425
+    },
+    "hgb_lr0.05_leaves15": {
+      "pr_auc": 0.03
+    },
+    "hgb_lr0.05_leaves31": {
+      "pr_auc": 0.0388
+    },
+    "hgb_lr0.1_leaves15": {
+      "pr_auc": 0.0554
+    },
+    "hgb_lr0.1_leaves31": {
+      "pr_auc": 0.0327
+    }
+  },
+  "splits": {
+    "method": "split by drive serial_number, stratified by 'failed in quarter', 60/20/20, fixed seed",
+    "train_rows": 122064,
+    "validation_rows": 40972,
+    "test_rows": 40464,
+    "disjoint_drives": true
+  },
+  "data": {
+    "source": "https://f001.backblazeb2.com/file/Backblaze-Hard-Drive-Data/data_Q1_2025.zip",
+    "zip_sha256": "7a230565f72fdb3882c05fdcfab361c801e9a545ba18543899fc7618174171ec",
+    "license": "Backblaze Drive Stats; free to use with attribution to Backblaze",
+    "rows": 203500,
+    "drives": 7242,
+    "failed_drives": 1061,
+    "positive_rows": 10143,
+    "horizon_days": 30,
+    "neg_drive_rate": 0.02,
+    "day_stride": 2,
+    "missing_fraction": {
+      "reallocated_sectors": 0.0067,
+      "reported_uncorrectable": 0.641,
+      "command_timeout": 0.643,
+      "pending_sectors": 0.0254,
+      "offline_uncorrectable": 0.0071,
+      "crc_errors": 0.0067,
+      "power_on_hours": 0.0012,
+      "temperature_c": 0.0012
+    }
+  },
+  "features": [
+    "reallocated_sectors",
+    "reported_uncorrectable",
+    "command_timeout",
+    "pending_sectors",
+    "offline_uncorrectable",
+    "crc_errors",
+    "power_on_hours",
+    "temperature_c"
+  ],
+  "units": {
+    "reallocated_sectors": "count",
+    "reported_uncorrectable": "count",
+    "command_timeout": "count",
+    "pending_sectors": "count",
+    "offline_uncorrectable": "count",
+    "crc_errors": "count",
+    "power_on_hours": "h",
+    "temperature_c": "C"
+  }
+}
