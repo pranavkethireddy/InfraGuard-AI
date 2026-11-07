@@ -78,9 +78,11 @@
     "estimated_downtime_hours": 4.0,
     "cost_per_hour": 12000.0,
     "estimated_repair_cost": 3500.0,
-    "assumptions_source": "demo assumption (configs/impact.yaml), not measured",
+    "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured",
     "estimated_downtime_cost": 48000.0,
-    "estimated_total_impact": 51500.0
+    "estimated_total_impact": 51500.0,
+    "cost_per_day": 288000.0,
+    "estimated_repair_hours": 3.0
   },
   "priority_weights": {
     "risk": 0.5,
@@ -98,5 +100,6 @@
       "status": "resolved",
       "created_at": "2026-11-07T20:20:00Z"
     }
-  ]
+  ],
+  "agent_steps": null
 }

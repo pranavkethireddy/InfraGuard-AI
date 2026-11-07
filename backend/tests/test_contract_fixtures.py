@@ -36,6 +36,7 @@ SCHEMAS = {
     "incidents.list.empty.response.json": Page[IncidentSummary],
     "incident.detail.response.json": IncidentDetail,
     "incident.resolved.response.json": IncidentDetail,
+    "incident.investigate.response.json": IncidentDetail,
     "incident.patch.request.json": IncidentPatchRequest,
     "simulation.request.json": SimulationRequest,
     "simulation.response.json": SimulationResponse,
