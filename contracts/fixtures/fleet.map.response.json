@@ -1,0 +1,2071 @@
+{
+  "site_name": "InfraGuard Demo Data Center",
+  "grid_unit": "floor tile (about 0.6 m)",
+  "generated_at": "2026-11-07T23:45:11.014087Z",
+  "live": {
+    "status": "running",
+    "run_id": "live-000001",
+    "seed": 42,
+    "tick_seconds": 1.0,
+    "started_at": "2026-11-07T23:45:00.660713Z",
+    "stopped_at": null,
+    "ticks": 11,
+    "auto_investigate": true,
+    "active_faults": [
+      {
+        "asset_id": "cooling-02",
+        "kind": "cooling_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-07T23:45:04.171248Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "drive-05",
+        "kind": "drive_degradation",
+        "phase": "holding",
+        "injected_at": "2026-11-07T23:45:04.171248Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "mill-02",
+        "kind": "machine_overstrain",
+        "phase": "holding",
+        "injected_at": "2026-11-07T23:45:04.171248Z",
+        "progress": 1.0
+      }
+    ]
+  },
+  "summary": {
+    "machines": 42,
+    "racks": 18,
+    "healthy": 39,
+    "warning": 0,
+    "critical": 3,
+    "no_data": 0,
+    "open_incidents": 3,
+    "racks_affected": 6,
+    "downtime_cost_per_day_at_risk": 372000.0,
+    "currency": "USD",
+    "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured"
+  },
+  "halls": [
+    {
+      "hall_id": "hall-a",
+      "name": "Hall A",
+      "kind": "data_hall",
+      "width": 18.0,
+      "depth": 12.0,
+      "status": "critical",
+      "racks": [
+        {
+          "rack_id": "A1-01",
+          "hall_id": "hall-a",
+          "row": "A1",
+          "label": "Rack A1-01",
+          "x": 4.0,
+          "y": 3.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-01"
+          ],
+          "machine_ids": [
+            "drive-01",
+            "drive-02"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "A1-02",
+          "hall_id": "hall-a",
+          "row": "A1",
+          "label": "Rack A1-02",
+          "x": 6.0,
+          "y": 3.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-01"
+          ],
+          "machine_ids": [
+            "drive-03",
+            "drive-04"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "A1-03",
+          "hall_id": "hall-a",
+          "row": "A1",
+          "label": "Rack A1-03",
+          "x": 8.0,
+          "y": 3.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "critical",
+          "reasons": [
+            "Predicted drive failure within 30 days: Rack A1-03, Drive Bay 1"
+          ],
+          "cooled_by": [
+            "cooling-01"
+          ],
+          "machine_ids": [
+            "drive-05",
+            "drive-06"
+          ],
+          "open_incident_ids": [
+            "inc-000177"
+          ]
+        },
+        {
+          "rack_id": "A1-04",
+          "hall_id": "hall-a",
+          "row": "A1",
+          "label": "Rack A1-04",
+          "x": 10.0,
+          "y": 3.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-01"
+          ],
+          "machine_ids": [
+            "drive-07",
+            "drive-08"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "A1-05",
+          "hall_id": "hall-a",
+          "row": "A1",
+          "label": "Rack A1-05",
+          "x": 12.0,
+          "y": 3.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-01"
+          ],
+          "machine_ids": [
+            "drive-09",
+            "drive-10"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "A2-01",
+          "hall_id": "hall-a",
+          "row": "A2",
+          "label": "Rack A2-01",
+          "x": 4.0,
+          "y": 8.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "warning",
+          "reasons": [
+            "Cooling unit CRAC Unit 2 serving this rack is critical"
+          ],
+          "cooled_by": [
+            "cooling-02"
+          ],
+          "machine_ids": [
+            "drive-11",
+            "drive-12"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "A2-02",
+          "hall_id": "hall-a",
+          "row": "A2",
+          "label": "Rack A2-02",
+          "x": 6.0,
+          "y": 8.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "warning",
+          "reasons": [
+            "Cooling unit CRAC Unit 2 serving this rack is critical"
+          ],
+          "cooled_by": [
+            "cooling-02"
+          ],
+          "machine_ids": [
+            "drive-13",
+            "drive-14"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "A2-03",
+          "hall_id": "hall-a",
+          "row": "A2",
+          "label": "Rack A2-03",
+          "x": 8.0,
+          "y": 8.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "warning",
+          "reasons": [
+            "Cooling unit CRAC Unit 2 serving this rack is critical"
+          ],
+          "cooled_by": [
+            "cooling-02"
+          ],
+          "machine_ids": [
+            "drive-15",
+            "drive-16"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "A2-04",
+          "hall_id": "hall-a",
+          "row": "A2",
+          "label": "Rack A2-04",
+          "x": 10.0,
+          "y": 8.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "warning",
+          "reasons": [
+            "Cooling unit CRAC Unit 2 serving this rack is critical"
+          ],
+          "cooled_by": [
+            "cooling-02"
+          ],
+          "machine_ids": [
+            "drive-17",
+            "drive-18"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "A2-05",
+          "hall_id": "hall-a",
+          "row": "A2",
+          "label": "Rack A2-05",
+          "x": 12.0,
+          "y": 8.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "warning",
+          "reasons": [
+            "Cooling unit CRAC Unit 2 serving this rack is critical"
+          ],
+          "cooled_by": [
+            "cooling-02"
+          ],
+          "machine_ids": [
+            "drive-19",
+            "drive-20"
+          ],
+          "open_incident_ids": []
+        }
+      ],
+      "machines": [
+        {
+          "asset_id": "cooling-01",
+          "name": "CRAC Unit 1",
+          "asset_type": "cooling_unit",
+          "criticality": "high",
+          "detector_id": "cooling-rule-v1",
+          "location": "Hall A",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": null,
+            "rack_id": null,
+            "slot": null,
+            "x": 1.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.1,
+          "latest_values": {
+            "temperature_c": 23.8,
+            "fan_speed_rpm": 1134.0
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "fan_speed_rpm"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "cooling-02",
+          "name": "CRAC Unit 2",
+          "asset_type": "cooling_unit",
+          "criticality": "high",
+          "detector_id": "cooling-rule-v1",
+          "location": "Hall A",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": null,
+            "rack_id": null,
+            "slot": null,
+            "x": 1.0,
+            "y": 8.0
+          },
+          "status": "critical",
+          "risk_level": "high",
+          "risk_score": 0.8,
+          "latest_values": {
+            "temperature_c": 37.45,
+            "fan_speed_rpm": 777.7
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "fan_speed_rpm"
+          ],
+          "active_incident": {
+            "incident_id": "inc-000384",
+            "title": "Sustained high temperature on CRAC Unit 2",
+            "status": "open",
+            "risk_level": "high",
+            "opened_at": "2026-11-07T23:45:09.704201Z",
+            "estimated_total_impact": 51500.0,
+            "cost_per_day": 288000.0,
+            "investigation_status": "completed"
+          },
+          "simulated_fault": {
+            "asset_id": "cooling-02",
+            "kind": "cooling_failure",
+            "phase": "holding",
+            "injected_at": "2026-11-07T23:45:04.171248Z",
+            "progress": 1.0
+          },
+          "history": []
+        },
+        {
+          "asset_id": "drive-01",
+          "name": "Rack A1-01, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-01, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-01",
+            "slot": 1,
+            "x": 4.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000532,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 25743,
+            "temperature_c": 32.9
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-02",
+          "name": "Rack A1-01, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-01, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-01",
+            "slot": 2,
+            "x": 4.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000556,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 29335,
+            "temperature_c": 30.1
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-03",
+          "name": "Rack A1-02, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-02, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-02",
+            "slot": 1,
+            "x": 6.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000546,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 30048,
+            "temperature_c": 32.1
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-04",
+          "name": "Rack A1-02, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-02, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-02",
+            "slot": 2,
+            "x": 6.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000559,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 36841,
+            "temperature_c": 32.2
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-05",
+          "name": "Rack A1-03, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-03, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-03",
+            "slot": 1,
+            "x": 8.0,
+            "y": 3.0
+          },
+          "status": "critical",
+          "risk_level": "high",
+          "risk_score": 0.858256,
+          "latest_values": {
+            "reallocated_sectors": 5000,
+            "reported_uncorrectable": 300,
+            "command_timeout": 0,
+            "pending_sectors": 800,
+            "offline_uncorrectable": 800,
+            "crc_errors": 0,
+            "power_on_hours": 34913,
+            "temperature_c": 37.3
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": {
+            "incident_id": "inc-000177",
+            "title": "Predicted drive failure within 30 days: Rack A1-03, Drive Bay 1",
+            "status": "open",
+            "risk_level": "high",
+            "opened_at": "2026-11-07T23:45:04.678831Z",
+            "estimated_total_impact": 3400.0,
+            "cost_per_day": 36000.0,
+            "investigation_status": "completed"
+          },
+          "simulated_fault": {
+            "asset_id": "drive-05",
+            "kind": "drive_degradation",
+            "phase": "holding",
+            "injected_at": "2026-11-07T23:45:04.171248Z",
+            "progress": 1.0
+          },
+          "history": []
+        },
+        {
+          "asset_id": "drive-06",
+          "name": "Rack A1-03, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-03, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-03",
+            "slot": 2,
+            "x": 8.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000713,
+          "latest_values": {
+            "reallocated_sectors": 2,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 14975,
+            "temperature_c": 32.3
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-07",
+          "name": "Rack A1-04, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-04, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-04",
+            "slot": 1,
+            "x": 10.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000718,
+          "latest_values": {
+            "reallocated_sectors": 2,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 15031,
+            "temperature_c": 31.6
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-08",
+          "name": "Rack A1-04, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-04, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-04",
+            "slot": 2,
+            "x": 10.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000541,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 32432,
+            "temperature_c": 34.0
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-09",
+          "name": "Rack A1-05, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-05, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-05",
+            "slot": 1,
+            "x": 12.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000492,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 11754,
+            "temperature_c": 31.4
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-10",
+          "name": "Rack A1-05, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A1, Rack A1-05, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A1",
+            "rack_id": "A1-05",
+            "slot": 2,
+            "x": 12.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000557,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 37791,
+            "temperature_c": 32.8
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-11",
+          "name": "Rack A2-01, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-01, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-01",
+            "slot": 1,
+            "x": 4.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000553,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 38525,
+            "temperature_c": 34.0
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-12",
+          "name": "Rack A2-01, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-01, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-01",
+            "slot": 2,
+            "x": 4.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000488,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 12626,
+            "temperature_c": 33.3
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-13",
+          "name": "Rack A2-02, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-02, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-02",
+            "slot": 1,
+            "x": 6.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000542,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 29969,
+            "temperature_c": 32.8
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-14",
+          "name": "Rack A2-02, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-02, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-02",
+            "slot": 2,
+            "x": 6.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000476,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 11631,
+            "temperature_c": 34.9
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-15",
+          "name": "Rack A2-03, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-03, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-03",
+            "slot": 1,
+            "x": 8.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000512,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 19549,
+            "temperature_c": 33.6
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-16",
+          "name": "Rack A2-03, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-03, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-03",
+            "slot": 2,
+            "x": 8.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000552,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 39989,
+            "temperature_c": 34.6
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-17",
+          "name": "Rack A2-04, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-04, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-04",
+            "slot": 1,
+            "x": 10.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.001119,
+          "latest_values": {
+            "reallocated_sectors": 8,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 36507,
+            "temperature_c": 32.9
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-18",
+          "name": "Rack A2-04, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-04, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-04",
+            "slot": 2,
+            "x": 10.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000552,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 32924,
+            "temperature_c": 32.2
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-19",
+          "name": "Rack A2-05, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-05, Bay 1",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-05",
+            "slot": 1,
+            "x": 12.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000567,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 38446,
+            "temperature_c": 31.3
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-20",
+          "name": "Rack A2-05, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall A, Row A2, Rack A2-05, Bay 2",
+          "placement": {
+            "hall_id": "hall-a",
+            "row": "A2",
+            "rack_id": "A2-05",
+            "slot": 2,
+            "x": 12.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000548,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 37447,
+            "temperature_c": 34.5
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        }
+      ]
+    },
+    {
+      "hall_id": "hall-b",
+      "name": "Hall B",
+      "kind": "data_hall",
+      "width": 16.0,
+      "depth": 12.0,
+      "status": "healthy",
+      "racks": [
+        {
+          "rack_id": "B1-01",
+          "hall_id": "hall-b",
+          "row": "B1",
+          "label": "Rack B1-01",
+          "x": 4.0,
+          "y": 3.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-03"
+          ],
+          "machine_ids": [
+            "drive-21",
+            "drive-22"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "B1-02",
+          "hall_id": "hall-b",
+          "row": "B1",
+          "label": "Rack B1-02",
+          "x": 6.0,
+          "y": 3.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-03"
+          ],
+          "machine_ids": [
+            "drive-23",
+            "drive-24"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "B1-03",
+          "hall_id": "hall-b",
+          "row": "B1",
+          "label": "Rack B1-03",
+          "x": 8.0,
+          "y": 3.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-03"
+          ],
+          "machine_ids": [
+            "drive-25",
+            "drive-26"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "B1-04",
+          "hall_id": "hall-b",
+          "row": "B1",
+          "label": "Rack B1-04",
+          "x": 10.0,
+          "y": 3.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-03"
+          ],
+          "machine_ids": [
+            "drive-27",
+            "drive-28"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "B2-01",
+          "hall_id": "hall-b",
+          "row": "B2",
+          "label": "Rack B2-01",
+          "x": 4.0,
+          "y": 8.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-04"
+          ],
+          "machine_ids": [
+            "drive-29",
+            "drive-30"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "B2-02",
+          "hall_id": "hall-b",
+          "row": "B2",
+          "label": "Rack B2-02",
+          "x": 6.0,
+          "y": 8.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-04"
+          ],
+          "machine_ids": [
+            "drive-31",
+            "drive-32"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "B2-03",
+          "hall_id": "hall-b",
+          "row": "B2",
+          "label": "Rack B2-03",
+          "x": 8.0,
+          "y": 8.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-04"
+          ],
+          "machine_ids": [
+            "drive-33",
+            "drive-34"
+          ],
+          "open_incident_ids": []
+        },
+        {
+          "rack_id": "B2-04",
+          "hall_id": "hall-b",
+          "row": "B2",
+          "label": "Rack B2-04",
+          "x": 10.0,
+          "y": 8.0,
+          "width": 2.0,
+          "depth": 1.0,
+          "status": "healthy",
+          "reasons": [],
+          "cooled_by": [
+            "cooling-04"
+          ],
+          "machine_ids": [
+            "drive-35",
+            "drive-36"
+          ],
+          "open_incident_ids": []
+        }
+      ],
+      "machines": [
+        {
+          "asset_id": "cooling-03",
+          "name": "CRAC Unit 3",
+          "asset_type": "cooling_unit",
+          "criticality": "high",
+          "detector_id": "cooling-rule-v1",
+          "location": "Hall B",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": null,
+            "rack_id": null,
+            "slot": null,
+            "x": 1.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.1,
+          "latest_values": {
+            "temperature_c": 21.74,
+            "fan_speed_rpm": 1076.4
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "fan_speed_rpm"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "cooling-04",
+          "name": "CRAC Unit 4",
+          "asset_type": "cooling_unit",
+          "criticality": "high",
+          "detector_id": "cooling-rule-v1",
+          "location": "Hall B",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": null,
+            "rack_id": null,
+            "slot": null,
+            "x": 1.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.1,
+          "latest_values": {
+            "temperature_c": 23.45,
+            "fan_speed_rpm": 1198.5
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "fan_speed_rpm"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-21",
+          "name": "Rack B1-01, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B1, Rack B1-01, Bay 1",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B1",
+            "rack_id": "B1-01",
+            "slot": 1,
+            "x": 4.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000481,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 10045,
+            "temperature_c": 31.9
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-22",
+          "name": "Rack B1-01, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B1, Rack B1-01, Bay 2",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B1",
+            "rack_id": "B1-01",
+            "slot": 2,
+            "x": 4.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.00053,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 32014,
+            "temperature_c": 36.2
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-23",
+          "name": "Rack B1-02, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B1, Rack B1-02, Bay 1",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B1",
+            "rack_id": "B1-02",
+            "slot": 1,
+            "x": 6.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000576,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 41645,
+            "temperature_c": 30.6
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-24",
+          "name": "Rack B1-02, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B1, Rack B1-02, Bay 2",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B1",
+            "rack_id": "B1-02",
+            "slot": 2,
+            "x": 6.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000481,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 8159,
+            "temperature_c": 29.4
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-25",
+          "name": "Rack B1-03, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B1, Rack B1-03, Bay 1",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B1",
+            "rack_id": "B1-03",
+            "slot": 1,
+            "x": 8.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000553,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 29517,
+            "temperature_c": 30.6
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-26",
+          "name": "Rack B1-03, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B1, Rack B1-03, Bay 2",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B1",
+            "rack_id": "B1-03",
+            "slot": 2,
+            "x": 8.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000505,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 14879,
+            "temperature_c": 31.6
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-27",
+          "name": "Rack B1-04, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B1, Rack B1-04, Bay 1",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B1",
+            "rack_id": "B1-04",
+            "slot": 1,
+            "x": 10.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000555,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 31911,
+            "temperature_c": 31.2
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-28",
+          "name": "Rack B1-04, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B1, Rack B1-04, Bay 2",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B1",
+            "rack_id": "B1-04",
+            "slot": 2,
+            "x": 10.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000553,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 38935,
+            "temperature_c": 34.0
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-29",
+          "name": "Rack B2-01, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B2, Rack B2-01, Bay 1",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B2",
+            "rack_id": "B2-01",
+            "slot": 1,
+            "x": 4.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.001059,
+          "latest_values": {
+            "reallocated_sectors": 8,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 21171,
+            "temperature_c": 31.9
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-30",
+          "name": "Rack B2-01, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B2, Rack B2-01, Bay 2",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B2",
+            "rack_id": "B2-01",
+            "slot": 2,
+            "x": 4.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.00095,
+          "latest_values": {
+            "reallocated_sectors": 8,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 10792,
+            "temperature_c": 35.0
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-31",
+          "name": "Rack B2-02, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B2, Rack B2-02, Bay 1",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B2",
+            "rack_id": "B2-02",
+            "slot": 1,
+            "x": 6.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000525,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 29061,
+            "temperature_c": 36.0
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-32",
+          "name": "Rack B2-02, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B2, Rack B2-02, Bay 2",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B2",
+            "rack_id": "B2-02",
+            "slot": 2,
+            "x": 6.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000727,
+          "latest_values": {
+            "reallocated_sectors": 2,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 16740,
+            "temperature_c": 31.7
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-33",
+          "name": "Rack B2-03, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B2, Rack B2-03, Bay 1",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B2",
+            "rack_id": "B2-03",
+            "slot": 1,
+            "x": 8.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000569,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 36295,
+            "temperature_c": 30.3
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-34",
+          "name": "Rack B2-03, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B2, Rack B2-03, Bay 2",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B2",
+            "rack_id": "B2-03",
+            "slot": 2,
+            "x": 8.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000778,
+          "latest_values": {
+            "reallocated_sectors": 2,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 25002,
+            "temperature_c": 29.7
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-35",
+          "name": "Rack B2-04, Drive Bay 1",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B2, Rack B2-04, Bay 1",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B2",
+            "rack_id": "B2-04",
+            "slot": 1,
+            "x": 10.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000546,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 41648,
+            "temperature_c": 36.3
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "drive-36",
+          "name": "Rack B2-04, Drive Bay 2",
+          "asset_type": "storage_drive",
+          "criticality": "medium",
+          "detector_id": "drive-failure-v1",
+          "location": "Hall B, Row B2, Rack B2-04, Bay 2",
+          "placement": {
+            "hall_id": "hall-b",
+            "row": "B2",
+            "rack_id": "B2-04",
+            "slot": 2,
+            "x": 10.0,
+            "y": 8.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.000489,
+          "latest_values": {
+            "reallocated_sectors": 0,
+            "reported_uncorrectable": 0,
+            "command_timeout": 0,
+            "pending_sectors": 0,
+            "offline_uncorrectable": 0,
+            "crc_errors": 0,
+            "power_on_hours": 9754,
+            "temperature_c": 29.8
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "temperature_c",
+            "reallocated_sectors",
+            "pending_sectors"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        }
+      ]
+    },
+    {
+      "hall_id": "plant",
+      "name": "Plant Room",
+      "kind": "plant_room",
+      "width": 10.0,
+      "depth": 6.0,
+      "status": "critical",
+      "racks": [],
+      "machines": [
+        {
+          "asset_id": "mill-01",
+          "name": "AI4I Benchmark Machine 1",
+          "asset_type": "industrial_machine",
+          "criticality": "medium",
+          "detector_id": "industrial-failure-v1",
+          "location": "Plant Room",
+          "placement": {
+            "hall_id": "plant",
+            "row": null,
+            "rack_id": null,
+            "slot": null,
+            "x": 2.0,
+            "y": 3.0
+          },
+          "status": "healthy",
+          "risk_level": "low",
+          "risk_score": 0.0,
+          "latest_values": {
+            "type": "H",
+            "air_temperature_k": 300.26,
+            "process_temperature_k": 310.23,
+            "rotational_speed_rpm": 1524,
+            "torque_nm": 42.4,
+            "tool_wear_min": 42
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "torque_nm",
+            "rotational_speed_rpm",
+            "tool_wear_min"
+          ],
+          "active_incident": null,
+          "simulated_fault": null,
+          "history": []
+        },
+        {
+          "asset_id": "mill-02",
+          "name": "AI4I Benchmark Machine 2",
+          "asset_type": "industrial_machine",
+          "criticality": "medium",
+          "detector_id": "industrial-failure-v1",
+          "location": "Plant Room",
+          "placement": {
+            "hall_id": "plant",
+            "row": null,
+            "rack_id": null,
+            "slot": null,
+            "x": 6.0,
+            "y": 3.0
+          },
+          "status": "critical",
+          "risk_level": "high",
+          "risk_score": 0.999992,
+          "latest_values": {
+            "type": "L",
+            "air_temperature_k": 300.82,
+            "process_temperature_k": 310.64,
+            "rotational_speed_rpm": 1291,
+            "torque_nm": 71.0,
+            "tool_wear_min": 230
+          },
+          "last_reading_at": "2026-11-07T23:45:10.705938Z",
+          "chart_fields": [
+            "torque_nm",
+            "rotational_speed_rpm",
+            "tool_wear_min"
+          ],
+          "active_incident": {
+            "incident_id": "inc-000381",
+            "title": "Elevated failure risk on AI4I Benchmark Machine 2",
+            "status": "open",
+            "risk_level": "high",
+            "opened_at": "2026-11-07T23:45:08.699128Z",
+            "estimated_total_impact": 21000.0,
+            "cost_per_day": 48000.0,
+            "investigation_status": "completed"
+          },
+          "simulated_fault": {
+            "asset_id": "mill-02",
+            "kind": "machine_overstrain",
+            "phase": "holding",
+            "injected_at": "2026-11-07T23:45:04.171248Z",
+            "progress": 1.0
+          },
+          "history": []
+        }
+      ]
+    }
+  ]
+}

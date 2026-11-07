@@ -1,0 +1,42 @@
+{
+  "_note": "Demo data-center layout for InfraGuard AI, not a real facility. The backend expands rows into racks and monitored drives; coordinates are floor-grid cells (one cell is about one 0.6 m floor tile).",
+  "site": {"name": "InfraGuard Demo Data Center", "grid_unit": "floor tile (about 0.6 m)"},
+  "asset_types": {
+    "cooling_unit": {"detector_id": "cooling-rule-v1", "chart_fields": ["temperature_c", "fan_speed_rpm"]},
+    "storage_drive": {"detector_id": "drive-failure-v1", "chart_fields": ["temperature_c", "reallocated_sectors", "pending_sectors"]},
+    "industrial_machine": {"detector_id": "industrial-failure-v1", "chart_fields": ["torque_nm", "rotational_speed_rpm", "tool_wear_min"]}
+  },
+  "halls": [
+    {
+      "hall_id": "hall-a", "name": "Hall A", "kind": "data_hall", "width": 18, "depth": 12,
+      "rows": [
+        {"row": "A1", "x0": 4, "y": 3, "racks": 5, "drives_per_rack": 2, "cooled_by": ["cooling-01"]},
+        {"row": "A2", "x0": 4, "y": 8, "racks": 5, "drives_per_rack": 2, "cooled_by": ["cooling-02"]}
+      ],
+      "units": [
+        {"asset_id": "cooling-01", "name": "CRAC Unit 1", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 3},
+        {"asset_id": "cooling-02", "name": "CRAC Unit 2", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 8}
+      ]
+    },
+    {
+      "hall_id": "hall-b", "name": "Hall B", "kind": "data_hall", "width": 16, "depth": 12,
+      "rows": [
+        {"row": "B1", "x0": 4, "y": 3, "racks": 4, "drives_per_rack": 2, "cooled_by": ["cooling-03"]},
+        {"row": "B2", "x0": 4, "y": 8, "racks": 4, "drives_per_rack": 2, "cooled_by": ["cooling-04"]}
+      ],
+      "units": [
+        {"asset_id": "cooling-03", "name": "CRAC Unit 3", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 3},
+        {"asset_id": "cooling-04", "name": "CRAC Unit 4", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 8}
+      ]
+    },
+    {
+      "hall_id": "plant", "name": "Plant Room", "kind": "plant_room", "width": 10, "depth": 6,
+      "rows": [],
+      "units": [
+        {"asset_id": "mill-01", "name": "AI4I Benchmark Machine 1", "asset_type": "industrial_machine", "criticality": "medium", "x": 2, "y": 3},
+        {"asset_id": "mill-02", "name": "AI4I Benchmark Machine 2", "asset_type": "industrial_machine", "criticality": "medium", "x": 6, "y": 3}
+      ]
+    }
+  ],
+  "rack": {"width": 2, "depth": 1, "drive_criticality": "medium"}
+}

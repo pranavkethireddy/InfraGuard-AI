@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import AwareDatetime, Field
 
-from .common import ContractModel, DataOrigin, ExplanationSource, IncidentStatus, RiskLevel, ScoreKind
+from .common import ContractModel, DataOrigin, ExplanationSource, IncidentStatus, InvestigationStatus, RiskLevel, ScoreKind
 from .impact import Impact
 from .maintenance import MaintenanceSource
 from .predictions import Evidence, PredictionResponse
@@ -51,6 +51,8 @@ class IncidentDetail(IncidentSummary):
     priority_weights: dict[str, float] | None
     notes: list[IncidentNote]
     agent_steps: list[AgentStep] | None = None
+    # Set when the live fleet demo queues an automatic AI investigation; None for manual-only incidents.
+    investigation_status: InvestigationStatus | None = None
 
 
 class IncidentPatchRequest(ContractModel):

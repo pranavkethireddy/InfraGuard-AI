@@ -58,4 +58,5 @@ def predict(store: Store, req: PredictionRequest, settings: Settings) -> tuple[P
             pred = pred.model_copy(update={"incident_id": inc.incident_id})
             inc.latest_prediction = pred
         store.predictions[key] = pred
+        store.remember_latest(pred)
     return pred, True

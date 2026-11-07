@@ -9,12 +9,16 @@ deterministic fallback runs the same tools and fills a template, marked explanat
 from __future__ import annotations
 
 import json
+import logging
 import re
+import threading
+import time
 from typing import Any, Callable
 
 import httpx
 
 from ..core.config import Settings
+from ..core.errors import ApiError
 from ..schemas.incidents import AgentStep, IncidentDetail
 from ..schemas.maintenance import MaintenanceSearchRequest
 from . import assets as asset_service
@@ -23,13 +27,17 @@ from . import maintenance
 from .model_registry import list_models
 from .store import Store
 
+log = logging.getLogger(__name__)
+
 API = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 MAX_TURNS = 8
 
 SYSTEM = """You are InfraGuard, an operations agent for a data center. Investigate the incident with the tools.
-Always call get_incident first, then the other tools you need (search_maintenance at least once).
+Call get_incident first. Then call every other tool you need together in ONE turn (parallel function calls):
+get_recent_readings, estimate_impact, search_maintenance (at least once) and get_model_card if useful.
 Rules: use only numbers returned by tools; never invent costs, times, or records; cite maintenance records by
-record_id; say clearly when evidence is missing; a human must approve any physical work.
+record_id and say which unit a record is from (records may come from similar equipment); say clearly when
+evidence is missing; a human must approve any physical work.
 Finish with ONLY a JSON object, no markdown:
 {"explanation": "<3-5 sentences: what is wrong, why, likely cause from records, money at stake per hour/day, expected repair time and cost>",
  "recommended_actions": ["<step 1>", "<step 2>", "..."],
@@ -67,7 +75,8 @@ class Toolbox:
     def t_get_incident(self) -> dict:
         i = self.inc
         p = i.latest_prediction
-        return {"incident_id": i.incident_id, "asset_id": i.asset_id, "asset_name": asset_service.get_asset(i.asset_id).name,
+        asset = asset_service.get_asset(i.asset_id)
+        return {"incident_id": i.incident_id, "asset_id": i.asset_id, "asset_name": asset.name, "location": asset.location,
                 "detector_id": i.detector_id, "status": i.status, "risk_level": i.risk_level, "title": i.title,
                 "prediction_count": i.prediction_count, "data_origin": i.data_origin,
                 "evidence": [e.model_dump(exclude_none=True) for e in i.evidence],
@@ -86,7 +95,11 @@ class Toolbox:
                 "rule_config": m.rule_config}
 
     def t_estimate_impact(self, asset_id: str) -> dict:
-        a = impact_service.load_assumptions(self.settings.impact_assumptions_path).get(asset_id)
+        try:
+            asset_type = asset_service.get_asset(asset_id).asset_type
+        except ApiError:
+            return {"error": "unknown asset"}
+        a = impact_service.for_asset(self.settings.impact_assumptions_path, asset_id, asset_type)
         return {"error": "no impact assumptions for this asset"} if a is None else impact_service.compute(a).model_dump()
 
     def t_search_maintenance(self, query: str, asset_id: str | None = None) -> dict:
@@ -132,15 +145,100 @@ def _parse(text: str) -> dict | None:
     return None
 
 
+RETRY_STATUS = {429, 500, 502, 503, 504}
+RETRY_DELAYS = (3.0, 8.0, 15.0, 30.0)
+# Longest we will wait for a rate-limited slot. Daily quotas ask for hours; then we move on at once.
+MAX_RETRY_DELAY = 45.0
+_slot_lock = threading.Lock()
+# Gemini quotas are per project and per model, so pacing and parking are tracked per (model, key).
+_slot_state: dict[tuple[str, str], dict[str, float]] = {}
+
+
+def _ready_at(slot: tuple[str, str], min_interval: float) -> float:
+    st = _slot_state.setdefault(slot, {"last": float("-inf"), "until": 0.0})
+    return max(st["last"] + min_interval, st["until"])
+
+
+def _take_slot(slots: list[tuple[str, str]], min_interval: float) -> tuple[str, str] | None:
+    """The first (model, key) in preference order that is free now; otherwise the one free soonest,
+    after waiting for it. None when every slot is parked longer than MAX_RETRY_DELAY."""
+    with _slot_lock:
+        now = time.monotonic()
+        slot = next((x for x in slots if _ready_at(x, min_interval) <= now), None)
+        if slot is None:
+            slot = min(slots, key=lambda x: _ready_at(x, min_interval))
+            wait = _ready_at(slot, min_interval) - now
+            if wait > MAX_RETRY_DELAY:
+                return None
+            time.sleep(wait)
+        _slot_state[slot]["last"] = time.monotonic()
+        return slot
+
+
+def _park(slot: tuple[str, str], seconds: float) -> None:
+    with _slot_lock:
+        _slot_state[slot]["until"] = time.monotonic() + seconds
+
+
+def _retry_delay(r: httpx.Response, default: float) -> float:
+    """Use the server's RetryInfo delay on 429 when it gives one (e.g. "21s")."""
+    try:
+        for d in r.json().get("error", {}).get("details", []):
+            if "retryDelay" in d:
+                return float(str(d["retryDelay"]).rstrip("s")) + 1.0
+    except (ValueError, AttributeError):
+        pass
+    return default
+
+
+def _post(client: httpx.Client, settings: Settings, payload: dict) -> httpx.Response:
+    """POST to Gemini. Tries the main model on each key, then the fallback models. A rate-limited
+    (model, key) is parked for the server's retry delay and the next one is used straight away;
+    transient server and network errors are retried with backoff."""
+    keys = settings.gemini_keys
+    slots = [(m, k) for m in settings.gemini_models for k in keys]
+    delays = list(RETRY_DELAYS)
+    rate_limits_left = len(RETRY_DELAYS) + len(slots)
+    last: httpx.Response | None = None
+    while True:
+        slot = _take_slot(slots, settings.gemini_min_interval_seconds)
+        if slot is None:  # every model and key is out of quota for a long time: caller falls back now
+            if last is not None:
+                last.raise_for_status()
+            raise httpx.HTTPError("all Gemini models and keys are rate limited")
+        model, key = slot
+        try:
+            r = client.post(API.format(model=model), headers={"x-goog-api-key": key}, json=payload)
+        except httpx.TransportError as e:  # network blip: retry like a 503
+            if not delays:
+                raise
+            wait = delays.pop(0)
+            log.info("Gemini request failed (%s), retrying in %.0f s", type(e).__name__, wait)
+            time.sleep(wait)
+            continue
+        if r.status_code == 429 and rate_limits_left > 0:
+            rate_limits_left -= 1
+            last = r
+            wait = _retry_delay(r, delays[0] if delays else MAX_RETRY_DELAY)
+            log.info("Gemini %s key %d rate limited; parking it for %.0f s", model, keys.index(key) + 1, wait)
+            _park(slot, wait)
+            continue
+        if r.status_code in RETRY_STATUS and r.status_code != 429 and delays:
+            wait = delays.pop(0)
+            log.info("Gemini %s returned %s, retrying in %.0f s", model, r.status_code, wait)
+            time.sleep(wait)
+            continue
+        r.raise_for_status()
+        return r
+
+
 def _gemini(box: Toolbox, settings: Settings) -> dict | None:
     contents = [{"role": "user", "parts": [{"text": f"Investigate incident {box.inc.incident_id}."}]}]
     body = {"system_instruction": {"parts": [{"text": SYSTEM}]}, "tools": [{"function_declarations": TOOLS}],
             "generation_config": {"temperature": 0.2}}
     with httpx.Client(timeout=60) as client:
         for _ in range(MAX_TURNS):
-            r = client.post(API.format(model=settings.gemini_model), headers={"x-goog-api-key": settings.gemini_api_key},
-                            json={**body, "contents": contents})
-            r.raise_for_status()
+            r = _post(client, settings, {**body, "contents": contents})
             content = r.json()["candidates"][0]["content"]
             contents.append(content)
             calls = [p["functionCall"] for p in content.get("parts", []) if "functionCall" in p]
@@ -170,11 +268,16 @@ def _fallback(box: Toolbox) -> dict:
 def investigate(store: Store, inc: IncidentDetail, settings: Settings) -> IncidentDetail:
     box = Toolbox(store, inc, settings)
     result, source = None, "rag"
-    if settings.gemini_api_key:
+    if settings.gemini_keys:
         try:
             result = _gemini(box, settings)
             source = "agent"
-        except (httpx.HTTPError, KeyError, IndexError, ValueError):
+            if result is None:
+                log.warning("Gemini gave no usable answer for %s; using fallback", inc.incident_id)
+        except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
+            # Never log the request (it carries the API key header); the status or error type is enough.
+            reason = e.response.status_code if isinstance(e, httpx.HTTPStatusError) else type(e).__name__
+            log.warning("Gemini call failed for %s (%s); using fallback", inc.incident_id, reason)
             result = None
     if result is None:
         box.steps.clear()

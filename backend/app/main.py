@@ -3,6 +3,8 @@
     python -m uvicorn backend.app.main:app --reload --port 8000
 """
 
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,8 +15,20 @@ from .core.errors import REQUEST_ID_HEADER, install_error_handlers
 from .services.store import Store
 
 
+def _app_logging() -> None:
+    """Show backend.* INFO logs (Gemini retries, fallbacks, live-loop errors) next to uvicorn's."""
+    log = logging.getLogger("backend")
+    if not log.handlers:
+        h = logging.StreamHandler()
+        h.setFormatter(logging.Formatter("%(levelname)s:     %(name)s: %(message)s"))
+        log.addHandler(h)
+        log.setLevel(logging.INFO)
+        log.propagate = False
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
+    _app_logging()
     app = FastAPI(title="InfraGuard AI API", version=APP_VERSION)
     app.state.store = Store()
     install_error_handlers(app)

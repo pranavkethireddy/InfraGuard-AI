@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import httpx
+import pytest
 
 from backend.app.schemas.incidents import IncidentDetail
 from backend.app.services import agent
@@ -61,3 +62,71 @@ def test_gemini_path_keeps_only_cited_records_the_tools_returned(client, setting
 def test_parse_rejects_non_json():
     assert agent._parse("no json here") is None
     assert agent._parse('```json\n{"explanation": "x", "recommended_actions": []}\n```')["explanation"] == "x"
+
+
+def test_rate_limited_key_switches_to_second_key_without_waiting(settings, monkeypatch):
+    settings.gemini_api_key, settings.gemini_api_key_2, settings.gemini_min_interval_seconds = "k1", "k2", 0.0
+    monkeypatch.setattr(agent, "_slot_state", {})
+    settings.gemini_fallback_models = ""
+    seen, slept = [], []
+    monkeypatch.setattr(agent.time, "sleep", slept.append)
+
+    def reply(req):
+        seen.append(req.headers["x-goog-api-key"])
+        if len(seen) == 1:
+            return httpx.Response(429, json={"error": {"details": [{"retryDelay": "30s"}]}})
+        return httpx.Response(200, json={"ok": True})
+
+    with httpx.Client(transport=httpx.MockTransport(reply)) as c:
+        assert agent._post(c, settings, {}).json() == {"ok": True}
+        assert seen == ["k1", "k2"] and slept == []
+        # k1 is still parked, so the next request goes to k2 as well.
+        agent._post(c, settings, {})
+    assert seen[-1] == "k2"
+
+
+def test_single_key_waits_for_the_server_retry_delay(settings, monkeypatch):
+    settings.gemini_api_key, settings.gemini_api_key_2, settings.gemini_min_interval_seconds = "only", None, 0.0
+    monkeypatch.setattr(agent, "_slot_state", {})
+    settings.gemini_fallback_models = ""
+    replies = [httpx.Response(429, json={"error": {"details": [{"retryDelay": "7s"}]}}),
+               httpx.Response(200, json={"ok": True})]
+    slept = []
+    monkeypatch.setattr(agent.time, "sleep", slept.append)
+    with httpx.Client(transport=httpx.MockTransport(lambda req: replies.pop(0))) as c:
+        assert agent._post(c, settings, {}).json() == {"ok": True}
+    assert len(slept) == 1 and 7.5 < slept[0] <= 8.0
+
+
+def test_daily_quota_on_every_key_fails_fast(settings, monkeypatch):
+    settings.gemini_api_key, settings.gemini_api_key_2, settings.gemini_min_interval_seconds = "k1", "k2", 0.0
+    settings.gemini_model, settings.gemini_fallback_models = "main", "lite"
+    monkeypatch.setattr(agent, "_slot_state", {})
+    slept, calls = [], []
+    monkeypatch.setattr(agent.time, "sleep", slept.append)
+
+    def reply(req):
+        calls.append((req.url.path.split("/")[-1].split(":")[0], req.headers["x-goog-api-key"]))
+        return httpx.Response(429, json={"error": {"details": [{"retryDelay": "29848s"}]}})
+
+    with httpx.Client(transport=httpx.MockTransport(reply)) as c, pytest.raises(httpx.HTTPStatusError):
+        agent._post(c, settings, {})
+    assert calls == [("main", "k1"), ("main", "k2"), ("lite", "k1"), ("lite", "k2")] and slept == []
+
+
+def test_main_model_out_of_quota_moves_to_fallback_model(settings, monkeypatch):
+    settings.gemini_api_key, settings.gemini_api_key_2, settings.gemini_min_interval_seconds = "k1", None, 0.0
+    settings.gemini_model, settings.gemini_fallback_models = "main", "lite"
+    monkeypatch.setattr(agent, "_slot_state", {})
+    models = []
+
+    def reply(req):
+        models.append(req.url.path.split("/")[-1].split(":")[0])
+        if models[-1] == "main":
+            return httpx.Response(429, json={"error": {"details": [{"retryDelay": "29848s"}]}})
+        return httpx.Response(200, json={"ok": True})
+
+    with httpx.Client(transport=httpx.MockTransport(reply)) as c:
+        assert agent._post(c, settings, {}).json() == {"ok": True}
+        agent._post(c, settings, {})  # main stays parked
+    assert models == ["main", "lite", "lite"]

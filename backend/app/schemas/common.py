@@ -10,6 +10,7 @@ ScoreKind = Literal["heuristic", "model_score", "calibrated_probability"]
 Criticality = Literal["low", "medium", "high"]
 ExplanationSource = Literal["rule", "template", "rag", "agent"]
 IncidentStatus = Literal["open", "acknowledged", "resolved"]
+InvestigationStatus = Literal["queued", "running", "completed", "failed"]
 ReadingValue = float | int | str
 
 

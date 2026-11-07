@@ -1,10 +1,15 @@
 {
-  "_note": "Demo assumptions for InfraGuard AI, not measured values. Backend reads this file; React only displays results.",
+  "_note": "Demo assumptions for InfraGuard AI, not measured values. Backend reads this file; React only displays results. Assets without their own entry use asset_type_defaults.",
   "currency": "USD",
   "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured",
   "assets": {
     "cooling-01": {"estimated_downtime_hours": 4.0, "cost_per_hour": 12000.0, "estimated_repair_cost": 3500.0, "estimated_repair_hours": 3.0},
     "mill-01": {"estimated_downtime_hours": 8.0, "cost_per_hour": 2000.0, "estimated_repair_cost": 5000.0, "estimated_repair_hours": 6.0},
     "drive-01": {"estimated_downtime_hours": 2.0, "cost_per_hour": 1500.0, "estimated_repair_cost": 400.0, "estimated_repair_hours": 1.0}
+  },
+  "asset_type_defaults": {
+    "cooling_unit": {"estimated_downtime_hours": 4.0, "cost_per_hour": 12000.0, "estimated_repair_cost": 3500.0, "estimated_repair_hours": 3.0},
+    "storage_drive": {"estimated_downtime_hours": 2.0, "cost_per_hour": 1500.0, "estimated_repair_cost": 400.0, "estimated_repair_hours": 1.0},
+    "industrial_machine": {"estimated_downtime_hours": 8.0, "cost_per_hour": 2000.0, "estimated_repair_cost": 5000.0, "estimated_repair_hours": 6.0}
   }
 }

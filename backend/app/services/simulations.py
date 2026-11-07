@@ -32,6 +32,8 @@ def start(store: Store, req: SimulationRequest, settings: Settings) -> Simulatio
                        {"asset_id": asset.asset_id, "compatible_detector": asset.compatible_detector})
     samples = _generate(req.scenario, req.seed, req.asset_id)
     with store.lock:
+        if store.live is not None and store.live.running:
+            raise ApiError(409, "FLEET_LIVE_RUNNING", "The live fleet demo is running; stop it before a single-asset run.", {})
         if any(s.asset_id == req.asset_id and s.status == "running" for s in store.simulations.values()):
             raise ApiError(409, "SIMULATION_ALREADY_RUNNING", f"A simulation is already running on {req.asset_id}.",
                            {"asset_id": req.asset_id})
@@ -99,6 +101,7 @@ def reset(store: Store, sim_id: str) -> SimulationResetResponse:
         keys = [k for k, p in store.predictions.items() if p.simulation_id == sim_id]
         for k in keys:
             del store.predictions[k]
+        store.rebuild_latest()
         resolved = 0
         for inc in store.incidents.values():
             if inc.simulation_id == sim_id and inc.status != "resolved":
