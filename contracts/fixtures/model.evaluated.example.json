@@ -1,0 +1,86 @@
+{
+  "detector_id": "industrial-failure-v1",
+  "model_name": "industrial-failure",
+  "model_version": "0.1.0",
+  "kind": "ml",
+  "asset_types": [
+    "industrial_machine"
+  ],
+  "score_kind": "model_score",
+  "target": "AI4I 'Machine failure' at time of observation (not a forecast)",
+  "prediction_horizon_hours": null,
+  "input_fields": [
+    {
+      "name": "type",
+      "unit": null,
+      "required": true
+    },
+    {
+      "name": "air_temperature_k",
+      "unit": "K",
+      "required": true
+    },
+    {
+      "name": "process_temperature_k",
+      "unit": "K",
+      "required": true
+    },
+    {
+      "name": "rotational_speed_rpm",
+      "unit": "rpm",
+      "required": true
+    },
+    {
+      "name": "torque_nm",
+      "unit": "Nm",
+      "required": true
+    },
+    {
+      "name": "tool_wear_min",
+      "unit": "min",
+      "required": true
+    }
+  ],
+  "risk_thresholds": {
+    "medium": 0.3,
+    "high": 0.5
+  },
+  "rule_config": null,
+  "status": "available",
+  "evaluation_status": "evaluated",
+  "metrics": {
+    "split": "test",
+    "evaluated_at": "2026-11-08T03:00:00Z",
+    "dataset_version": "UCI AI4I 2020 (id 601)",
+    "seed": 42,
+    "n": 2000,
+    "positives": 68,
+    "threshold": 0.5,
+    "threshold_selection": "max F1 on validation split",
+    "precision": 0.5,
+    "recall": 0.5,
+    "f1": 0.5,
+    "pr_auc": 0.5,
+    "roc_auc": null,
+    "brier": null,
+    "calibrated": false,
+    "confusion_matrix": {
+      "tp": 34,
+      "fp": 34,
+      "tn": 1898,
+      "fn": 34
+    },
+    "baseline": {
+      "name": "majority_class",
+      "pr_auc": 0.034,
+      "f1": 0.0
+    },
+    "metrics_file": "ml/artifacts/metrics/industrial-failure-v1.json"
+  },
+  "source_dataset": "UCI AI4I 2020 (id 601), CC BY 4.0",
+  "model_card_url": "ml/artifacts/model_cards/industrial-failure-v1.md",
+  "limitations": [
+    "Trained on the synthetic AI4I benchmark; not validated for facility equipment.",
+    "Score is not a calibrated probability."
+  ]
+}

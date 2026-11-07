@@ -1,0 +1,11 @@
+{
+  "asset_id": "cooling-01",
+  "observed_at": "2026-11-07T20:00:00Z",
+  "data_origin": "simulated",
+  "detector_id": "cooling-rule-v1",
+  "readings": {
+    "temperature_c": 35.0,
+    "fan_speed_rpm": 850
+  },
+  "simulation_id": "sim-demo-001"
+}

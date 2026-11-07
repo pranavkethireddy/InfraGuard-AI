@@ -51,6 +51,22 @@ Ownership covers the existing template and the planned InfraGuard AI application
 | GitHub templates, CI, deployment, and repository configuration | @pranavkethireddy + @sohaswin | `.github/`, root deployment files, `.env.example`, `.gitignore`, and other root configuration; component-specific configuration follows its folder owner |
 | End-to-end integration and demo rehearsal | @pranavkethireddy + @sohaswin | `tests/` for cross-system tests, deployment verification, and the complete prediction-to-response demo |
 
+### SKILL.md path mapping (proposed in issue #2)
+
+SKILL.md proposes a layout that differs from the table above. These rows settle it so there is one location for each kind of code:
+
+| SKILL.md path | Use instead | Owner (GitHub login) |
+|---|---|---|
+| `src/infraguard/{ingest,features,models}/` | `ml/` (Python package `ml/infraguard_ml/`) | @pranavkethireddy |
+| `src/infraguard/simulation/` | `simulator/` | @sohaswin |
+| `src/infraguard/legacy/` | `backend/app/services/retrieval/` | @pranavkethireddy |
+| `src/infraguard/impact/` | `backend/app/services/impact/` | @pranavkethireddy |
+| `scripts/` (data prep, training, demo runners) | `scripts/` (new top-level folder, thin CLIs that call `ml/` or `simulator/`) | @pranavkethireddy; `scripts/run_demo.py` is shared |
+| `artifacts/{metrics,model_cards}/` | `ml/artifacts/{metrics,model_cards}/` | @pranavkethireddy |
+| `backend/alembic/` | `backend/migrations/` (the only migrations folder) | @pranavkethireddy |
+| root `tests/test_ai4i_leakage.py` and other ML tests | `ml/tests/` | @pranavkethireddy |
+| `backend/pyproject.toml` vs `requirements.txt` | `backend/requirements.txt` and `ml/requirements.txt`, pinned | per folder owner |
+
 - Start with one validated ML model and a separately labeled rule-based cooling simulation. Additional models are stretch work after integration succeeds.
 - Agree on request/response JSON and example fixtures before implementing independently. Coordinate contract changes with both owners.
 - Shared ownership requires coordination before editing the same file. Keep backend calculations authoritative and avoid duplicating risk/cost logic in React.

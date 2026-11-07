@@ -1,0 +1,19 @@
+{
+  "asset_id": "cooling-01",
+  "name": "CRAC Unit 1",
+  "asset_type": "cooling_unit",
+  "location": "Hall A",
+  "criticality": "high",
+  "compatible_detector": "cooling-rule-v1",
+  "data_origin": "simulated",
+  "current_risk_level": "high",
+  "active_incident_id": "inc-demo-001",
+  "last_reading_at": "2026-11-07T20:00:00Z",
+  "impact_assumptions": {
+    "currency": "USD",
+    "estimated_downtime_hours": 4.0,
+    "cost_per_hour": 12000.0,
+    "estimated_repair_cost": 3500.0,
+    "assumptions_source": "demo assumption (configs/impact.yaml), not measured"
+  }
+}

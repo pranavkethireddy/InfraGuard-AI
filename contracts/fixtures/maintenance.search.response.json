@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "record_id": "mr-0042",
+      "asset_id": "cooling-01",
+      "recorded_at": "2025-08-14T09:30:00Z",
+      "source_name": "demo maintenance log (seeded)",
+      "excerpt": "Replaced clogged air filter on CRAC 1; supply temperature had drifted up over two days.",
+      "score": 0.71
+    }
+  ],
+  "total": 1,
+  "status": "ok"
+}
