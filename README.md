@@ -28,21 +28,25 @@ The demo uses a simulated facility rather than a live production connection. A m
 
 Backblaze drive failure prediction is the next ML extension after the MVP passes its acceptance checks. NASA C-MAPSS, ASHRAE, learned facility anomaly detection, WebSockets, and production integrations are stretch work.
 
-## Sponsor track
-
-**Primary track: NMC².** InfraGuard AI is built for predictive monitoring and infrastructure resilience. CBRE remains a secondary fit through facility business impact. 8090.AI is no longer targeted.
+## Tracks: three sponsor challenges + HackUTD general track
 
 Confirm the event's official challenge wording, eligibility, required sponsor technologies, and submission requirements before pitching; these descriptions are not verified sponsor rules.
 
-| Sponsor | Role | Evidence to show judges |
+### Sponsor challenges
+
+| Sponsor | Alignment | Evidence to show judges |
 |---|---|---|
-| **NMC²** | Primary | Equipment readings, one evaluated model, risk evidence, cooling anomaly detection, and an incident response workflow |
-| **CBRE** | Secondary | Asset criticality, transparent downtime cost estimates, and prioritized maintenance decisions |
-| **HackUTD Design** (general track) | General | A clear operations console: risk at a glance, a guided incident workflow, and plain-language explanations |
+| **NMC²** | Predictive monitoring and infrastructure resilience for data centers | Equipment readings, evaluated failure models, risk evidence, cooling anomaly detection, and an incident response workflow |
+| **CBRE** | Facility operations and business impact | Asset criticality, transparent downtime cost and repair-time estimates, and prioritized maintenance decisions |
+| **8090.AI** | Agentic AI over legacy maintenance information | An AI agent that calls the trained models, retrieves past maintenance records, cites its sources, and recommends how to fix the problem |
+
+### HackUTD general track
+
+| Track | Evidence to show judges |
+|---|---|
+| **Design** | A clear operations console: risk at a glance, a guided incident workflow, and plain-language explanations |
 
 Every project is also judged in Overall automatically. The Beginner track does not apply because it needs a majority of first-time hackers.
-
-Maintenance-record retrieval stays as supporting context for explanations, not as a separate sponsor alignment.
 
 Use one coherent demo: an asset develops a problem, InfraGuard detects it, historical records add context, and the operator sees its estimated business impact. Clearly distinguish the validated ML example from the simulated cooling example.
 
@@ -373,7 +377,7 @@ Use pytest for backend, model integration, rules, and impact calculation; use Vi
 4. Open the incident and inspect maintenance evidence and a grounded explanation.
 5. Show criticality, estimated impact, and the priority decision.
 6. Acknowledge or resolve the incident and reset the scenario.
-7. Pitch to NMC² (monitoring and resilience), with facility impact as the CBRE angle, using the verified event requirements.
+7. Pitch to all three sponsors (NMC² monitoring and resilience, CBRE facility impact, 8090.AI agentic maintenance intelligence) and the Design track, using the verified event requirements.
 
 ## Existing team coordination guide
 
