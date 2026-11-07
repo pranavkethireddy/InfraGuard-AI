@@ -28,17 +28,20 @@ The demo uses a simulated facility rather than a live production connection. A m
 
 Backblaze drive failure prediction is the next ML extension after the MVP passes its acceptance checks. NASA C-MAPSS, ASHRAE, learned facility anomaly detection, WebSockets, and production integrations are stretch work.
 
-## Three sponsor challenge alignments
+## Sponsor track
 
-These are the project's intended alignments from the planning discussion. Confirm the event's official challenge wording, eligibility, required sponsor technologies, and submission requirements before pitching; these descriptions are not verified sponsor rules.
+**Primary track: NMC².** InfraGuard AI is built for predictive monitoring and infrastructure resilience. CBRE remains a secondary fit through facility business impact. 8090.AI is no longer targeted.
 
-| Sponsor | Intended alignment | Evidence to show judges |
+Confirm the event's official challenge wording, eligibility, required sponsor technologies, and submission requirements before pitching; these descriptions are not verified sponsor rules.
+
+| Sponsor | Role | Evidence to show judges |
 |---|---|---|
-| **NMC²** | Predictive monitoring and infrastructure resilience | Equipment readings, one evaluated model, risk evidence, cooling anomaly detection, and an incident response workflow |
-| **CBRE** | Facility operations and business impact | Asset criticality, transparent downtime cost estimates, and prioritized maintenance decisions |
-| **8090.AI** | Intelligence over legacy maintenance information | Ingested maintenance records, relevant retrieved excerpts, source-linked explanations, and recommended next steps |
+| **NMC²** | Primary | Equipment readings, one evaluated model, risk evidence, cooling anomaly detection, and an incident response workflow |
+| **CBRE** | Secondary | Asset criticality, transparent downtime cost estimates, and prioritized maintenance decisions |
 
-Use one coherent demo across all three: an asset develops a problem, InfraGuard detects it, historical records add context, and the operator sees its estimated business impact. Clearly distinguish the validated ML example from the simulated cooling example.
+Maintenance-record retrieval stays as supporting context for explanations, not as a separate sponsor alignment.
+
+Use one coherent demo: an asset develops a problem, InfraGuard detects it, historical records add context, and the operator sees its estimated business impact. Clearly distinguish the validated ML example from the simulated cooling example.
 
 ## Full system components
 
@@ -367,7 +370,7 @@ Use pytest for backend, model integration, rules, and impact calculation; use Vi
 4. Open the incident and inspect maintenance evidence and a grounded explanation.
 5. Show criticality, estimated impact, and the priority decision.
 6. Acknowledge or resolve the incident and reset the scenario.
-7. Connect monitoring to NMC², facility impact to CBRE, and legacy-record intelligence to 8090.AI, using the verified event requirements in the final pitch.
+7. Pitch to NMC² (monitoring and resilience), with facility impact as the CBRE angle, using the verified event requirements.
 
 ## Existing team coordination guide
 
