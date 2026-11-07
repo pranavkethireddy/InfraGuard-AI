@@ -1,0 +1,9 @@
+# Tested with Python 3.14.2. README targets Python 3.11+.
+fastapi==0.162.2
+starlette==1.10.0
+pydantic==2.14.3
+pydantic-settings==2.16.2
+uvicorn==0.54.0
+# test
+pytest==9.2.0
+httpx==0.28.1

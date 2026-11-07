@@ -1,0 +1,31 @@
+"""FastAPI entry point. Run from the repository root:
+
+    python -m uvicorn backend.app.main:app --reload --port 8000
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .api.v1 import health
+from .api.v1.router import api_router
+from .core.config import APP_VERSION, Settings, get_settings
+from .core.errors import REQUEST_ID_HEADER, install_error_handlers
+
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = settings or get_settings()
+    app = FastAPI(title="InfraGuard AI API", version=APP_VERSION)
+    install_error_handlers(app)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_list,
+        allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+        allow_headers=["Content-Type", REQUEST_ID_HEADER],
+        expose_headers=[REQUEST_ID_HEADER],
+    )
+    app.include_router(health.router)
+    app.include_router(api_router)
+    return app
+
+
+app = create_app()
