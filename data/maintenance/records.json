@@ -1,0 +1,16 @@
+{
+  "_note": "SYNTHETIC demo maintenance log written for the InfraGuard AI demo. Not real facility records.",
+  "source_name": "Demo maintenance log (synthetic)",
+  "records": [
+    {"record_id": "mr-0042", "asset_id": "cooling-01", "recorded_at": "2025-08-14T09:30:00Z", "text": "CRAC Unit 1 supply air drifted from 24 C to 34 C over two hours. Air filter was clogged. Replaced filter, cleaned coil. Work took 2.5 h, parts and labor about $900. Temperature back to normal within 30 minutes."},
+    {"record_id": "mr-0057", "asset_id": "cooling-01", "recorded_at": "2025-11-02T14:10:00Z", "text": "CRAC Unit 1 fan speed dropped to 780 rpm and supply temperature rose above 32 C. Fan belt worn and slipping. Replaced belt and re-tensioned. Work took 3 h, about $1,400."},
+    {"record_id": "mr-0063", "asset_id": "cooling-01", "recorded_at": "2026-02-19T07:45:00Z", "text": "High temperature alarm on CRAC Unit 1. Refrigerant pressure low from a leak at a brazed joint. Leak repaired and unit recharged. Unit was down 6 h, repair about $3,800. Portable cooling was used for Hall A."},
+    {"record_id": "mr-0071", "asset_id": "cooling-01", "recorded_at": "2026-06-03T16:20:00Z", "text": "Quarterly preventive maintenance on CRAC Unit 1: filters replaced, belts inspected, condensate drain cleared. No faults found. 1.5 h."},
+    {"record_id": "mr-0110", "asset_id": "drive-01", "recorded_at": "2026-03-11T10:00:00Z", "text": "Storage Node 7, Bay 3 drive reported 120 reallocated sectors and rising pending sectors. Data migrated, drive hot-swapped, RAID rebuild finished in 9 h. Swap took 45 minutes, drive cost about $320."},
+    {"record_id": "mr-0114", "asset_id": "drive-01", "recorded_at": "2026-07-22T13:00:00Z", "text": "Storage Node 7 drive bays running at 41 C after a blocked rack vent. Vent cleared, drive temperatures returned to 32 C. No drive replaced. 1 h."},
+    {"record_id": "mr-0118", "asset_id": null, "recorded_at": "2026-05-05T11:00:00Z", "text": "Fleet note: drives with uncorrectable errors (SMART 187/198) or growing pending sectors (SMART 197) are replaced proactively. Standard procedure: confirm backup, mark drive failed in controller, hot-swap, verify RAID rebuild. Typical swap 1 h, about $300 to $450 per drive."},
+    {"record_id": "mr-0201", "asset_id": "mill-01", "recorded_at": "2026-01-28T08:15:00Z", "text": "Milling machine stopped on overstrain: torque above 60 Nm with tool wear near 200 min. Tool replaced and feed rate reduced. Machine down 5 h, repair about $2,600."},
+    {"record_id": "mr-0207", "asset_id": "mill-01", "recorded_at": "2026-04-09T15:40:00Z", "text": "Power failure fault on milling machine at high rotational speed with high torque. Spindle drive inspected, settings corrected. 4 h, about $1,900."},
+    {"record_id": "mr-0300", "asset_id": null, "recorded_at": "2026-01-10T09:00:00Z", "text": "Data hall policy: any CRAC unit above 32 C supply for more than 10 minutes requires a technician on site within 1 hour and a check of filters, fan belt and refrigerant pressure."}
+  ]
+}
