@@ -1,6 +1,12 @@
+import json
+from pathlib import Path
+
+import pytest
+
+
 from backend.app.schemas.assets import AssetDetail, AssetSummary
 from backend.app.schemas.common import Page
-from backend.app.schemas.models import ModelInfo
+from backend.app.schemas.models import ModelInfo, ModelMetrics
 
 
 def test_list_assets(client):
@@ -32,3 +38,51 @@ def test_models_never_report_unearned_metrics(client):
     assert industrial.evaluation_status == "not_evaluated"
     assert industrial.metrics is None
     assert industrial.prediction_horizon_hours is None
+
+
+REAL_METRICS = Path(__file__).resolve().parents[2] / "ml" / "artifacts" / "metrics" / "industrial-failure-v1.json"
+
+
+def _industrial(client) -> ModelInfo:
+    page = Page[ModelInfo].model_validate(client.get("/api/v1/models").json())
+    return {m.detector_id: m for m in page.items}["industrial-failure-v1"]
+
+
+@pytest.fixture
+def artifact(settings, tmp_path):
+    p = tmp_path / "pipeline.joblib"
+    p.write_bytes(b"placeholder")
+    settings.model_artifact_path = str(p)
+
+
+@pytest.mark.skipif(not REAL_METRICS.is_file(), reason="model not trained")
+def test_models_report_training_metrics_unchanged(client, settings, artifact):
+    settings.industrial_metrics_path = str(REAL_METRICS)
+    raw = json.loads(REAL_METRICS.read_text())
+    m = _industrial(client)
+    assert m.status == "available" and m.evaluation_status == "evaluated"
+    assert m.metrics.model_dump(mode="json") == ModelMetrics.model_validate(raw["contract_metrics"]).model_dump(mode="json")
+    assert m.risk_thresholds.model_dump() == raw["risk_thresholds"]
+    assert m.metrics.split == "test"
+
+
+def test_missing_metrics_file_means_not_evaluated(client, artifact):
+    m = _industrial(client)
+    assert m.status == "available"
+    assert m.evaluation_status == "not_evaluated" and m.metrics is None and m.risk_thresholds is None
+
+
+@pytest.mark.parametrize("content", ["{not json", "[]", '{"contract_metrics": {"split": "train"}, "risk_thresholds": {"medium": 0.1, "high": 0.5}}'])
+def test_broken_metrics_file_means_not_evaluated(client, settings, artifact, tmp_path, content):
+    bad = tmp_path / "bad.json"
+    bad.write_text(content)
+    settings.industrial_metrics_path = str(bad)
+    m = _industrial(client)
+    assert m.evaluation_status == "not_evaluated" and m.metrics is None and m.risk_thresholds is None
+
+
+@pytest.mark.skipif(not REAL_METRICS.is_file(), reason="model not trained")
+def test_metrics_hidden_when_pipeline_missing(client, settings):
+    settings.industrial_metrics_path = str(REAL_METRICS)
+    m = _industrial(client)
+    assert m.status == "unavailable" and m.evaluation_status == "not_evaluated" and m.metrics is None
