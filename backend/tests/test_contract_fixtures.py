@@ -8,6 +8,8 @@ import pytest
 from backend.app.schemas.assets import AssetDetail, AssetSummary
 from backend.app.schemas.common import Page
 from backend.app.schemas.errors import ErrorResponse
+from backend.app.schemas.fleet import (ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus,
+                                       LiveStartRequest, LiveStatus, RackDetail)
 from backend.app.schemas.health import HealthResponse
 from backend.app.schemas.incidents import IncidentDetail, IncidentPatchRequest, IncidentSummary
 from backend.app.schemas.maintenance import MaintenanceSearchRequest, MaintenanceSearchResponse
@@ -38,6 +40,14 @@ SCHEMAS = {
     "incident.resolved.response.json": IncidentDetail,
     "incident.investigate.response.json": IncidentDetail,
     "incident.patch.request.json": IncidentPatchRequest,
+    "fleet.map.response.json": FleetMap,
+    "fleet.status.response.json": FleetStatus,
+    "fleet.rack.response.json": RackDetail,
+    "fleet.live.response.json": LiveStatus,
+    "fleet.live.start.request.json": LiveStartRequest,
+    "fleet.faults.request.json": FaultRequest,
+    "fleet.faults.response.json": FaultResponse,
+    "fleet.clear.response.json": ClearResponse,
     "simulation.request.json": SimulationRequest,
     "simulation.response.json": SimulationResponse,
     "simulation.status.response.json": SimulationResponse,

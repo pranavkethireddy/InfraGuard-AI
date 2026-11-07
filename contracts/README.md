@@ -50,6 +50,14 @@ All numbers in fixtures are **illustrative**. They are not measured results and 
 | GET | `/api/v1/simulations/{simulation_id}` | none | `simulation.status.response.json` |
 | POST | `/api/v1/simulations/{simulation_id}/reset` | none | `simulation.reset.response.json` |
 | POST | `/api/v1/maintenance/search` | `maintenance.search.request.json` | `maintenance.search.response.json`, `maintenance.search.no_evidence.response.json` |
+| GET | `/api/v1/fleet/map?history=` | none | `fleet.map.response.json` |
+| GET | `/api/v1/fleet/status?history=&status=&hall_id=` | none | `fleet.status.response.json` (example filtered to `status=critical&history=3`) |
+| GET | `/api/v1/fleet/racks/{rack_id}?history=` | none | `fleet.rack.response.json` |
+| GET | `/api/v1/fleet/live` | none | `fleet.live.response.json` |
+| POST | `/api/v1/fleet/live/start` | `fleet.live.start.request.json` (optional body) | live status shape (200) |
+| POST | `/api/v1/fleet/live/stop` | none | live status shape (200) |
+| POST | `/api/v1/fleet/faults` | `fleet.faults.request.json` (optional body; default `{"count": 3}`) | `fleet.faults.response.json` (201) |
+| POST | `/api/v1/fleet/clear` | none | `fleet.clear.response.json` |
 
 Error examples are in `error.422.json`, `error.404.json`, `error.409.json` and `error.503.json`.
 
@@ -86,7 +94,7 @@ Error examples are in `error.422.json`, `error.404.json`, `error.409.json` and `
 - `notes` items: `{ "note": string, "status": "open" | "acknowledged" | "resolved", "created_at": UTC }`, oldest first. `status` is the state the incident moved to when the note was written. A `PATCH` with a non-null `note` appends one.
 - `impact` is computed server-side: `estimated_downtime_cost = estimated_downtime_hours × cost_per_hour`, and `estimated_total_impact = estimated_downtime_cost + estimated_repair_cost`. Its inputs and `assumptions_source` are always included. React displays these values and never recomputes them.
 - Optional (additive) impact fields: `cost_per_day = cost_per_hour × 24`, and `estimated_repair_hours` (hands-on repair time). Both may be `null`. Assumptions come from `configs/impact_assumptions.json`.
-- **Investigate.** `POST /incidents/{id}/investigate` runs the AI agent (10–30 s) and returns the updated incident. With a Gemini key it sets `explanation_source: "agent"`, and `agent_steps` lists each tool call as `{tool, summary}`. Without a key, or if the call fails, it falls back to `"rag"`: the same tools run deterministically and `agent_steps` lists them too. `agent_steps` is `null` until the incident has been investigated. `maintenance_sources` holds only the records the explanation cites. Actions always need human review.
+- **Investigate.** `POST /incidents/{id}/investigate` runs the AI agent (10–30 s) and returns the updated incident. With a Gemini key it sets `explanation_source: "agent"`, and `agent_steps` lists each tool call as `{tool, summary}`. Without a key, or if the call fails, it falls back to `"rag"`: the same tools run deterministically and `agent_steps` lists them too. When a key is rate limited the backend moves to `GEMINI_API_KEY_2`, then to the models in `GEMINI_FALLBACK_MODELS`; it falls back to `"rag"` at once when every model and key is out of quota. `agent_steps` is `null` until the incident has been investigated. `maintenance_sources` holds only the records the explanation cites. Actions always need human review.
 - **Editing impact assumptions is deferred past the MVP.** Assumptions come from `configs/` and are shown read-only. A later `PATCH /api/v1/assets/{asset_id}/impact-assumptions` would be an additive change.
 - `priority_index` (0–1) combines the risk level, the asset criticality and the normalized impact using the weights in `priority_weights`. It is a ranking aid, not a financial expectation.
 
@@ -101,14 +109,27 @@ Error examples are in `error.422.json`, `error.404.json`, `error.409.json` and `
 - **Recovery after reload.** `GET /simulations?status=running` (or with `asset_id=`) finds the active run. `GET /simulations/{id}` returns its progress (`samples_emitted` / `samples_total`).
 - **Reset.** Stops the thread, deletes the run's readings and predictions (matched by `simulation_id`), resolves its active incidents with `resolved_by: "reset"`, and clears the rule's persistence and cooldown state for that asset. The demo can then be rerun. Resetting a run that is already reset is idempotent: `200` with zero counts.
 
+### Live fleet demo
+
+The fleet fixtures were captured from a real backend run (fallback investigation, no Gemini key), so their numbers are real outputs of the rule and the trained models on simulated readings.
+
+- **Layout.** `configs/datacenter_layout.json` defines halls, rows and cooling units. The backend expands each row into racks (`A1-01`, `A1-02`, ...) and each rack into monitored drives (`drive-01`, `drive-02`, ... in hall, row and rack order). The demo has 42 machines: 4 CRAC units, 36 drives in 18 racks, and 2 AI4I benchmark machines in the plant room. `GET /assets` lists all of them. Coordinates (`x`, `y`, `width`, `depth`, hall `width`/`depth`) are floor-grid cells (`grid_unit`); a rack's top-left corner is at (`x`, `y`).
+- **Live loop.** `POST /fleet/live/start` sends one reading per machine every `tick_seconds` (default 1, from 0.2 to 10) through the normal readings and predictions path, tagged `data_origin: "simulated"` and `simulation_id` = the live `run_id`. Healthy readings vary a little so charts move. Starting while running returns the current run. `POST /fleet/live/stop` stops readings (charts freeze) and cancels active faults; data and incidents stay.
+- **Faults.** `POST /fleet/faults` makes machines start failing. With `asset_ids` it targets those; otherwise it picks `count` machines with no fault and no unresolved incident, rotating cooling unit, drive, machine so a demo shows each kind. It starts the live loop if needed. Faults change only the readings: `cooling_failure` (temperature up about 13 C, fan down, then recovers), `drive_degradation` (SMART error counts climb; when it ends the drive counts as hot-swapped), `machine_overstrain` (torque and tool wear up, speed down, then recovers). The cooling rule and trained models decide the risk and open the incidents, usually within 2 to 7 ticks. `simulated_fault` on a machine shows the injected fault and its `phase` (`ramping`, `holding`, `recovering`) so the demo is honest about it.
+- **Automatic investigation.** With `auto_investigate` on (default), each incident the live loop opens is queued for the AI agent. `investigation_status` on the incident (and on `active_incident` in fleet views) moves `queued → running → completed` (or `failed`). It is `null` on incidents nobody queued. Results are the same as `POST /incidents/{id}/investigate`.
+- **Clear.** `POST /fleet/clear` deletes every reading, prediction and incident, cancels faults and resets any running single-asset simulation. The live loop keeps running, so charts continue from a clean state. Counts in the response say what was removed.
+- **Status rules.** Per machine: `critical` = unresolved high-risk incident or latest risk high; `warning` = latest risk medium or any other unresolved incident; `healthy` = latest risk low; `no_data` = nothing scored yet. Incidents stay open after a machine recovers until an operator resolves them, so the machine stays `critical` until then. A rack takes the worst status of its machines and is at least `warning` when a cooling unit in `cooled_by` is not healthy; `reasons` says why in plain text. A hall takes the worst status of its racks and machines.
+- **Summary.** `downtime_cost_per_day_at_risk` is the sum of `impact.cost_per_day` over unresolved incidents, from the labelled assumptions in `configs/impact_assumptions.json` (assets without their own entry use `asset_type_defaults`).
+- **Single-asset simulations.** `POST /simulations` returns `409 FLEET_LIVE_RUNNING` while the live loop runs, and `POST /fleet/live/start` returns `409 SIMULATION_ALREADY_RUNNING` while a single-asset run is active.
+
 ### Error codes
 
 | HTTP | Codes |
 |---|---|
-| 404 | `ASSET_NOT_FOUND`, `INCIDENT_NOT_FOUND`, `SIMULATION_NOT_FOUND` |
-| 409 | `INVALID_TRANSITION`, `SIMULATION_ALREADY_RUNNING` |
+| 404 | `ASSET_NOT_FOUND`, `INCIDENT_NOT_FOUND`, `SIMULATION_NOT_FOUND`, `RACK_NOT_FOUND` |
+| 409 | `INVALID_TRANSITION`, `SIMULATION_ALREADY_RUNNING`, `FLEET_LIVE_RUNNING`, `FAULT_ALREADY_ACTIVE`, `NO_HEALTHY_ASSETS` |
 | 422 | `VALIDATION_ERROR` (FastAPI and Pydantic errors, normalized), `INVALID_FEATURES`, `INSUFFICIENT_DATA`, `UNSUPPORTED_DETECTOR` |
-| 503 | `MODEL_UNAVAILABLE`, `RETRIEVAL_UNAVAILABLE`, `DATABASE_UNAVAILABLE` |
+| 503 | `MODEL_UNAVAILABLE`, `RETRIEVAL_UNAVAILABLE`, `DATABASE_UNAVAILABLE`, `SIMULATOR_UNAVAILABLE` |
 
 ## Change process
 
