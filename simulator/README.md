@@ -43,15 +43,24 @@ generator state without touching global RNG state.
 
 ```bash
 python3 -m simulator start --scenario cooling_anomaly --seed 42
+python3 -m simulator list --status running --asset-id cooling-01
 python3 -m simulator status SIMULATION_ID
 python3 -m simulator reset SIMULATION_ID
 # Alternate API location (global option goes before the subcommand):
 python3 -m simulator --base-url http://localhost:8000/api/v1 start --scenario normal
 ```
 
-These commands use the agreed `/simulations` endpoints. They require Pranav's
-simulation lifecycle implementation; the initial backend skeleton does not yet
-provide it. Failures are reported with HTTP status, backend error code and
+These commands use the implemented `/api/v1/simulations` endpoints. Start the
+backend from the repository root in its prepared Python environment:
+
+```bash
+python -m uvicorn backend.app.main:app --port 8000
+```
+
+`start` posts the scenario, asset and seed; `list` discovers runs using optional
+status/asset filters; `status` fetches one run; `reset` posts to its `/reset`
+route. The default API base is `http://localhost:8000/api/v1`.
+Failures are reported with HTTP status, backend error code and
 request ID when present, rather than silently simulating success.
 
 The backend calls `generate`, assigns real UTC emission timestamps and simulated
@@ -65,3 +74,14 @@ There is deliberately no second HTTP replay producer for an already running
 backend simulation: feeding both would double the readings. A standalone ingest
 runner needs an agreed externally-managed run lifecycle first. Reading values
 are deterministic; real backend emission timestamps are not.
+
+## Dashboard
+
+The React `/simulate` page uses the same backend lifecycle, polls status and
+readings every two seconds, and exposes reset. Run the frontend in live mode
+with `VITE_API_BASE_URL=http://localhost:8000/api/v1`; explicit fixture mode is
+an offline preview that cannot start or reset runs. The incident page can call
+`POST /api/v1/incidents/{id}/investigate` to show recommendations, maintenance
+sources, tool steps, and backend-supplied impact/repair-time assumptions.
+`GEMINI_API_KEY` belongs on the backend only. Without it, investigation uses a
+clearly labeled local retrieval/template fallback.

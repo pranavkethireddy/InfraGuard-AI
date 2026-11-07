@@ -140,8 +140,30 @@ class ClientTests(unittest.TestCase):
             with self.subTest(url=url), self.assertRaises(ValueError):
                 SimulationClient(url)
 
+    @patch("simulator.client.urlopen")
+    def test_list_runs_filters_and_empty_result(self, opener):
+        opener.return_value = io.BytesIO(b'{"items":[],"total":0,"limit":50,"offset":0}')
+        result = SimulationClient().list_runs(status="running", asset_id="cooling /01")
+        self.assertEqual(result["items"], [])
+        request = opener.call_args.args[0]
+        self.assertEqual(request.get_method(), "GET")
+        self.assertEqual(request.full_url, "http://localhost:8000/api/v1/simulations?status=running&asset_id=cooling+%2F01")
+
+    def test_list_rejects_invalid_filters(self):
+        for filters in ({"status": "unknown"}, {"asset_id": " "}):
+            with self.subTest(filters=filters), self.assertRaises(ValueError):
+                SimulationClient().list_runs(**filters)
+
 
 class CLITests(unittest.TestCase):
+    @patch("simulator.client.urlopen")
+    def test_list_command(self, opener):
+        opener.return_value = io.BytesIO(b'{"items":[],"total":0,"limit":50,"offset":0}')
+        out = io.StringIO()
+        with redirect_stdout(out):
+            status = main(["list", "--status", "running", "--asset-id", "cooling-01"])
+        self.assertEqual(status, 0)
+        self.assertEqual(json.loads(out.getvalue())["total"], 0)
     @patch("simulator.client.urlopen")
     def test_preview_is_offline_and_valid_json(self, opener):
         out = io.StringIO()
