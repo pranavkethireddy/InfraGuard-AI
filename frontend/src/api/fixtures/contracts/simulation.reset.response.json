@@ -1,0 +1,7 @@
+{
+  "simulation_id": "sim-demo-001",
+  "status": "reset",
+  "readings_deleted": 12,
+  "predictions_deleted": 12,
+  "incidents_resolved": 1
+}
