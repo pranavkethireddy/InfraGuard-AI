@@ -21,6 +21,7 @@ class PredictionRequest(ContractModel):
     data_origin: DataOrigin
     detector_id: str
     readings: dict[str, ReadingValue] = Field(min_length=1)
+    simulation_id: str | None = None
 
 
 class PredictionResponse(ContractModel):
@@ -43,3 +44,4 @@ class PredictionResponse(ContractModel):
     maintenance_sources: list[MaintenanceSource]
     limitations: list[str]
     incident_id: str | None
+    simulation_id: str | None

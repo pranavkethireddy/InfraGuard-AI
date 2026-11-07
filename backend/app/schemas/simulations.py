@@ -21,6 +21,10 @@ class SimulationResponse(ContractModel):
     status: Literal["running", "completed", "reset"]
     data_origin: DataOrigin
     started_at: AwareDatetime
+    completed_at: AwareDatetime | None
+    tick_seconds: float = Field(gt=0)
+    samples_total: int = Field(ge=0)
+    samples_emitted: int = Field(ge=0)
 
 
 class SimulationResetResponse(ContractModel):
