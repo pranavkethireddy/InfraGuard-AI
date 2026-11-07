@@ -1,0 +1,53 @@
+{
+  "detector_id": "industrial-failure-v1",
+  "model_version": "0.1.0",
+  "features": [
+    "type",
+    "air_temperature_k",
+    "process_temperature_k",
+    "rotational_speed_rpm",
+    "torque_nm",
+    "tool_wear_min"
+  ],
+  "categorical": {
+    "type": [
+      "H",
+      "L",
+      "M"
+    ]
+  },
+  "units": {
+    "air_temperature_k": "K",
+    "process_temperature_k": "K",
+    "rotational_speed_rpm": "rpm",
+    "torque_nm": "Nm",
+    "tool_wear_min": "min"
+  },
+  "training_ranges": {
+    "air_temperature_k": {
+      "min": 295.3,
+      "max": 304.5
+    },
+    "process_temperature_k": {
+      "min": 305.7,
+      "max": 313.8
+    },
+    "rotational_speed_rpm": {
+      "min": 1168.0,
+      "max": 2886.0
+    },
+    "torque_nm": {
+      "min": 3.8,
+      "max": 76.6
+    },
+    "tool_wear_min": {
+      "min": 0.0,
+      "max": 253.0
+    }
+  },
+  "risk_thresholds": {
+    "medium": 0.0018,
+    "high": 0.4487
+  },
+  "sklearn_version": "1.8.0"
+}

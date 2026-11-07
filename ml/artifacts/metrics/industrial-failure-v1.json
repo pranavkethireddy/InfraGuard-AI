@@ -1,0 +1,414 @@
+{
+  "detector_id": "industrial-failure-v1",
+  "model_version": "0.1.0",
+  "chosen_candidate": "hgb_lr0.1_leaves31",
+  "target": "AI4I 'Machine failure' at time of observation (not a forecast)",
+  "score_kind": "model_score",
+  "contract_metrics": {
+    "split": "test",
+    "evaluated_at": "2026-11-07T21:30:15Z",
+    "dataset_version": "UCI AI4I 2020 (id 601)",
+    "seed": 42,
+    "n": 2000,
+    "positives": 68,
+    "threshold": 0.4487,
+    "threshold_selection": "max F1 on validation split",
+    "precision": 0.8727,
+    "recall": 0.7059,
+    "f1": 0.7805,
+    "pr_auc": 0.806,
+    "roc_auc": 0.9822,
+    "brier": 0.0128,
+    "calibrated": false,
+    "confusion_matrix": {
+      "tp": 48,
+      "fp": 7,
+      "tn": 1925,
+      "fn": 20
+    },
+    "baseline": {
+      "name": "dummy_prior (majority/prevalence)",
+      "pr_auc": 0.034,
+      "f1": 0.0
+    },
+    "metrics_file": "ml/artifacts/metrics/industrial-failure-v1.json"
+  },
+  "risk_thresholds": {
+    "medium": 0.0018,
+    "high": 0.4487
+  },
+  "medium_threshold_selection": "max F2 (recall-weighted) on validation split, below the high threshold",
+  "test_at_medium_threshold": {
+    "precision": 0.5851,
+    "recall": 0.8088,
+    "f1": 0.679,
+    "confusion_matrix": {
+      "tp": 55,
+      "fp": 39,
+      "tn": 1893,
+      "fn": 13
+    },
+    "alerts": 94,
+    "false_alert_rate": 0.0202
+  },
+  "test_false_alert_rate": 0.0036,
+  "beats_baseline_on_test_pr_auc": true,
+  "validation_candidates": {
+    "dummy_prior": {
+      "pr_auc": 0.034,
+      "precision": 0.034,
+      "recall": 1.0,
+      "f1": 0.0658,
+      "confusion_matrix": {
+        "tp": 68,
+        "fp": 1932,
+        "tn": 0,
+        "fn": 0
+      },
+      "alerts": 2000,
+      "false_alert_rate": 1.0,
+      "threshold": 0.0338
+    },
+    "logreg_C0.1": {
+      "pr_auc": 0.4101,
+      "precision": 0.3362,
+      "recall": 0.5735,
+      "f1": 0.4239,
+      "confusion_matrix": {
+        "tp": 39,
+        "fp": 77,
+        "tn": 1855,
+        "fn": 29
+      },
+      "alerts": 116,
+      "false_alert_rate": 0.0399,
+      "threshold": 0.7822
+    },
+    "logreg_C1.0": {
+      "pr_auc": 0.4072,
+      "precision": 0.3656,
+      "recall": 0.5,
+      "f1": 0.4224,
+      "confusion_matrix": {
+        "tp": 34,
+        "fp": 59,
+        "tn": 1873,
+        "fn": 34
+      },
+      "alerts": 93,
+      "false_alert_rate": 0.0305,
+      "threshold": 0.8424
+    },
+    "logreg_C10.0": {
+      "pr_auc": 0.4069,
+      "precision": 0.3656,
+      "recall": 0.5,
+      "f1": 0.4224,
+      "confusion_matrix": {
+        "tp": 34,
+        "fp": 59,
+        "tn": 1873,
+        "fn": 34
+      },
+      "alerts": 93,
+      "false_alert_rate": 0.0305,
+      "threshold": 0.8452
+    },
+    "hgb_lr0.05_leaves15": {
+      "pr_auc": 0.8039,
+      "precision": 0.8276,
+      "recall": 0.7059,
+      "f1": 0.7619,
+      "confusion_matrix": {
+        "tp": 48,
+        "fp": 10,
+        "tn": 1922,
+        "fn": 20
+      },
+      "alerts": 58,
+      "false_alert_rate": 0.0052,
+      "threshold": 0.334
+    },
+    "hgb_lr0.05_leaves31": {
+      "pr_auc": 0.8067,
+      "precision": 0.9,
+      "recall": 0.6618,
+      "f1": 0.7627,
+      "confusion_matrix": {
+        "tp": 45,
+        "fp": 5,
+        "tn": 1927,
+        "fn": 23
+      },
+      "alerts": 50,
+      "false_alert_rate": 0.0026,
+      "threshold": 0.5211
+    },
+    "hgb_lr0.1_leaves15": {
+      "pr_auc": 0.8061,
+      "precision": 0.75,
+      "recall": 0.75,
+      "f1": 0.75,
+      "confusion_matrix": {
+        "tp": 51,
+        "fp": 17,
+        "tn": 1915,
+        "fn": 17
+      },
+      "alerts": 68,
+      "false_alert_rate": 0.0088,
+      "threshold": 0.1717
+    },
+    "hgb_lr0.1_leaves31": {
+      "pr_auc": 0.8127,
+      "precision": 0.8704,
+      "recall": 0.6912,
+      "f1": 0.7705,
+      "confusion_matrix": {
+        "tp": 47,
+        "fp": 7,
+        "tn": 1925,
+        "fn": 21
+      },
+      "alerts": 54,
+      "false_alert_rate": 0.0036,
+      "threshold": 0.4487
+    }
+  },
+  "splits": {
+    "method": "stratified random 60/20/20 on Machine failure, fixed seed",
+    "train": {
+      "n": 6000,
+      "positives": 203
+    },
+    "validation": {
+      "n": 2000,
+      "positives": 68
+    },
+    "test": {
+      "n": 2000,
+      "positives": 68
+    },
+    "disjoint": true,
+    "caveat": "Random split of a synthetic cross-sectional benchmark; no time or machine grouping exists."
+  },
+  "data": {
+    "source": "https://archive.ics.uci.edu/static/public/601/ai4i+2020+predictive+maintenance+dataset.zip",
+    "csv_sha256": "dc6630cd9b1f0f853922fad78a1b6436570d3f1ec863f1dd5c4340ac56bc8a8e",
+    "license": "CC BY 4.0",
+    "rows": 10000,
+    "positives": 339,
+    "positive_rate": 0.0339,
+    "failure_modes": {
+      "TWF": 46,
+      "HDF": 115,
+      "PWF": 95,
+      "OSF": 98,
+      "RNF": 19
+    },
+    "type_counts": {
+      "H": 1003,
+      "L": 6000,
+      "M": 2997
+    },
+    "failures_by_type": {
+      "H": 21,
+      "L": 235,
+      "M": 83
+    },
+    "duplicate_feature_rows": 0
+  },
+  "features": [
+    "type",
+    "air_temperature_k",
+    "process_temperature_k",
+    "rotational_speed_rpm",
+    "torque_nm",
+    "tool_wear_min"
+  ],
+  "excluded_columns": [
+    "Machine failure",
+    "TWF",
+    "HDF",
+    "PWF",
+    "OSF",
+    "RNF",
+    "UDI",
+    "Product ID"
+  ],
+  "permutation_importance_validation_pr_auc": {
+    "air_temperature_k": 0.5319,
+    "torque_nm": 0.5212,
+    "rotational_speed_rpm": 0.4155,
+    "tool_wear_min": 0.3517,
+    "process_temperature_k": 0.3337,
+    "type": 0.0127
+  },
+  "error_examples_test": {
+    "false_negatives": [
+      {
+        "UDI": 2245,
+        "Type": "M",
+        "Air temperature [K]": 299.3,
+        "Process temperature [K]": 308.4,
+        "Rotational speed [rpm]": 1542,
+        "Torque [Nm]": 37.5,
+        "Tool wear [min]": 203,
+        "TWF": 1,
+        "HDF": 0,
+        "PWF": 0,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.0,
+        "label": 1
+      },
+      {
+        "UDI": 1493,
+        "Type": "M",
+        "Air temperature [K]": 298.0,
+        "Process temperature [K]": 308.7,
+        "Rotational speed [rpm]": 1479,
+        "Torque [Nm]": 58.5,
+        "Tool wear [min]": 176,
+        "TWF": 0,
+        "HDF": 0,
+        "PWF": 1,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.0,
+        "label": 1
+      },
+      {
+        "UDI": 4045,
+        "Type": "M",
+        "Air temperature [K]": 301.9,
+        "Process temperature [K]": 310.9,
+        "Rotational speed [rpm]": 1419,
+        "Torque [Nm]": 47.7,
+        "Tool wear [min]": 20,
+        "TWF": 0,
+        "HDF": 0,
+        "PWF": 0,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.0,
+        "label": 1
+      },
+      {
+        "UDI": 6257,
+        "Type": "L",
+        "Air temperature [K]": 301.0,
+        "Process temperature [K]": 310.6,
+        "Rotational speed [rpm]": 1493,
+        "Torque [Nm]": 37.8,
+        "Tool wear [min]": 206,
+        "TWF": 1,
+        "HDF": 0,
+        "PWF": 0,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.0,
+        "label": 1
+      },
+      {
+        "UDI": 7088,
+        "Type": "L",
+        "Air temperature [K]": 300.6,
+        "Process temperature [K]": 310.3,
+        "Rotational speed [rpm]": 1648,
+        "Torque [Nm]": 30.5,
+        "Tool wear [min]": 217,
+        "TWF": 1,
+        "HDF": 0,
+        "PWF": 0,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.0,
+        "label": 1
+      }
+    ],
+    "false_positives": [
+      {
+        "UDI": 4232,
+        "Type": "L",
+        "Air temperature [K]": 302.2,
+        "Process temperature [K]": 310.8,
+        "Rotational speed [rpm]": 1340,
+        "Torque [Nm]": 47.8,
+        "Tool wear [min]": 54,
+        "TWF": 0,
+        "HDF": 0,
+        "PWF": 0,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.9996,
+        "label": 0
+      },
+      {
+        "UDI": 3795,
+        "Type": "M",
+        "Air temperature [K]": 302.2,
+        "Process temperature [K]": 310.8,
+        "Rotational speed [rpm]": 1356,
+        "Torque [Nm]": 48.3,
+        "Tool wear [min]": 36,
+        "TWF": 0,
+        "HDF": 0,
+        "PWF": 0,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.9988,
+        "label": 0
+      },
+      {
+        "UDI": 3590,
+        "Type": "L",
+        "Air temperature [K]": 301.7,
+        "Process temperature [K]": 310.5,
+        "Rotational speed [rpm]": 2465,
+        "Torque [Nm]": 13.7,
+        "Tool wear [min]": 149,
+        "TWF": 0,
+        "HDF": 0,
+        "PWF": 0,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.9965,
+        "label": 0
+      },
+      {
+        "UDI": 8115,
+        "Type": "H",
+        "Air temperature [K]": 300.4,
+        "Process temperature [K]": 311.8,
+        "Rotational speed [rpm]": 2496,
+        "Torque [Nm]": 13.5,
+        "Tool wear [min]": 5,
+        "TWF": 0,
+        "HDF": 0,
+        "PWF": 0,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.9964,
+        "label": 0
+      },
+      {
+        "UDI": 4303,
+        "Type": "L",
+        "Air temperature [K]": 301.7,
+        "Process temperature [K]": 310.1,
+        "Rotational speed [rpm]": 2695,
+        "Torque [Nm]": 12.6,
+        "Tool wear [min]": 10,
+        "TWF": 0,
+        "HDF": 0,
+        "PWF": 0,
+        "OSF": 0,
+        "RNF": 0,
+        "score": 0.994,
+        "label": 0
+      }
+    ]
+  },
+  "calibration": "not calibrated; scores are model scores, not probabilities"
+}
