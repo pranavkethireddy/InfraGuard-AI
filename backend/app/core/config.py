@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     drive_model_artifact_path: str = "ml/artifacts/backblaze/pipeline.joblib"
     drive_metrics_path: str = "ml/artifacts/metrics/drive-failure-v1.json"
     simulation_enabled: bool = True
+    simulation_tick_seconds: float = 2.0
+    impact_assumptions_path: str = "configs/impact_assumptions.json"
+    maintenance_records_path: str = "data/maintenance/records.json"
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash"
 
     @property
     def cors_origin_list(self) -> list[str]:

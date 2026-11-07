@@ -8,7 +8,7 @@ DataOrigin = Literal["simulated", "observed"]
 RiskLevel = Literal["low", "medium", "high"]
 ScoreKind = Literal["heuristic", "model_score", "calibrated_probability"]
 Criticality = Literal["low", "medium", "high"]
-ExplanationSource = Literal["rule", "template", "rag"]
+ExplanationSource = Literal["rule", "template", "rag", "agent"]
 IncidentStatus = Literal["open", "acknowledged", "resolved"]
 ReadingValue = float | int | str
 

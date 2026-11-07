@@ -33,6 +33,13 @@ class IncidentSummary(ContractModel):
     priority_index: float | None = Field(ge=0, le=1)
 
 
+class AgentStep(ContractModel):
+    """One tool call the AI agent made while investigating an incident."""
+
+    tool: str
+    summary: str
+
+
 class IncidentDetail(IncidentSummary):
     latest_prediction: PredictionResponse | None
     evidence: list[Evidence]
@@ -43,6 +50,7 @@ class IncidentDetail(IncidentSummary):
     impact: Impact | None
     priority_weights: dict[str, float] | None
     notes: list[IncidentNote]
+    agent_steps: list[AgentStep] | None = None
 
 
 class IncidentPatchRequest(ContractModel):
