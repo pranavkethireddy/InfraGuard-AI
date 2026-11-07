@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "ASSET_NOT_FOUND",
+    "message": "Asset 'cooling-99' does not exist.",
+    "details": {
+      "asset_id": "cooling-99"
+    },
+    "request_id": "req-demo-002"
+  }
+}

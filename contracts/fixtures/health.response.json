@@ -1,0 +1,13 @@
+{
+  "status": "ok",
+  "contract_version": "1",
+  "version": "0.1.0",
+  "dependencies": {
+    "database": "ok",
+    "models": {
+      "cooling-rule-v1": "available",
+      "industrial-failure-v1": "unavailable"
+    },
+    "retrieval": "ok"
+  }
+}

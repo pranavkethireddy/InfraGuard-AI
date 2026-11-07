@@ -1,0 +1,12 @@
+{
+  "error": {
+    "code": "INVALID_FEATURES",
+    "message": "Required detector input is missing.",
+    "details": {
+      "missing_fields": [
+        "temperature_c"
+      ]
+    },
+    "request_id": "req-demo-001"
+  }
+}

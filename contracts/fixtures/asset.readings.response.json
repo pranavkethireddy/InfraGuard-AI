@@ -1,0 +1,25 @@
+{
+  "asset_id": "cooling-01",
+  "start": "2026-11-06T20:00:00Z",
+  "end": "2026-11-07T20:00:01Z",
+  "items": [
+    {
+      "observed_at": "2026-11-07T19:59:00Z",
+      "values": {
+        "temperature_c": 33.1,
+        "fan_speed_rpm": 860
+      },
+      "data_origin": "simulated"
+    },
+    {
+      "observed_at": "2026-11-07T20:00:00Z",
+      "values": {
+        "temperature_c": 35.0,
+        "fan_speed_rpm": 850
+      },
+      "data_origin": "simulated"
+    }
+  ],
+  "total": 2,
+  "limit": 500
+}

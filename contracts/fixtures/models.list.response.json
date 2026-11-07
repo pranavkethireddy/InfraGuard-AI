@@ -1,0 +1,103 @@
+{
+  "items": [
+    {
+      "detector_id": "cooling-rule-v1",
+      "model_name": "cooling-rule",
+      "model_version": "1.0.0",
+      "kind": "rule",
+      "asset_types": [
+        "cooling_unit"
+      ],
+      "score_kind": "heuristic",
+      "target": "sustained supply temperature above configured threshold",
+      "prediction_horizon_hours": null,
+      "input_fields": [
+        {
+          "name": "temperature_c",
+          "unit": "C",
+          "required": true
+        },
+        {
+          "name": "fan_speed_rpm",
+          "unit": "rpm",
+          "required": false
+        }
+      ],
+      "risk_thresholds": {
+        "medium": 0.4,
+        "high": 0.7
+      },
+      "rule_config": {
+        "temperature_threshold_c": 32.0,
+        "consecutive_readings": 3,
+        "cooldown_readings": 3
+      },
+      "status": "available",
+      "evaluation_status": "not_applicable",
+      "metrics": null,
+      "source_dataset": null,
+      "model_card_url": null,
+      "limitations": [
+        "Rule thresholds are demo assumptions, not facility safety specifications."
+      ]
+    },
+    {
+      "detector_id": "industrial-failure-v1",
+      "model_name": "industrial-failure",
+      "model_version": "0.1.0",
+      "kind": "ml",
+      "asset_types": [
+        "industrial_machine"
+      ],
+      "score_kind": "model_score",
+      "target": "AI4I 'Machine failure' at time of observation (not a forecast)",
+      "prediction_horizon_hours": null,
+      "input_fields": [
+        {
+          "name": "type",
+          "unit": null,
+          "required": true
+        },
+        {
+          "name": "air_temperature_k",
+          "unit": "K",
+          "required": true
+        },
+        {
+          "name": "process_temperature_k",
+          "unit": "K",
+          "required": true
+        },
+        {
+          "name": "rotational_speed_rpm",
+          "unit": "rpm",
+          "required": true
+        },
+        {
+          "name": "torque_nm",
+          "unit": "Nm",
+          "required": true
+        },
+        {
+          "name": "tool_wear_min",
+          "unit": "min",
+          "required": true
+        }
+      ],
+      "risk_thresholds": null,
+      "rule_config": null,
+      "status": "unavailable",
+      "evaluation_status": "not_evaluated",
+      "metrics": null,
+      "source_dataset": "UCI AI4I 2020 (id 601), CC BY 4.0",
+      "model_card_url": null,
+      "limitations": [
+        "Trained on the synthetic AI4I benchmark; not validated for facility equipment.",
+        "Score is not a calibrated probability."
+      ]
+    }
+  ],
+  "total": 2,
+  "limit": 50,
+  "offset": 0
+}

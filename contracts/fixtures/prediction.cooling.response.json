@@ -1,0 +1,32 @@
+{
+  "prediction_id": "pred-demo-001",
+  "asset_id": "cooling-01",
+  "detector_id": "cooling-rule-v1",
+  "observed_at": "2026-11-07T20:00:00Z",
+  "generated_at": "2026-11-07T20:00:01Z",
+  "data_origin": "simulated",
+  "model_name": "cooling-rule",
+  "model_version": "1.0.0",
+  "target": "sustained supply temperature above configured threshold",
+  "risk_score": 0.8,
+  "score_kind": "heuristic",
+  "risk_level": "high",
+  "prediction_horizon_hours": null,
+  "explanation": "Temperature stayed above the configured 32.0 C threshold for 3 consecutive readings.",
+  "explanation_source": "rule",
+  "evidence": [
+    {
+      "type": "sensor_rule",
+      "field": "temperature_c",
+      "value": 35.0,
+      "threshold": 32.0,
+      "unit": "C",
+      "consecutive_readings": 3
+    }
+  ],
+  "maintenance_sources": [],
+  "limitations": [
+    "Rule thresholds are demo assumptions, not facility safety specifications."
+  ],
+  "incident_id": "inc-demo-001"
+}
