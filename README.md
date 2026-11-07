@@ -38,6 +38,9 @@ Confirm the event's official challenge wording, eligibility, required sponsor te
 |---|---|---|
 | **NMC²** | Primary | Equipment readings, one evaluated model, risk evidence, cooling anomaly detection, and an incident response workflow |
 | **CBRE** | Secondary | Asset criticality, transparent downtime cost estimates, and prioritized maintenance decisions |
+| **HackUTD Design** (general track) | General | A clear operations console: risk at a glance, a guided incident workflow, and plain-language explanations |
+
+Every project is also judged in Overall automatically. The Beginner track does not apply because it needs a majority of first-time hackers.
 
 Maintenance-record retrieval stays as supporting context for explanations, not as a separate sponsor alignment.
 
