@@ -86,3 +86,19 @@ def test_metrics_hidden_when_pipeline_missing(client, settings):
     settings.industrial_metrics_path = str(REAL_METRICS)
     m = _industrial(client)
     assert m.status == "unavailable" and m.evaluation_status == "not_evaluated" and m.metrics is None
+
+
+DRIVE_METRICS = Path(__file__).resolve().parents[2] / "ml" / "artifacts" / "metrics" / "drive-failure-v1.json"
+
+
+@pytest.mark.skipif(not DRIVE_METRICS.is_file(), reason="drive model not trained")
+def test_drive_model_reports_horizon_and_metrics(client, settings, tmp_path):
+    p = tmp_path / "drive.joblib"
+    p.write_bytes(b"placeholder")
+    settings.drive_model_artifact_path = str(p)
+    settings.drive_metrics_path = str(DRIVE_METRICS)
+    page = Page[ModelInfo].model_validate(client.get("/api/v1/models").json())
+    m = {x.detector_id: x for x in page.items}["drive-failure-v1"]
+    assert m.prediction_horizon_hours == 720 and m.asset_types == ["storage_drive"]
+    assert m.evaluation_status == "evaluated"
+    assert m.metrics.pr_auc == json.loads(DRIVE_METRICS.read_text())["contract_metrics"]["pr_auc"]
