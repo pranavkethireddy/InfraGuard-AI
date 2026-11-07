@@ -7,8 +7,12 @@ from backend.app.main import create_app
 
 @pytest.fixture
 def settings(tmp_path) -> Settings:
-    # No artifact at this path, so the AI4I model reports "unavailable".
-    return Settings(cors_origins="http://localhost:5173", model_artifact_path=str(tmp_path / "missing.joblib"))
+    # No artifact or metrics at these paths, so the AI4I model reports "unavailable" and "not_evaluated".
+    return Settings(
+        cors_origins="http://localhost:5173",
+        model_artifact_path=str(tmp_path / "missing.joblib"),
+        industrial_metrics_path=str(tmp_path / "missing.json"),
+    )
 
 
 @pytest.fixture

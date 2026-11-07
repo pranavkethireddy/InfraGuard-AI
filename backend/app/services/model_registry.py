@@ -1,16 +1,31 @@
 """Detector catalogue. Each detector keeps its own input schema; scores are never mixed."""
 
+import json
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from ..core.config import Settings
-from ..schemas.models import InputField, ModelInfo, RiskThresholds
+from ..schemas.models import InputField, ModelInfo, ModelMetrics, RiskThresholds
 
 COOLING_RULE_ID = "cooling-rule-v1"
 INDUSTRIAL_ID = "industrial-failure-v1"
 
 
+def load_evaluation(path: str) -> tuple[ModelMetrics, RiskThresholds] | None:
+    """Read training output. Anything missing or malformed means "not evaluated", never a guess."""
+    try:
+        raw = json.loads(Path(path).read_text())
+        return ModelMetrics.model_validate(raw["contract_metrics"]), RiskThresholds.model_validate(raw["risk_thresholds"])
+    except (OSError, ValueError, KeyError, TypeError, ValidationError):
+        return None
+
+
 def list_models(settings: Settings) -> list[ModelInfo]:
     industrial_available = Path(settings.model_artifact_path).is_file()
+    # Metrics describe the saved pipeline, so they are only reported when that pipeline is present.
+    evaluation = load_evaluation(settings.industrial_metrics_path) if industrial_available else None
+    metrics, thresholds = evaluation if evaluation else (None, None)
     return [
         ModelInfo(
             detector_id=COOLING_RULE_ID,
@@ -52,13 +67,13 @@ def list_models(settings: Settings) -> list[ModelInfo]:
                 InputField(name="torque_nm", unit="Nm", required=True),
                 InputField(name="tool_wear_min", unit="min", required=True),
             ],
-            # Thresholds are chosen on validation data during training; unknown until then.
-            risk_thresholds=None,
+            # Chosen on the validation split during training (max F1 for high, max F2 for medium).
+            risk_thresholds=thresholds,
             rule_config=None,
             status="available" if industrial_available else "unavailable",
-            # Metrics come from ml/artifacts/metrics once training exists. Never filled in by hand.
-            evaluation_status="not_evaluated",
-            metrics=None,
+            # Held-out test metrics from ml/artifacts/metrics. Never filled in by hand.
+            evaluation_status="evaluated" if metrics else "not_evaluated",
+            metrics=metrics,
             source_dataset="UCI AI4I 2020 (id 601), CC BY 4.0",
             model_card_url=None,
             limitations=[
