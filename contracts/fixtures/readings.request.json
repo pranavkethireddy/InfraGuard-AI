@@ -1,0 +1,21 @@
+{
+  "asset_id": "cooling-01",
+  "data_origin": "simulated",
+  "simulation_id": "sim-demo-001",
+  "readings": [
+    {
+      "observed_at": "2026-11-07T19:59:00Z",
+      "values": {
+        "temperature_c": 33.1,
+        "fan_speed_rpm": 860
+      }
+    },
+    {
+      "observed_at": "2026-11-07T20:00:00Z",
+      "values": {
+        "temperature_c": 35.0,
+        "fan_speed_rpm": 850
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "INVALID_TRANSITION",
+    "message": "Cannot move incident from 'resolved' to 'acknowledged'.",
+    "details": {
+      "from": "resolved",
+      "to": "acknowledged"
+    },
+    "request_id": "req-demo-003"
+  }
+}

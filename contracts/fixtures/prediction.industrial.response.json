@@ -1,0 +1,34 @@
+{
+  "prediction_id": "pred-demo-002",
+  "asset_id": "mill-01",
+  "detector_id": "industrial-failure-v1",
+  "observed_at": "2026-11-07T20:05:00Z",
+  "generated_at": "2026-11-07T20:05:00Z",
+  "data_origin": "simulated",
+  "model_name": "industrial-failure",
+  "model_version": "0.1.0",
+  "target": "AI4I 'Machine failure' at time of observation (not a forecast)",
+  "risk_score": 0.62,
+  "score_kind": "model_score",
+  "risk_level": "medium",
+  "prediction_horizon_hours": null,
+  "explanation": "Model score is above the medium threshold selected on validation data.",
+  "explanation_source": "template",
+  "evidence": [
+    {
+      "type": "model_feature",
+      "field": "torque_nm",
+      "value": 65.7,
+      "threshold": null,
+      "unit": "Nm",
+      "consecutive_readings": null
+    }
+  ],
+  "maintenance_sources": [],
+  "limitations": [
+    "Trained on the synthetic AI4I benchmark; not validated for facility equipment.",
+    "Score is not a calibrated probability."
+  ],
+  "incident_id": null,
+  "simulation_id": null
+}

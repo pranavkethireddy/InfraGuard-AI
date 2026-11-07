@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "incident_id": "inc-demo-001",
+      "asset_id": "cooling-01",
+      "detector_id": "cooling-rule-v1",
+      "status": "open",
+      "risk_level": "high",
+      "score_kind": "heuristic",
+      "data_origin": "simulated",
+      "title": "Sustained high temperature on CRAC Unit 1",
+      "opened_at": "2026-11-07T20:00:01Z",
+      "last_seen_at": "2026-11-07T20:00:01Z",
+      "acknowledged_at": null,
+      "resolved_at": null,
+      "resolved_by": null,
+      "prediction_count": 1,
+      "simulation_id": "sim-demo-001",
+      "priority_index": 0.86
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}

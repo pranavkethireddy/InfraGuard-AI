@@ -1,0 +1,5 @@
+{
+  "scenario": "cooling_anomaly",
+  "asset_id": "cooling-01",
+  "seed": 42
+}

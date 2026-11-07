@@ -1,0 +1,5 @@
+{
+  "asset_id": "cooling-01",
+  "query": "supply temperature rising",
+  "limit": 5
+}

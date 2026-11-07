@@ -1,0 +1,31 @@
+{
+  "items": [
+    {
+      "asset_id": "cooling-01",
+      "name": "CRAC Unit 1",
+      "asset_type": "cooling_unit",
+      "location": "Hall A",
+      "criticality": "high",
+      "compatible_detector": "cooling-rule-v1",
+      "data_origin": "simulated",
+      "current_risk_level": "high",
+      "active_incident_id": "inc-demo-001",
+      "last_reading_at": "2026-11-07T20:00:00Z"
+    },
+    {
+      "asset_id": "mill-01",
+      "name": "AI4I Demo Machine",
+      "asset_type": "industrial_machine",
+      "location": "Benchmark (AI4I synthetic)",
+      "criticality": "medium",
+      "compatible_detector": "industrial-failure-v1",
+      "data_origin": "simulated",
+      "current_risk_level": null,
+      "active_incident_id": null,
+      "last_reading_at": null
+    }
+  ],
+  "total": 2,
+  "limit": 50,
+  "offset": 0
+}
