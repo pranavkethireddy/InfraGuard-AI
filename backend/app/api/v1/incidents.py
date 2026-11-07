@@ -34,3 +34,11 @@ def get_incident(incident_id: str, store: StoreDep) -> IncidentDetail:
 def patch_incident(incident_id: str, req: IncidentPatchRequest, store: StoreDep, settings: SettingsDep) -> IncidentDetail:
     cooldown = next(m.rule_config["cooldown_readings"] for m in list_models(settings) if m.kind == "rule")
     return incidents.patch(store, incident_id, req, cooldown)
+
+
+@router.post("/{incident_id}/investigate", response_model=IncidentDetail, responses={404: {"model": ErrorResponse}})
+def investigate(incident_id: str, store: StoreDep, settings: SettingsDep) -> IncidentDetail:
+    """Run the AI agent: it calls InfraGuard tools and writes a cited fix plan onto the incident."""
+    from ...services import agent
+
+    return agent.investigate(store, incidents.get(store, incident_id), settings)

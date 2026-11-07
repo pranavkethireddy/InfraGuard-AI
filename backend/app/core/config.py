@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     impact_assumptions_path: str = "configs/impact_assumptions.json"
     maintenance_records_path: str = "data/maintenance/records.json"
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash"
 
     @property
     def cors_origin_list(self) -> list[str]:
