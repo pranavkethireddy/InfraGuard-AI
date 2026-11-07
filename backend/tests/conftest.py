@@ -1,0 +1,20 @@
+import pytest
+from fastapi.testclient import TestClient
+
+from backend.app.core.config import Settings
+from backend.app.main import create_app
+
+
+@pytest.fixture
+def settings(tmp_path) -> Settings:
+    # No artifact at this path, so the AI4I model reports "unavailable".
+    return Settings(cors_origins="http://localhost:5173", model_artifact_path=str(tmp_path / "missing.joblib"))
+
+
+@pytest.fixture
+def client(settings) -> TestClient:
+    from backend.app.core.config import get_settings
+
+    app = create_app(settings)
+    app.dependency_overrides[get_settings] = lambda: settings
+    return TestClient(app, raise_server_exceptions=False)
