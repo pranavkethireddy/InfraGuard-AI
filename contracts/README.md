@@ -44,6 +44,7 @@ All numbers in fixtures are **illustrative**. They are not measured results and 
 | GET | `/api/v1/incidents?status=&asset_id=&limit=&offset=` | none | `incidents.list.response.json`, `incidents.list.empty.response.json` |
 | GET | `/api/v1/incidents/{incident_id}` | none | `incident.detail.response.json` (open), `incident.resolved.response.json` (resolved, with notes) |
 | PATCH | `/api/v1/incidents/{incident_id}` | `incident.patch.request.json` | incident detail shape |
+| POST | `/api/v1/incidents/{incident_id}/investigate` | none | `incident.investigate.response.json` (incident detail shape, 200) |
 | POST | `/api/v1/simulations` | `simulation.request.json` | `simulation.response.json` (201) |
 | GET | `/api/v1/simulations?status=&asset_id=&limit=&offset=` | none | `simulations.list.response.json` |
 | GET | `/api/v1/simulations/{simulation_id}` | none | `simulation.status.response.json` |
@@ -65,7 +66,7 @@ Error examples are in `error.422.json`, `error.404.json`, `error.409.json` and `
 - `simulation_id` is optional on the request (`null` for non-simulated traffic) and is echoed in the response. It is how predictions and incidents are linked to a run for reset.
 - **Repeated evaluation of the same reading is idempotent.** A prediction is unique per (`asset_id`, `detector_id`, `observed_at`). Posting the same one again returns the stored prediction with `200`, and incident counters don't change.
 - `incident_id` is set when this prediction opened or updated an active incident, and is `null` otherwise. A below-trigger result (`prediction.cooling.normal.response.json`) has `incident_id: null`.
-- `explanation_source` is `rule`, `template` or `rag`. `maintenance_sources` is empty unless retrieval ran.
+- `explanation_source` is `rule`, `template`, `rag` or `agent` (`agent` only on incidents, after `/investigate`). `maintenance_sources` is empty unless retrieval ran.
 - Each detector has its own input schema in `readings`. Cooling and AI4I inputs are never interchangeable. Sending AI4I fields to `cooling-rule-v1` returns `422 INVALID_FEATURES`.
 - An asset whose `compatible_detector` doesn't match `detector_id` returns `422 UNSUPPORTED_DETECTOR`.
 - A model whose artifact isn't trained or loaded returns `503 MODEL_UNAVAILABLE`.
@@ -84,6 +85,8 @@ Error examples are in `error.422.json`, `error.404.json`, `error.409.json` and `
 - `PATCH` body: `{ "status": "acknowledged" | "resolved", "note": string | null }`. The server sets `acknowledged_at`, `resolved_at` and `resolved_by: "operator"`.
 - `notes` items: `{ "note": string, "status": "open" | "acknowledged" | "resolved", "created_at": UTC }`, oldest first. `status` is the state the incident moved to when the note was written. A `PATCH` with a non-null `note` appends one.
 - `impact` is computed server-side: `estimated_downtime_cost = estimated_downtime_hours × cost_per_hour`, and `estimated_total_impact = estimated_downtime_cost + estimated_repair_cost`. Its inputs and `assumptions_source` are always included. React displays these values and never recomputes them.
+- Optional (additive) impact fields: `cost_per_day = cost_per_hour × 24`, and `estimated_repair_hours` (hands-on repair time). Both may be `null`. Assumptions come from `configs/impact_assumptions.json`.
+- **Investigate.** `POST /incidents/{id}/investigate` runs the AI agent (10–30 s) and returns the updated incident. With a Gemini key it sets `explanation_source: "agent"`, and `agent_steps` lists each tool call as `{tool, summary}`. Without a key, or if the call fails, it falls back to `"rag"` and `agent_steps` is `[]`. `agent_steps` is `null` until the incident has been investigated. `maintenance_sources` holds only the records the explanation cites. Actions always need human review.
 - **Editing impact assumptions is deferred past the MVP.** Assumptions come from `configs/` and are shown read-only. A later `PATCH /api/v1/assets/{asset_id}/impact-assumptions` would be an additive change.
 - `priority_index` (0–1) combines the risk level, the asset criticality and the normalized impact using the weights in `priority_weights`. It is a ranking aid, not a financial expectation.
 
