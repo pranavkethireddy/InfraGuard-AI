@@ -15,6 +15,7 @@ def settings(tmp_path) -> Settings:
         drive_model_artifact_path=str(tmp_path / "missing-drive.joblib"),
         drive_metrics_path=str(tmp_path / "missing-drive.json"),
         gemini_api_key=None,  # tests never call Gemini live
+        gemini_api_key_2=None,
     )
 
 

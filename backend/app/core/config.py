@@ -21,10 +21,30 @@ class Settings(BaseSettings):
     drive_metrics_path: str = "ml/artifacts/metrics/drive-failure-v1.json"
     simulation_enabled: bool = True
     simulation_tick_seconds: float = 2.0
+    # Live fleet demo (services/live.py).
+    datacenter_layout_path: str = "configs/datacenter_layout.json"
+    live_tick_seconds: float = 1.0
+    live_history_limit: int = 300
+    auto_investigate: bool = True
     impact_assumptions_path: str = "configs/impact_assumptions.json"
     maintenance_records_path: str = "data/maintenance/records.json"
     gemini_api_key: str | None = None
+    # Optional second key: when one key is rate limited, requests move to the other.
+    gemini_api_key_2: str | None = None
     gemini_model: str = "gemini-3.5-flash"
+    # Tried in order when the main model is rate limited on every key (free-tier quotas are per model).
+    gemini_fallback_models: str = "gemini-3.5-flash-lite,gemini-3.1-flash-lite"
+    # Minimum gap between Gemini requests, shared by all investigations (free-tier rate limits).
+    gemini_min_interval_seconds: float = 4.0
+
+    @property
+    def gemini_keys(self) -> list[str]:
+        return [k for k in dict.fromkeys([self.gemini_api_key, self.gemini_api_key_2]) if k]
+
+    @property
+    def gemini_models(self) -> list[str]:
+        extra = [m.strip() for m in self.gemini_fallback_models.split(",") if m.strip()]
+        return list(dict.fromkeys([self.gemini_model, *extra]))
 
     @property
     def cors_origin_list(self) -> list[str]:

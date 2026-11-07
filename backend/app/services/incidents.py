@@ -46,11 +46,11 @@ def open_or_update(store: Store, pred: PredictionResponse, asset, settings: Sett
         inc.risk_level = pred.risk_level
         inc.evidence = pred.evidence
         return inc
-    assumptions = impact_service.load_assumptions(settings.impact_assumptions_path).get(asset.asset_id)
+    assumptions = impact_service.for_asset(settings.impact_assumptions_path, asset.asset_id, asset.asset_type)
     imp = impact_service.compute(assumptions) if assumptions else None
     title = {
         "cooling-rule-v1": f"Sustained high temperature on {asset.name}",
-        "drive-failure-v1": f"Predicted drive failure within 30 days on {asset.name}",
+        "drive-failure-v1": f"Predicted drive failure within 30 days: {asset.name}",
     }.get(pred.detector_id, f"Elevated failure risk on {asset.name}")
     inc = IncidentDetail(
         incident_id=store.next_id("inc"), asset_id=pred.asset_id, detector_id=pred.detector_id, status="open",

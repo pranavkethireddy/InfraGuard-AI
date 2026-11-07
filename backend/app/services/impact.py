@@ -9,21 +9,32 @@ from pathlib import Path
 from ..schemas.impact import Impact, ImpactAssumptions
 
 
+def _parse(raw: dict, section: str) -> dict[str, ImpactAssumptions]:
+    return {
+        key: ImpactAssumptions(currency=raw["currency"], assumptions_source=raw["assumptions_source"],
+                               cost_per_day=a["cost_per_hour"] * 24, **a)
+        for key, a in raw.get(section, {}).items()
+    }
+
+
 @lru_cache
-def load_assumptions(path: str) -> dict[str, ImpactAssumptions]:
+def _load(path: str) -> tuple[dict[str, ImpactAssumptions], dict[str, ImpactAssumptions]]:
     p = Path(path)
     if not p.is_file():
-        return {}
+        return {}, {}
     raw = json.loads(p.read_text())
-    out = {}
-    for asset_id, a in raw["assets"].items():
-        out[asset_id] = ImpactAssumptions(
-            currency=raw["currency"],
-            assumptions_source=raw["assumptions_source"],
-            cost_per_day=a["cost_per_hour"] * 24,
-            **a,
-        )
-    return out
+    return _parse(raw, "assets"), _parse(raw, "asset_type_defaults")
+
+
+def load_assumptions(path: str) -> dict[str, ImpactAssumptions]:
+    """Per-asset entries only."""
+    return _load(path)[0]
+
+
+def for_asset(path: str, asset_id: str, asset_type: str) -> ImpactAssumptions | None:
+    """The asset's own entry, else the default for its asset type, else None."""
+    per_asset, per_type = _load(path)
+    return per_asset.get(asset_id) or per_type.get(asset_type)
 
 
 def compute(a: ImpactAssumptions) -> Impact:
@@ -36,5 +47,6 @@ def compute(a: ImpactAssumptions) -> Impact:
 
 
 def max_total_impact(path: str) -> float:
-    totals = [compute(a).estimated_total_impact for a in load_assumptions(path).values()]
+    per_asset, per_type = _load(path)
+    totals = [compute(a).estimated_total_impact for a in [*per_asset.values(), *per_type.values()]]
     return max(totals, default=0.0)

@@ -26,15 +26,26 @@ def _index(path: str):
     return raw["source_name"], records, vec, matrix
 
 
+def _same_kind(asset_id: str) -> set[str | None]:
+    """The asset itself, site-wide records (None) and other assets of the same type: a CRAC unit can
+    learn from another CRAC unit's repairs. Each hit keeps its own asset_id, so citations stay honest."""
+    from .assets import all_assets
+
+    assets = all_assets()
+    kind = assets[asset_id].asset_type if asset_id in assets else None
+    return {asset_id, None} | {a for a, x in assets.items() if kind and x.asset_type == kind}
+
+
 def search(req: MaintenanceSearchRequest, path: str) -> MaintenanceSearchResponse:
     source, records, vec, matrix = _index(path)
     scores = (matrix @ vec.transform([req.query]).T).toarray().ravel()
+    allowed = _same_kind(req.asset_id) if req.asset_id else None
     hits = []
     for i in scores.argsort()[::-1]:
         r = records[i]
         if scores[i] < MIN_SCORE:
             break
-        if req.asset_id and r["asset_id"] not in (req.asset_id, None):
+        if allowed is not None and r["asset_id"] not in allowed:
             continue
         hits.append(MaintenanceSource(record_id=r["record_id"], asset_id=r["asset_id"], recorded_at=r["recorded_at"],
                                       source_name=source, excerpt=r["text"][:400], score=round(float(scores[i]), 4)))
