@@ -6,5 +6,6 @@
   "readings": {
     "temperature_c": 35.0,
     "fan_speed_rpm": 850
-  }
+  },
+  "simulation_id": "sim-demo-001"
 }

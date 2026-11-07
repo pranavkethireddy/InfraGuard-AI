@@ -39,45 +39,64 @@ All numbers in fixtures are **illustrative**. They are not measured results and 
 | GET | `/api/v1/assets/{asset_id}` | none | `asset.detail.response.json` |
 | GET | `/api/v1/assets/{asset_id}/readings?start=&end=&limit=` | none | `asset.readings.response.json` |
 | POST | `/api/v1/readings` | `readings.request.json` | `readings.response.json` (201) |
-| POST | `/api/v1/predictions` | `prediction.cooling.request.json`, `prediction.industrial.request.json` | `prediction.cooling.response.json`, `prediction.industrial.response.json` (201) |
-| GET | `/api/v1/models` | none | `models.list.response.json` |
-| GET | `/api/v1/incidents?status=&asset_id=&limit=&offset=` | none | `incidents.list.response.json` |
-| GET | `/api/v1/incidents/{incident_id}` | none | `incident.detail.response.json` |
-| PATCH | `/api/v1/incidents/{incident_id}` | `incident.patch.request.json` | `incident.detail.response.json` shape |
+| POST | `/api/v1/predictions` | `prediction.cooling.request.json`, `prediction.industrial.request.json` | `prediction.cooling.response.json` (triggered), `prediction.cooling.normal.response.json` (no incident), `prediction.industrial.response.json` (201, or 200 on an idempotent repeat) |
+| GET | `/api/v1/models` | none | `models.list.response.json`; one evaluated entry: `model.evaluated.example.json` |
+| GET | `/api/v1/incidents?status=&asset_id=&limit=&offset=` | none | `incidents.list.response.json`, `incidents.list.empty.response.json` |
+| GET | `/api/v1/incidents/{incident_id}` | none | `incident.detail.response.json` (open), `incident.resolved.response.json` (resolved, with notes) |
+| PATCH | `/api/v1/incidents/{incident_id}` | `incident.patch.request.json` | incident detail shape |
 | POST | `/api/v1/simulations` | `simulation.request.json` | `simulation.response.json` (201) |
+| GET | `/api/v1/simulations?status=&asset_id=&limit=&offset=` | none | `simulations.list.response.json` |
+| GET | `/api/v1/simulations/{simulation_id}` | none | `simulation.status.response.json` |
 | POST | `/api/v1/simulations/{simulation_id}/reset` | none | `simulation.reset.response.json` |
-| POST | `/api/v1/maintenance/search` | `maintenance.search.request.json` | `maintenance.search.response.json` |
+| POST | `/api/v1/maintenance/search` | `maintenance.search.request.json` | `maintenance.search.response.json`, `maintenance.search.no_evidence.response.json` |
 
 Error examples are in `error.422.json`, `error.404.json`, `error.409.json` and `error.503.json`.
 
 ### Lists, pagination and time filters
 
 - Paginated lists return `{ "items": [...], "total": n, "limit": n, "offset": n }`. The default `limit` is 50 and the maximum is 200.
+- An empty list is a normal `200` with `items: []` and `total: 0`, never a `404`.
 - Reading history uses `start` (inclusive) and `end` (exclusive), both UTC. With no `start`, the last 24 h are returned. Results are ordered by `observed_at` ascending and capped by `limit` (default 500, max 2000).
 
 ### Predictions
 
 - `risk_score` is a number in `[0, 1]`. `score_kind` says how to read it. A `heuristic` score must never be labelled a probability in the UI.
 - `risk_level` comes from detector-specific thresholds in `configs/`. `GET /models` publishes them.
-- `incident_id` is set when this prediction opened or updated an active incident, and is `null` otherwise.
+- `simulation_id` is optional on the request (`null` for non-simulated traffic) and is echoed in the response. It is how predictions and incidents are linked to a run for reset.
+- **Repeated evaluation of the same reading is idempotent.** A prediction is unique per (`asset_id`, `detector_id`, `observed_at`). Posting the same one again returns the stored prediction with `200`, and incident counters don't change.
+- `incident_id` is set when this prediction opened or updated an active incident, and is `null` otherwise. A below-trigger result (`prediction.cooling.normal.response.json`) has `incident_id: null`.
 - `explanation_source` is `rule`, `template` or `rag`. `maintenance_sources` is empty unless retrieval ran.
 - Each detector has its own input schema in `readings`. Cooling and AI4I inputs are never interchangeable. Sending AI4I fields to `cooling-rule-v1` returns `422 INVALID_FEATURES`.
 - An asset whose `compatible_detector` doesn't match `detector_id` returns `422 UNSUPPORTED_DETECTOR`.
 - A model whose artifact isn't trained or loaded returns `503 MODEL_UNAVAILABLE`.
 
+### Models and metrics
+
+- `metrics` is `null` unless `evaluation_status` is `"evaluated"`. The UI shows "not evaluated" for `null`.
+- When present, `metrics` is copied from `ml/artifacts/metrics/<detector_id>.json` and is never typed in by hand. Shape: `split`, `evaluated_at`, `dataset_version`, `seed`, `n`, `positives`, `threshold`, `threshold_selection`, `precision`, `recall`, `f1`, `pr_auc`, `roc_auc | null`, `brier | null`, `calibrated`, `confusion_matrix {tp, fp, tn, fn}`, `baseline {name, pr_auc, f1}`, `metrics_file`. See `model.evaluated.example.json`. Its numbers are placeholders, not results.
+
 ### Incidents
 
-- One active (`open` or `acknowledged`) incident per (`asset_id`, `detector_id`). Repeated triggering predictions update `last_seen_at` and `prediction_count` instead of creating new incidents.
+- One active (`open` or `acknowledged`) incident per (`asset_id`, `detector_id`). Each new triggering prediction (a distinct `observed_at`) updates `last_seen_at` and `prediction_count` instead of creating a new incident.
+- After an incident is resolved, the cooling rule needs `cooldown_readings` below-threshold readings before it can open a new one, so the incident doesn't immediately reopen.
+- An incident's `simulation_id` is taken from the prediction that opened it.
 - Allowed transitions: `open → acknowledged`, `open → resolved`, `acknowledged → resolved`. Any other transition returns `409 INVALID_TRANSITION`.
-- `PATCH` body: `{ "status": "acknowledged" | "resolved", "note": string | null }`. The server sets `acknowledged_at` and `resolved_at`.
+- `PATCH` body: `{ "status": "acknowledged" | "resolved", "note": string | null }`. The server sets `acknowledged_at`, `resolved_at` and `resolved_by: "operator"`.
+- `notes` items: `{ "note": string, "status": "open" | "acknowledged" | "resolved", "created_at": UTC }`, oldest first. `status` is the state the incident moved to when the note was written. A `PATCH` with a non-null `note` appends one.
 - `impact` is computed server-side: `estimated_downtime_cost = estimated_downtime_hours × cost_per_hour`, and `estimated_total_impact = estimated_downtime_cost + estimated_repair_cost`. Its inputs and `assumptions_source` are always included. React displays these values and never recomputes them.
+- **Editing impact assumptions is deferred past the MVP.** Assumptions come from `configs/` and are shown read-only. A later `PATCH /api/v1/assets/{asset_id}/impact-assumptions` would be an additive change.
 - `priority_index` (0–1) combines the risk level, the asset criticality and the normalized impact using the weights in `priority_weights`. It is a ranking aid, not a financial expectation.
 
 ### Simulations
 
-- `scenario` is `normal` or `cooling_anomaly`. The same `seed` always produces the same readings.
-- The simulator (owned by @sohaswin) posts readings through `POST /readings`, then calls `POST /predictions`. Simulations use the same validation and incident path as any other reading.
-- Reset stops the run, deletes that run's readings and predictions, resolves its incidents with `resolved_by: "reset"`, and clears detector persistence counters, so the demo can be rerun.
+- `scenario` is `normal` or `cooling_anomaly`. The same `seed` always produces the same reading **values**. Timestamps are the real emission times.
+- **Who runs it.** `POST /simulations` makes the backend start the run in a background thread, so the browser only talks to FastAPI. The sample values come from @sohaswin's generator in `simulator/`. Proposed interface: `generate(scenario: str, seed: int, asset_id: str) -> list[dict[str, float]]`, a pure function with no I/O and no clock. Each sample goes through the same services as `POST /readings` and then `POST /predictions`, with `data_origin: "simulated"` and the run's `simulation_id`.
+- The same generator can run standalone from a CLI (`python -m simulator ...`) that posts to the HTTP API with a `simulation_id` it was given. This is for testing and rehearsal.
+- **Cadence and duration.** One sample every `tick_seconds` (default 2, set in `configs/`). The run lasts `samples_total` samples, which is the length of the generator's list.
+- **Status.** `running` until the last sample is emitted, then `completed`, with `completed_at` set. Reset sets the status to `reset` at any time. There is no separate stop: reset stops the run.
+- At most one `running` simulation per asset. A second start returns `409 SIMULATION_ALREADY_RUNNING`.
+- **Recovery after reload.** `GET /simulations?status=running` (or with `asset_id=`) finds the active run. `GET /simulations/{id}` returns its progress (`samples_emitted` / `samples_total`).
+- **Reset.** Stops the thread, deletes the run's readings and predictions (matched by `simulation_id`), resolves its active incidents with `resolved_by: "reset"`, and clears the rule's persistence and cooldown state for that asset. The demo can then be rerun. Resetting a run that is already reset is idempotent: `200` with zero counts.
 
 ### Error codes
 

@@ -29,5 +29,6 @@
     "Trained on the synthetic AI4I benchmark; not validated for facility equipment.",
     "Score is not a calibrated probability."
   ],
-  "incident_id": null
+  "incident_id": null,
+  "simulation_id": null
 }

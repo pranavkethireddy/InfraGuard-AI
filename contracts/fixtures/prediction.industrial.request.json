@@ -10,5 +10,6 @@
     "rotational_speed_rpm": 1410,
     "torque_nm": 65.7,
     "tool_wear_min": 191
-  }
+  },
+  "simulation_id": null
 }

@@ -45,7 +45,8 @@
     "limitations": [
       "Rule thresholds are demo assumptions, not facility safety specifications."
     ],
-    "incident_id": "inc-demo-001"
+    "incident_id": "inc-demo-001",
+    "simulation_id": "sim-demo-001"
   },
   "evidence": [
     {

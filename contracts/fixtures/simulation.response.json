@@ -5,5 +5,9 @@
   "seed": 42,
   "status": "running",
   "data_origin": "simulated",
-  "started_at": "2026-11-07T19:55:00Z"
+  "started_at": "2026-11-07T19:55:00Z",
+  "completed_at": null,
+  "tick_seconds": 2.0,
+  "samples_total": 30,
+  "samples_emitted": 0
 }
