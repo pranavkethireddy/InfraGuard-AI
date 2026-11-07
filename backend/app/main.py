@@ -10,11 +10,13 @@ from .api.v1 import health
 from .api.v1.router import api_router
 from .core.config import APP_VERSION, Settings, get_settings
 from .core.errors import REQUEST_ID_HEADER, install_error_handlers
+from .services.store import Store
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     app = FastAPI(title="InfraGuard AI API", version=APP_VERSION)
+    app.state.store = Store()
     install_error_handlers(app)
     app.add_middleware(
         CORSMiddleware,
