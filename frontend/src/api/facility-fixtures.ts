@@ -1,0 +1,10 @@
+import map from './fixtures/contracts/fleet.map.facility.response.json';
+import status from './fixtures/contracts/fleet.status.facility.response.json';
+import rack from './fixtures/contracts/fleet.rack.facility.response.json';
+import floor from './fixtures/contracts/ops.floor.facility.response.json';
+import type { FleetMap, FleetStatus, RackDetail } from './fleet-types';
+import type { FloorPlan } from './ops-types';
+import type { Widen } from './fixtures';
+const checks: [Widen<FleetMap>, Widen<FleetStatus>, Widen<RackDetail>, Widen<FloorPlan>] = [map, status, rack, floor];
+void checks;
+export const facilityFixtures = { map: map as unknown as FleetMap, status: status as unknown as FleetStatus, rack: rack as unknown as RackDetail, floor: floor as FloorPlan };

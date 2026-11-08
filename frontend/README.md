@@ -26,6 +26,10 @@ Vite preserves the `/api` prefix and proxies requests and EventSource streams to
 
 ## Fixtures
 
+The approved PR80/81 facility fixtures are preserved byte-for-byte alongside earlier fixtures. Datacenter map/status/floor use six returned halls and 170 equipment records; rack `A1-01` has the approved nullable PDU/ToR snapshot, while previously approved rack fixtures remain available. No asset-detail or incident response is manufactured from map data.
+
+`/fleet/equipment/:id?site=datacenter|mining` inspects actual returned inventory with latest readings, native units, history and incident/rack/server links. Overview and Live fleet retain world-coordinate technician routes with a focused hall map and searchable category/room equipment list. Rack pages and inline investigation display returned `pdu_id`/`tor_id` and independent nullable `pdu`/`tor` records, not inferred relationships or additional rack machine counts. Facility fault controls are collapsed; all 21 kinds follow the read-only FACILITY compatibility reference and POST only after explicit selection and injection. Native `flow_lps` is L/s and `pressure_kpa` is kPa, never converted to L/min or bar; absent/unknown units say Not provided.
+
 `src/api/fixtures/contracts/*.json` are exact approved copies of `contracts/fixtures/`; GPU PR47 and floor/pager PR49 are merged on public main. Pager claim/walking/action and stream examples are test-only; the fixture pager displays a clearly labelled static paged snapshot, never a fake executed action.
 `src/api/fixtures/index.ts` checks them against the TypeScript contracts at compile time; `src/test/fixtures.test.ts` checks enum values at runtime.
 `model.evaluated.example.json` is used only in tests and is never displayed as a measured result.

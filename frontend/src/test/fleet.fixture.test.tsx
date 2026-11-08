@@ -8,7 +8,13 @@ it('disables every fleet mutation in fixture mode, including snapshot running st
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={qc}><FleetPage site="datacenter" onSiteChange={() => {}} /></QueryClientProvider>);
   await waitFor(() => expect(screen.getByText(/Loop: running/)).toBeInTheDocument());
-  for (const name of ['Start live loop', 'Stop live loop', 'Inject 3 faults', 'Clear fleet']) expect(screen.getByRole('button', { name })).toBeDisabled();
+  // Scope to the returned buttons once; repeated full-tree accessible-name scans
+  // are expensive now that the approved facility contains 170 inspectable machines.
+  const controls = screen.getAllByRole('button');
+  for (const name of ['Start live loop', 'Stop live loop', 'Inject 3 faults', 'Clear fleet']) {
+    const control = controls.find((b) => b.textContent === name);
+    expect(control).toBeDefined(); expect(control).toBeDisabled();
+  }
 });
 it('disables targeted server fault mutations in fixture preview', async () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });

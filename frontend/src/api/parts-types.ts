@@ -22,4 +22,4 @@ export function metricUnit(metric: string): string | null {
 }
 export const serverPath = (id: string) => `/fleet/servers/${encodeURIComponent(id)}`;
 export const componentPath = (id: string, cid: string) => `${serverPath(id)}/components/${encodeURIComponent(cid)}`;
-export const rackPath = (id: string) => `/fleet/racks/${encodeURIComponent(id)}`;
+export const rackPath = (id: string, site?: string) => `/fleet/racks/${encodeURIComponent(id)}${site ? `?site=${encodeURIComponent(site)}` : ''}`;

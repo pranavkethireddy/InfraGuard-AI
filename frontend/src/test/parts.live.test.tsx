@@ -95,7 +95,9 @@ it('uses only the actual returned rack machines, server IDs, cooling and inciden
   h.fetch.mockImplementation(async () => json(fleetFixtures.rack)); mount(<RackPage id={fleetFixtures.rack.rack_id} />);
   const link = await screen.findByRole('link', { name: 'Open rack A1-03' }); expect(link).toHaveAttribute('href', '/fleet/racks/A1-03');
   for (const id of fleetFixtures.rack.server_ids ?? []) expect(screen.getAllByRole('link', { name: id })[0]).toHaveAttribute('href', serverPath(id));
-  expect(screen.queryByText(/PDU|ToR/)).not.toBeInTheDocument(); expect(h.fetch.mock.calls[0]?.[0]).toBe('/api/v1/fleet/racks/A1-03?history=30');
+  expect(screen.queryByRole('region', { name: /Equipment details/ })).not.toBeInTheDocument();
+  expect(screen.getAllByText('Not reported').length).toBeGreaterThanOrEqual(2);
+  expect(h.fetch.mock.calls[0]?.[0]).toBe('/api/v1/fleet/racks/A1-03?history=30');
 });
 it.each(['memory_fault','nic_failure','server_fan_failure'])('POSTs exact merged %s kind only on click and locks duplicates', async (kind) => {
   let finish: ((r: Response) => void) | undefined;

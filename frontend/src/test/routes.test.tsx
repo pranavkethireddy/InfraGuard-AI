@@ -25,6 +25,7 @@ describe("routes (react-router-dom)", () => {
     ["/assets/cooling-01", "CRAC Unit 1"], ["/incidents/inc-demo-001", "Sustained high temperature on CRAC Unit 1"],
     ["/fleet/servers/srv-A1-01-1/components/fan5", "Fan 5"], ["/fleet/racks/A1-03", "Rack A1-03"],
     ["/fleet/servers/srv-A1-01-1", "Server srv-A1-01-1"],
+    ["/fleet/equipment/ups-01", "UPS A"], ["/fleet/racks/A1-01", "Rack A1-01"],
     ["/servers/srv-B1-04-3?gpu=7", "Rack B1-04, GPU Server 3"],
   ])("%s renders %s heading", async (path, heading) => {
     renderAt(path);

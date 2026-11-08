@@ -4,7 +4,7 @@ export type RiskLevel = "low" | "medium" | "high";
 export type DataOrigin = "simulated" | "observed";
 export type ScoreKind = "heuristic" | "model_score" | "calibrated_probability";
 export type IncidentStatus = "open" | "acknowledged" | "resolved";
-export type AssetType = "cooling_unit" | "industrial_machine" | "storage_drive" | "asic_miner" | "mining_container" | "gpu_server";
+export type AssetType = "cooling_unit" | "industrial_machine" | "storage_drive" | "asic_miner" | "mining_container" | "gpu_server" | "ups" | "generator" | "ats" | "pdu" | "chiller" | "cdu" | "env_sensor" | "network_switch" | "smoke_detector" | "fire_suppression" | "access_control";
 export type ExplanationSource = "rule" | "template" | "rag" | "agent";
 
 export interface Paginated<T> {
