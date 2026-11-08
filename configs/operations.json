@@ -1,0 +1,50 @@
+{
+  "_note": "Demo operations model for InfraGuard AI: crew, windows, time scale, thermal shutdown limits and power prices. All values are labelled demo assumptions, not measured; people are fictional.",
+  "assumptions_source": "demo assumption (configs/operations.json), not measured",
+  "demo_minutes_per_tick": 2,
+  "timezone": "America/Chicago",
+  "travel_minutes": 10,
+  "overtime_multiplier": 1.5,
+  "projection_hours": 12,
+  "thermal": {
+    "rack_shutdown_c": 42.0,
+    "restart_hours": 1.0,
+    "rise_c_per_hour": 3.0,
+    "mitigated_rise_factor": 0.25,
+    "mitigation_cost_per_hour": 80.0,
+    "mitigation": "Move workload off the affected racks and raise airflow on the neighbouring cooling unit"
+  },
+  "miner": {
+    "chip_shutdown_c": 95.0,
+    "fan_fault_rise_c_per_hour": 6.0,
+    "mitigated_rise_factor": 0.2,
+    "underclock_hashrate_factor": 0.7,
+    "mitigation": "Underclock the miner to cut heat until the fan is replaced"
+  },
+  "sites": {
+    "datacenter": {
+      "window": {"kind": "maintenance_window", "label": "Nightly maintenance window", "start_hour": 2, "end_hour": 5}
+    },
+    "mining": {
+      "window": {"kind": "curtailment", "label": "Power-price curtailment window"},
+      "power_price_source": "demo assumption shaped like a Texas summer day-ahead curve, not real market data",
+      "power_price_usd_per_mwh": [32, 30, 28, 27, 27, 29, 35, 42, 45, 48, 55, 65, 80, 98, 125, 160, 210, 240, 185, 120, 75, 52, 40, 35]
+    }
+  },
+  "technicians": [
+    {"technician_id": "tech-01", "name": "Maya Ortiz", "role": "HVAC mechanic", "site": "datacenter", "skills": ["cooling_unit"], "rate_per_hour": 95.0, "home": "hall-a"},
+    {"technician_id": "tech-02", "name": "Dev Patel", "role": "Data center technician", "site": "datacenter", "skills": ["storage_drive"], "rate_per_hour": 70.0, "home": "hall-a"},
+    {"technician_id": "tech-03", "name": "Sam Rivera", "role": "Data center technician", "site": "datacenter", "skills": ["storage_drive", "cooling_unit"], "rate_per_hour": 75.0, "home": "hall-b"},
+    {"technician_id": "tech-04", "name": "Ana Brooks", "role": "Millwright", "site": "datacenter", "skills": ["industrial_machine"], "rate_per_hour": 90.0, "home": "plant"},
+    {"technician_id": "tech-05", "name": "Leo Kim", "role": "Mining technician", "site": "mining", "skills": ["asic_miner"], "rate_per_hour": 55.0, "home": "container-1"},
+    {"technician_id": "tech-06", "name": "Rosa Nguyen", "role": "Mining technician", "site": "mining", "skills": ["asic_miner", "cooling_unit"], "rate_per_hour": 60.0, "home": "container-2"},
+    {"technician_id": "tech-07", "name": "Omar Haddad", "role": "HVAC mechanic", "site": "mining", "skills": ["cooling_unit"], "rate_per_hour": 90.0, "home": "container-1"}
+  ],
+  "routine_jobs": [
+    {"technician_id": "tech-01", "title": "Quarterly filter change, Hall B CRAC units", "hall_id": "hall-b", "hours": 6.0, "delay_cost_per_hour": 5.0},
+    {"technician_id": "tech-02", "title": "Firmware update, Row A1 drives", "hall_id": "hall-a", "hours": 4.0, "delay_cost_per_hour": 2.0},
+    {"technician_id": "tech-04", "title": "Spindle lubrication, plant room", "hall_id": "plant", "hours": 3.0, "delay_cost_per_hour": 10.0},
+    {"technician_id": "tech-05", "title": "Dust cleaning, Row M3 miners", "hall_id": "container-2", "hours": 5.0, "delay_cost_per_hour": 4.0},
+    {"technician_id": "tech-07", "title": "Fan wall belt inspection, Container 2", "hall_id": "container-2", "hours": 4.0, "delay_cost_per_hour": 3.0}
+  ]
+}

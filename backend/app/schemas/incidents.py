@@ -27,7 +27,7 @@ class IncidentSummary(ContractModel):
     last_seen_at: AwareDatetime
     acknowledged_at: AwareDatetime | None
     resolved_at: AwareDatetime | None
-    resolved_by: Literal["operator", "reset"] | None
+    resolved_by: Literal["operator", "reset", "technician"] | None
     prediction_count: int = Field(ge=1)
     simulation_id: str | None
     priority_index: float | None = Field(ge=0, le=1)
@@ -56,6 +56,8 @@ class IncidentDetail(IncidentSummary):
     # Set by the investigation (additive): the problem in one sentence and its likely cause.
     problem: str | None = None
     likely_cause: str | None = None
+    # Open or last work order for this incident (additive; see /ops).
+    work_order_id: str | None = None
 
 
 class IncidentPatchRequest(ContractModel):

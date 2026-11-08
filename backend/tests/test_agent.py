@@ -28,7 +28,7 @@ def test_fallback_without_key_uses_tools_and_real_numbers(client):
     d = IncidentDetail.model_validate(client.post(f"/api/v1/incidents/{open_cooling_incident(client)}/investigate").json())
     assert d.explanation_source == "rag"
     assert [s.tool for s in d.agent_steps] == ["get_incident", "get_recent_readings", "estimate_impact",
-                                               "search_maintenance", "get_model_card"]
+                                               "search_maintenance", "get_model_card", "search_learned_cases"]
     assert "$12,000 per hour ($288,000 per day)" in d.explanation
     # Business case: $48,000 downtime + $3,500 unplanned repair if it fails, vs $900 planned now.
     assert "$51,500" in d.explanation and "$900" in d.explanation and "$50,600" in d.explanation

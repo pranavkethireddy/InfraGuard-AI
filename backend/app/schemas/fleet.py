@@ -30,6 +30,19 @@ class HistoryPoint(ContractModel):
     values: dict[str, ReadingValue]
 
 
+PowerState = Literal["on", "at_risk", "off"]
+
+
+class WorkOrderBrief(ContractModel):
+    work_order_id: str
+    technician_id: str
+    technician_name: str
+    status: Literal["scheduled", "traveling", "in_progress", "paused", "done"]
+    option: Literal["fix_now", "wait_for_window", "buy_time"] | None
+    progress: float = Field(ge=0, le=1)
+    eta_minutes: float | None
+
+
 class IncidentBrief(ContractModel):
     incident_id: str
     title: str
@@ -66,6 +79,12 @@ class MachineStatus(ContractModel):
     active_incident: IncidentBrief | None
     simulated_fault: FaultInfo | None
     history: list[HistoryPoint]
+    # Additive: off = thermal shutdown (no readings while off); at_risk = projected to shut down within
+    # the projection horizon; shutdown_eta_minutes is demo minutes from the observed trend.
+    power_state: PowerState = "on"
+    power_reason: str | None = None
+    shutdown_eta_minutes: float | None = None
+    work_order: WorkOrderBrief | None = None
 
 
 class RackStatus(ContractModel):
@@ -82,6 +101,8 @@ class RackStatus(ContractModel):
     cooled_by: list[str]
     machine_ids: list[str]
     open_incident_ids: list[str]
+    power_state: PowerState = "on"
+    shutdown_eta_minutes: float | None = None
 
 
 class HallMap(ContractModel):
@@ -108,6 +129,8 @@ class FleetSummary(ContractModel):
     currency: str
     assumptions_source: str | None
     # Business case over unresolved incidents (additive): what they cost if they fail vs fixing them now.
+    machines_powered_off: int = 0
+    machines_at_risk_of_shutdown: int = 0
     cost_if_all_fail: float = 0.0
     cost_to_fix_all_now: float = 0.0
     savings_if_fixed_now: float = 0.0

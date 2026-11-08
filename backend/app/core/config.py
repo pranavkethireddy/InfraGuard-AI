@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     mining_layout_path: str = "configs/mining_layout.json"
     # Daily Bitcoin hashprice (CloudMineCrypto open data, CC BY 4.0); prices lost mining revenue.
     hashprice_data_path: str = "data/market/hashprice_daily.csv"
+    # Crew, windows, demo clock and thermal limits (services/ops.py, services/whatif.py).
+    operations_path: str = "configs/operations.json"
+    # Learned repair cases; survives restarts and /fleet/clear. Not committed.
+    learned_cases_path: str = "backend/var/learned_cases.json"
     live_tick_seconds: float = 1.0
     live_history_limit: int = 300
     auto_investigate: bool = True

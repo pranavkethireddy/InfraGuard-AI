@@ -67,6 +67,19 @@ class FleetTests(unittest.TestCase):
             self.assertLess(fan["fan_speed_rpm"], 1000)
             self.assertGreater(fan["chip_temp_c"], 88)
 
+    def test_cooling_and_fan_faults_escalate_past_full_signature_others_clamp(self):
+        p, r = fleet.profile("cooling_unit", "c", 42), fleet.rng_for(42, "c")
+        t1 = fleet.sample("cooling_unit", p, 0, r, 1.0)["temperature_c"]
+        t2 = fleet.sample("cooling_unit", p, 0, r, 1.5)["temperature_c"]
+        self.assertGreater(t2 - t1, 5)
+        m = fleet.profile("asic_miner", "m", 42)
+        hot = fleet.sample("asic_miner", m, 0, fleet.rng_for(42, "m"), 1.5, "fan_failure")
+        self.assertGreater(hot["chip_temp_c"], 100)
+        self.assertGreaterEqual(hot["fan_speed_rpm"], 0)
+        d = fleet.profile("storage_drive", "d", 42)
+        self.assertEqual(fleet.sample("storage_drive", d, 0, fleet.rng_for(42, "d"), 1.8)["reallocated_sectors"],
+                         d["reallocated_sectors"] + 5000)
+
     def test_every_type_has_a_fault_kind(self):
         self.assertEqual(set(fleet.FAULT_KINDS), set(TYPES))
         self.assertEqual(set(fleet.FAULT_CHOICES), set(TYPES))

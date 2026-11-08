@@ -34,6 +34,10 @@ FAULT_TICKS = {
     "fan_failure": (5, 30, 5),
     "hashboard_failure": (3, 37, 0),
 }
+# Faults that keep getting worse while nobody fixes them: degrees added per unit of progress above 1.
+# Progress may go up to MAX_ESCALATION for these (the backend drives it from configs/operations.json).
+ESCALATING = {"cooling_failure": 13.0, "fan_failure": 28.0}
+MAX_ESCALATION = 2.0
 # ASIC miner spec-sheet-class demo values (about 200 TH/s at 3.5 kW); must match configs/mining_layout.json.
 MINER_RATED_THS = 200.0
 MINER_RATED_W = 3500.0
@@ -83,11 +87,14 @@ def sample(asset_type: str, prof: dict, tick: int, rng: random.Random, progress:
            kind: str | None = None) -> dict:
     """One reading for one machine. progress is the fault severity (0 healthy, 1 full failure signature);
     kind picks the signature for types with several faults (default FAULT_KINDS[asset_type])."""
-    p = min(max(progress, 0.0), 1.0)
+    cap = MAX_ESCALATION if (kind or FAULT_KINDS.get(asset_type)) in ESCALATING else 1.0
+    p = min(max(progress, 0.0), cap)
     wave = math.sin(tick / 6 + prof["phase"])
     if asset_type == "cooling_unit":
+        # Cooling escalates past progress 1 (kept by cap above); everything else is clamped to 1 below.
         return {"temperature_c": round(prof["setpoint_c"] + 0.8 * wave + rng.uniform(-0.3, 0.3) + 13.0 * p, 2),
-                "fan_speed_rpm": round(prof["fan_rpm"] + 25 * wave + rng.uniform(-20, 20) - 380 * p, 1)}
+                "fan_speed_rpm": round(max(0.0, prof["fan_rpm"] + 25 * wave + rng.uniform(-20, 20) - 380 * p), 1)}
+    p = min(p, 1.0) if asset_type != "asic_miner" else p
     if asset_type == "storage_drive":
         return {"reallocated_sectors": prof["reallocated_sectors"] + round(5000 * p),
                 "reported_uncorrectable": round(300 * p), "command_timeout": 0,
@@ -110,10 +117,10 @@ def sample(asset_type: str, prof: dict, tick: int, rng: random.Random, progress:
 def miner_sample(prof: dict, wave: float, rng: random.Random, p: float, kind: str) -> dict:
     """ASIC miner reading. kind picks the fault signature; p is its severity."""
     fan = p if kind == "fan_failure" else 0.0
-    board = p if kind == "hashboard_failure" else 0.0
-    ths = MINER_RATED_THS * prof["eff"] * (1 - board / 3) * (1 - 0.25 * fan)
+    board = min(p, 1.0) if kind == "hashboard_failure" else 0.0
+    ths = MINER_RATED_THS * prof["eff"] * (1 - board / 3) * (1 - 0.25 * min(fan, 1.0))
     return {"hashrate_ths": round(ths + 2.5 * wave + rng.uniform(-2, 2), 1), "rated_hashrate_ths": MINER_RATED_THS,
             "chip_temp_c": round(prof["chip_c"] + 1.5 * wave + rng.uniform(-0.8, 0.8) + 28 * fan, 1),
-            "fan_speed_rpm": round((prof["fan_rpm"] + 120 * wave + rng.uniform(-60, 60)) * (1 - 0.9 * fan)),
-            "power_w": round(MINER_RATED_W * (1 - board / 3) * (1 - 0.2 * fan) + rng.uniform(-30, 30)),
-            "hw_error_pct": round(max(0.0, 0.02 + rng.uniform(-0.015, 0.015) + 2.0 * board + 0.3 * fan), 3)}
+            "fan_speed_rpm": round((prof["fan_rpm"] + 120 * wave + rng.uniform(-60, 60)) * max(0.0, 1 - 0.9 * min(fan, 1.0))),
+            "power_w": round(MINER_RATED_W * (1 - board / 3) * (1 - 0.2 * min(fan, 1.0)) + rng.uniform(-30, 30)),
+            "hw_error_pct": round(max(0.0, 0.02 + rng.uniform(-0.015, 0.015) + 2.0 * board + 0.3 * min(fan, 1.0)), 3)}

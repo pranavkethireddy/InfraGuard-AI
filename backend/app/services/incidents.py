@@ -94,7 +94,7 @@ def resolve(store: Store, inc: IncidentDetail, by: str, cooldown: int) -> None:
     inc.resolved_at = now()
     inc.resolved_by = by
     st = store.rule_state.get(inc.asset_id)
-    if st is not None and by == "operator":
+    if st is not None and by in ("operator", "technician"):
         st.cooldown_remaining = cooldown
         st.consecutive_above = 0
 

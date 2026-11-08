@@ -11,6 +11,8 @@ from backend.app.schemas.errors import ErrorResponse
 from backend.app.schemas.fleet import (ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus,
                                        LiveStartRequest, LiveStatus, RackDetail, SitesResponse)
 from backend.app.schemas.health import HealthResponse
+from backend.app.schemas.ops import (DispatchRequest, DispatchResponse, LearnedCases, LearningMatrix, PlanResponse,
+                                     TechniciansResponse, WhatIf)
 from backend.app.schemas.incidents import IncidentDetail, IncidentPatchRequest, IncidentSummary
 from backend.app.schemas.maintenance import MaintenanceSearchRequest, MaintenanceSearchResponse
 from backend.app.schemas.models import ModelInfo
@@ -51,6 +53,13 @@ SCHEMAS = {
     "fleet.sites.response.json": SitesResponse,
     "fleet.status.mining.response.json": FleetStatus,
     "incident.miner.response.json": IncidentDetail,
+    "incident.whatif.response.json": WhatIf,
+    "ops.technicians.response.json": TechniciansResponse,
+    "ops.plan.response.json": PlanResponse,
+    "ops.dispatch.request.json": DispatchRequest,
+    "ops.dispatch.response.json": DispatchResponse,
+    "learning.matrix.response.json": LearningMatrix,
+    "learning.cases.response.json": LearnedCases,
     "simulation.request.json": SimulationRequest,
     "simulation.response.json": SimulationResponse,
     "simulation.status.response.json": SimulationResponse,
