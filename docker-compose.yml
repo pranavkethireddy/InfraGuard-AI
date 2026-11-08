@@ -1,0 +1,20 @@
+# One server, one URL: Caddy on port 80 (443 with a domain) serves the app and proxies /api to the backend.
+#   docker compose up -d --build
+services:
+  backend:
+    build: { context: ., dockerfile: deploy/backend.Dockerfile }
+    env_file: [backend/.env]
+    environment:
+      SIMULATION_ENABLED: "true"
+      LIVE_AUTOSTART: "true"
+    restart: unless-stopped
+  web:
+    build: { context: ., dockerfile: deploy/web.Dockerfile }
+    depends_on: [backend]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports: ["80:80", "443:443"]
+    volumes: [caddy_data:/data]
+    restart: unless-stopped
+volumes:
+  caddy_data:

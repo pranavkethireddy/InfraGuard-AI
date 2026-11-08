@@ -4,6 +4,7 @@
 """
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,7 +30,19 @@ def _app_logging() -> None:
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     _app_logging()
-    app = FastAPI(title="InfraGuard AI API", version=APP_VERSION)
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        if settings.live_autostart:
+            from .schemas.fleet import LiveStartRequest
+            from .services import live
+
+            live.start(app.state.store, LiveStartRequest(), settings)
+            yield
+            live.stop(app.state.store, settings)
+        else:
+            yield
+
+    app = FastAPI(title="InfraGuard AI API", version=APP_VERSION, lifespan=lifespan)
     app.state.store = Store()
     install_error_handlers(app)
     app.add_middleware(
