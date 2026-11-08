@@ -156,6 +156,37 @@ def server(info: ModelInfo, readings: dict[str, ReadingValue], state: RuleState)
     return Result(0.5, "medium", False, f"GPU server reading out of limits ({n} of {need} consecutive readings needed): {what}.", ev)
 
 
+def facility(info: ModelInfo, readings: dict[str, ReadingValue], state: RuleState) -> Result:
+    """Facility equipment rules from rule_config: any rule broken for N consecutive readings raises an incident."""
+    import operator
+
+    ops = {"<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge}
+    cfg = info.rule_config
+    need, name = cfg["consecutive_readings"], cfg["name"]
+    units = {f.name: f.unit for f in info.input_fields}
+    v = {k: _num(k, readings[k]) for k in readings}
+    broken = [(high, Evidence(type="sensor_rule", field=f, value=v[f], threshold=thr, unit=units.get(f)), text)
+              for f, op, thr, high, text in cfg["rules"] if f in v and ops[op](v[f], thr)]
+    if broken:
+        state.consecutive_above += 1
+    else:
+        state.consecutive_above = 0
+        state.cooldown_remaining = max(0, state.cooldown_remaining - 1)
+    n = state.consecutive_above
+    first = next(((f, thr) for f, _, thr, _, _ in cfg["rules"] if f in v), None)
+    ev = [e.model_copy(update={"consecutive_readings": n}) for _, e, _ in broken] or (
+        [Evidence(type="sensor_rule", field=first[0], value=v[first[0]], threshold=first[1], unit=units.get(first[0]),
+                  consecutive_readings=0)] if first else [])
+    if not broken:
+        return Result(0.1, "low", False, f"{name} within limits.", ev)
+    what = "; ".join(t for _, _, t in broken)
+    high = any(h for h, _, _ in broken)
+    if n >= need:
+        return Result(0.85 if high else 0.55, "high" if high else "medium", state.cooldown_remaining == 0,
+                      f"{name} fault for {n} consecutive readings: {what}.", ev)
+    return Result(0.5, "medium", False, f"{name} reading out of limits ({n} of {need} consecutive readings needed): {what}.", ev)
+
+
 @lru_cache(maxsize=4)
 def _load(path: str):
     import joblib

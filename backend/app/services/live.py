@@ -33,7 +33,9 @@ from .incidents import now
 from .store import Store
 
 log = logging.getLogger(__name__)
-TYPE_ORDER = ("cooling_unit", "gpu_server", "storage_drive", "asic_miner", "industrial_machine")
+TYPE_ORDER = ("cooling_unit", "gpu_server", "storage_drive", "asic_miner", "industrial_machine", "ups", "pdu",
+              "network_switch", "chiller", "cdu", "generator", "ats", "env_sensor", "smoke_detector", "fire_suppression",
+              "access_control")
 
 
 def _fleet():

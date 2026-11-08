@@ -4,7 +4,8 @@ Two sites: the data center (configs/datacenter_layout.json) and the crypto minin
 (configs/mining_layout.json). Rows are expanded into racks, and each rack into its devices
 (drives or ASIC miners, plus GPU servers where the rack config has "servers"), so the configs stay
 short. Device ids run <prefix>-01, <prefix>-02, ... in hall, row and rack order; GPU servers are
-srv-<rack>-<slot>. A row with a "job" runs one synchronous GPU job across all its servers.
+srv-<rack>-<slot>. Each rack can also have a power strip (pdu-<rack>) and a top-of-rack switch (tor-<rack>),
+which are not counted among the rack's machines. A row with a "job" runs one synchronous GPU job across all its servers.
 """
 
 from __future__ import annotations
@@ -33,6 +34,8 @@ class Rack:
     cooled_by: tuple[str, ...]
     asset_ids: tuple[str, ...]
     server_ids: tuple[str, ...] = ()
+    pdu_id: str | None = None  # the rack's power strip
+    tor_id: str | None = None  # the rack's top-of-rack network switch
 
 
 @dataclass(frozen=True)
@@ -125,11 +128,20 @@ def load(path: str) -> Layout:
                         f"{h['name']}, Row {row['row']}, Rack {rack_id}, {label}",
                         Placement(hall_id=h["hall_id"], row=row["row"], rack_id=rack_id, slot=slot, x=x, y=y))
                     server_ids.append(asset_id)
+                extra = {}
+                for key in ("pdu", "tor"):
+                    eq = rack_cfg.get(key)
+                    if eq:
+                        asset_id = f"{eq['device_prefix']}-{rack_id}"
+                        add(asset_id, f"Rack {rack_id}, {eq['device_label']}", eq["device_type"], eq["device_criticality"],
+                            f"{h['name']}, Row {row['row']}, Rack {rack_id}, {eq['device_label']}",
+                            Placement(hall_id=h["hall_id"], row=row["row"], rack_id=rack_id, slot=None, x=x, y=y))
+                        extra[f"{key}_id"] = asset_id
                 row_servers += server_ids
                 racks[rack_id] = Rack(rack_id=rack_id, hall_id=h["hall_id"], row=row["row"], label=f"Rack {rack_id}",
                                       x=x, y=y, width=rack_cfg["width"], depth=rack_cfg["depth"],
                                       cooled_by=tuple(row["cooled_by"]), asset_ids=tuple(device_ids + server_ids),
-                                      server_ids=tuple(server_ids))
+                                      server_ids=tuple(server_ids), **extra)
                 rack_ids.append(rack_id)
             if row.get("job") and row_servers:
                 jobs[f"job-{row['row']}"] = Job(job_id=f"job-{row['row']}", name=row["job"], row=row["row"],

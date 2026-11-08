@@ -76,7 +76,10 @@
       "site": "datacenter",
       "skills": [
         "cooling_unit",
-        "gpu_server"
+        "gpu_server",
+        "chiller",
+        "cdu",
+        "env_sensor"
       ],
       "rate_per_hour": 95.0,
       "home": "hall-a"
@@ -88,7 +91,10 @@
       "site": "datacenter",
       "skills": [
         "storage_drive",
-        "gpu_server"
+        "gpu_server",
+        "network_switch",
+        "pdu",
+        "access_control"
       ],
       "rate_per_hour": 70.0,
       "home": "hall-a"
@@ -101,7 +107,13 @@
       "skills": [
         "storage_drive",
         "gpu_server",
-        "cooling_unit"
+        "cooling_unit",
+        "ups",
+        "generator",
+        "ats",
+        "pdu",
+        "smoke_detector",
+        "fire_suppression"
       ],
       "rate_per_hour": 75.0,
       "home": "hall-b"
@@ -113,7 +125,11 @@
       "site": "datacenter",
       "skills": [
         "industrial_machine",
-        "gpu_server"
+        "gpu_server",
+        "generator",
+        "ats",
+        "chiller",
+        "cdu"
       ],
       "rate_per_hour": 90.0,
       "home": "plant"

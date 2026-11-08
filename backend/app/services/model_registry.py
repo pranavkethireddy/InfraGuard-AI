@@ -20,7 +20,69 @@ SERVER_PART_FIELDS = (
     ("psu1_w", "W"), ("psu2_w", "W"), ("nic1_link", None), ("nic2_link", None), ("nic_links_up", "links"),
     ("nic_crc_errors", "count"), ("nvme1_wear_pct", "%"), ("nvme2_wear_pct", "%"), ("nvme_temp_c", "C"), ("bmc_ok", None),
 )
-RULE_IDS = (COOLING_RULE_ID, MINER_RULE_ID, SERVER_RULE_ID)
+# Facility equipment: one transparent rule detector per family. Each rule is
+# (reading, op, threshold, high risk?, what it means). Thresholds are demo assumptions, not vendor limits,
+# and match configs/failure_catalog.json.
+FACILITY_RULES: dict[str, dict] = {
+    "ups": {"name": "UPS", "target": "UPS on battery or battery runtime too short to bridge to the generator",
+            "fields": {"load_pct": "%", "runtime_min": "min", "battery_charge_pct": "%", "battery_temp_c": "C",
+                       "input_voltage_v": "V", "output_voltage_v": "V", "on_battery": None},
+            "rules": [("on_battery", ">=", 1, True, "UPS is running on battery: utility power is lost"),
+                      ("runtime_min", "<", 8, True, "battery runtime is below the 8 minutes needed to start the generator"),
+                      ("battery_temp_c", ">", 30, False, "battery is running hot, which shortens its life")]},
+    "generator": {"name": "Generator", "target": "standby generator would fail to start or run out of fuel",
+                  "fields": {"fuel_pct": "%", "start_battery_v": "V", "coolant_temp_c": "C", "last_test_ok": None,
+                             "running": None, "output_kw": "kW"},
+                  "rules": [("start_battery_v", "<", 23, True, "start battery is too weak to crank the engine"),
+                            ("last_test_ok", "<", 1, True, "the last start test failed"),
+                            ("fuel_pct", "<", 40, False, "fuel is below the 24-hour reserve")]},
+    "ats": {"name": "Transfer switch", "target": "automatic transfer switch failed to move the load to the generator",
+            "fields": {"utility_voltage_v": "V", "source": None, "transfer_ok": None, "transfer_time_ms": "ms"},
+            "rules": [("transfer_ok", "<", 1, True, "the switch failed to transfer"),
+                      ("utility_voltage_v", "<", 432, False, "utility voltage is more than 10% below 480 V")]},
+    "pdu": {"name": "Rack PDU", "target": "rack power strip near its breaker limit or badly unbalanced",
+            "fields": {"phase_a_amps": "A", "phase_b_amps": "A", "phase_c_amps": "A", "breaker_rating_amps": "A",
+                       "max_phase_pct": "%", "imbalance_pct": "%", "power_kw": "kW"},
+            "rules": [("max_phase_pct", ">", 80, True, "a phase is above 80% of its breaker rating"),
+                      ("imbalance_pct", ">", 20, False, "phase load is unbalanced by more than 20%")]},
+    "chiller": {"name": "Chiller", "target": "chiller lost cooling capacity or water flow",
+                "fields": {"supply_water_c": "C", "return_water_c": "C", "compressor_amps": "A", "flow_lps": "L/s"},
+                "rules": [("supply_water_c", ">", 12, True, "chilled water is leaving above 12 C"),
+                          ("flow_lps", "<", 20, False, "chilled water flow is low")]},
+    "cdu": {"name": "Coolant distribution unit", "target": "liquid cooling loop leak or pump failure",
+            "fields": {"flow_lps": "L/s", "pressure_kpa": "kPa", "coolant_supply_c": "C", "coolant_return_c": "C",
+                       "leak_detected": None},
+            "rules": [("leak_detected", ">=", 1, True, "the leak sensor tripped"),
+                      ("flow_lps", "<", 1.5, True, "coolant flow is too low to cool the GPUs"),
+                      ("coolant_supply_c", ">", 38, False, "coolant supply is hot")]},
+    "env_sensor": {"name": "Hall environment", "target": "water under the floor or humidity out of range",
+                   "fields": {"temperature_c": "C", "humidity_pct": "%", "dew_point_c": "C", "water_under_floor": None},
+                   "rules": [("water_under_floor", ">=", 1, True, "water detected under the raised floor"),
+                             ("humidity_pct", ">", 70, False, "humidity is above 70%"),
+                             ("humidity_pct", "<", 20, False, "humidity is below 20% (static risk)")]},
+    "network_switch": {"name": "Network switch", "target": "switch links down, failing optics or overheating",
+                       "fields": {"temperature_c": "C", "cpu_pct": "%", "optic_rx_dbm": "dBm", "port_errors_per_min": "count",
+                                  "links_down": "links", "packet_loss_pct": "%"},
+                       "rules": [("links_down", ">", 0, True, "network links are down"),
+                                 ("optic_rx_dbm", "<", -12, False, "an optic's receive power is too low"),
+                                 ("packet_loss_pct", ">", 1, False, "packet loss above 1%"),
+                                 ("temperature_c", ">", 60, False, "switch is overheating")]},
+    "smoke_detector": {"name": "Smoke detection", "target": "smoke detected in the hall",
+                       "fields": {"obscuration_pct_per_m": "%/m", "alarm_level": None},
+                       "rules": [("alarm_level", ">=", 1, True, "smoke detector is in alarm"),
+                                 ("obscuration_pct_per_m", ">", 0.2, False, "smoke is building up (alert level)")]},
+    "fire_suppression": {"name": "Fire suppression", "target": "suppression system would not discharge correctly",
+                         "fields": {"agent_pressure_pct": "%", "armed": None},
+                         "rules": [("armed", "<", 1, True, "suppression panel is disarmed"),
+                                   ("agent_pressure_pct", "<", 90, True, "agent cylinder pressure is below 90%")]},
+    "access_control": {"name": "Door access", "target": "door forced or badge reader failing",
+                       "fields": {"door_held_open_s": "s", "badge_failures_per_min": "count", "forced_open": None},
+                       "rules": [("forced_open", ">=", 1, True, "door was forced open"),
+                                 ("door_held_open_s", ">", 60, False, "door held open over 60 s"),
+                                 ("badge_failures_per_min", ">", 5, False, "badge reads are failing")]},
+}
+FACILITY_RULE_IDS = {t: f"{t.replace('_', '-')}-rule-v1" for t in FACILITY_RULES}
+RULE_IDS = (COOLING_RULE_ID, MINER_RULE_ID, SERVER_RULE_ID, *FACILITY_RULE_IDS.values())
 GPUS_PER_SERVER = 8
 DRIVE_FEATURES = [
     ("reallocated_sectors", "count"), ("reported_uncorrectable", "count"), ("command_timeout", "count"),
@@ -99,6 +161,7 @@ def list_models(settings: Settings) -> list[ModelInfo]:
             ],
         ),
         _drive(settings),
+        *[_facility(t) for t in FACILITY_RULES],
         ModelInfo(
             detector_id=MINER_RULE_ID,
             model_name="miner-rule",
@@ -197,3 +260,17 @@ def _drive(settings: Settings) -> ModelInfo:
         ],
     )
 
+
+
+def _facility(asset_type: str) -> ModelInfo:
+    spec = FACILITY_RULES[asset_type]
+    return ModelInfo(
+        detector_id=FACILITY_RULE_IDS[asset_type], model_name=f"{asset_type.replace('_', '-')}-rule", model_version="1.0.0",
+        kind="rule", asset_types=[asset_type], score_kind="heuristic", target=spec["target"], prediction_horizon_hours=None,
+        input_fields=[InputField(name=n, unit=u, required=False) for n, u in spec["fields"].items()],
+        risk_thresholds=RiskThresholds(medium=0.4, high=0.7),
+        rule_config={"name": spec["name"], "rules": [list(r) for r in spec["rules"]], "consecutive_readings": 2,
+                     "cooldown_readings": 3},
+        status="available", evaluation_status="not_applicable", metrics=None, source_dataset=None, model_card_url=None,
+        limitations=[f"Transparent rule on simulated {spec['name'].lower()} telemetry, not a trained model.",
+                     "Thresholds are demo assumptions, not vendor limits."])
