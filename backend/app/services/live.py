@@ -227,13 +227,20 @@ def inject(store: Store, req: FaultRequest, settings: Settings) -> FaultResponse
             if req.site is not None:
                 from .layout import get_layout
                 pool = {a: assets[a] for a in get_layout(req.site).assets}
+            if req.kind is not None:  # e.g. "a GPU server goes down": only machines that can have that fault
+                pool = {a: x for a, x in pool.items() if req.kind in fleet.FAULT_CHOICES.get(x.asset_type, ())}
             chosen = _pick(store, run, pool, req.count)
             if not chosen:
                 raise ApiError(409, "NO_HEALTHY_ASSETS", "Every machine already has a fault or an open incident; clear first.", {})
         at = now()
         rng = random.Random(f"{run.seed}:kinds:{run.injections}")
+        if req.kind is not None:
+            wrong = [a for a in chosen if req.kind not in fleet.FAULT_CHOICES.get(assets[a].asset_type, ())]
+            if wrong:
+                raise ApiError(422, "FAULT_KIND_NOT_SUPPORTED", f"'{req.kind}' cannot happen on these machines.",
+                               {"asset_ids": wrong, "kind": req.kind})
         for asset_id in chosen:
-            kind = fleet.fault_kind(assets[asset_id].asset_type, rng)
+            kind = req.kind or fleet.fault_kind(assets[asset_id].asset_type, rng)
             run.faults[asset_id] = Fault(asset_id=asset_id, kind=kind, injected_tick=run.ticks, injected_at=at)
         run.injections += 1
         injected = [_fault_info(run, run.faults[a]) for a in chosen]
@@ -376,6 +383,10 @@ def _tick(store: Store, run: LiveRun, settings: Settings) -> None:
         ops.advance(store, settings, off)
     for incident_id in opened:  # page the closest technician (no-op when automatic dispatch is off)
         pager.auto_dispatch(store, settings, incident_id)
+    with store.lock:
+        escalated, store.escalated = [i for i in store.escalated if i not in opened], []
+    for incident_id in escalated:  # got more urgent: page someone now or pull the repair forward
+        pager.escalate(store, settings, incident_id)
 
 
 def _maybe_queue(store: Store, incident_id: str, settings: Settings) -> None:

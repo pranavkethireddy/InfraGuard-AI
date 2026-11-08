@@ -117,13 +117,14 @@ class Toolbox:
 
     def t_diagnose_readings(self, asset_id: str) -> dict:
         with self.store.lock:
-            rows = self.store.readings.get(asset_id, [])
-            latest = dict(rows[-1].reading.values) if rows else None
+            recent = [dict(r.reading.values) for r in self.store.readings.get(asset_id, [])[-60:]]
         try:
             asset_type = asset_service.get_asset(asset_id).asset_type
         except ApiError:
             return {"error": "unknown asset"}
-        return {"likely_cause": diagnosis.likely_cause(asset_type, latest)}
+        # Newest reading that shows a pattern: a fault that has since recovered still names its cause.
+        cause = next((c for v in reversed(recent) if (c := diagnosis.likely_cause(asset_type, v))), None)
+        return {"likely_cause": cause}
 
 
 def _summ(name: str, args: dict, out: dict) -> str:
