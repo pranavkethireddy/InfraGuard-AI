@@ -27,15 +27,20 @@ def test_maintenance_search_cites_records_or_says_no_evidence(client):
 def test_fallback_without_key_uses_tools_and_real_numbers(client):
     d = IncidentDetail.model_validate(client.post(f"/api/v1/incidents/{open_cooling_incident(client)}/investigate").json())
     assert d.explanation_source == "rag"
-    assert [s.tool for s in d.agent_steps] == ["get_incident", "get_model_card", "estimate_impact", "search_maintenance"]
+    assert [s.tool for s in d.agent_steps] == ["get_incident", "get_recent_readings", "estimate_impact",
+                                               "search_maintenance", "get_model_card"]
     assert "$12,000 per hour ($288,000 per day)" in d.explanation
+    # Business case: $48,000 downtime + $3,500 unplanned repair if it fails, vs $900 planned now.
+    assert "$51,500" in d.explanation and "$900" in d.explanation and "$50,600" in d.explanation
+    assert d.impact.cost_if_it_fails == 51500 and d.impact.cost_to_fix_now == 900 and d.impact.savings_if_fixed_now == 50600
+    assert d.problem and d.problem.startswith("Sustained high temperature on CRAC Unit 1")
     assert d.maintenance_sources and d.maintenance_sources[0].record_id in d.explanation
 
 
 def test_gemini_failure_falls_back(client, settings, monkeypatch):
     settings.gemini_api_key = "test"
 
-    def boom(box, s):
+    def boom(box, s, ctx):
         raise httpx.ConnectError("offline")
 
     monkeypatch.setattr(agent, "_gemini", boom)
@@ -46,10 +51,9 @@ def test_gemini_failure_falls_back(client, settings, monkeypatch):
 def test_gemini_path_keeps_only_cited_records_the_tools_returned(client, settings, monkeypatch):
     settings.gemini_api_key = "test"
 
-    def fake(box, s):
-        box.call("get_incident", {})
+    def fake(box, s, ctx):
         box.call("search_maintenance", {"query": "filter clogged temperature"})
-        return {"explanation": "Likely clogged filter.", "recommended_actions": ["Replace filter (human approval)."],
+        return {"problem": "CRAC Unit 1 is overheating.", "likely_cause": "Clogged filter (mr-0042).","explanation": "Likely clogged filter.", "recommended_actions": ["Replace filter (human approval)."],
                 "cited_record_ids": ["mr-0042", "mr-9999"]}
 
     monkeypatch.setattr(agent, "_gemini", fake)
@@ -57,6 +61,25 @@ def test_gemini_path_keeps_only_cited_records_the_tools_returned(client, setting
     assert d["explanation_source"] == "agent"
     assert [m["record_id"] for m in d["maintenance_sources"]] == ["mr-0042"]  # invented id dropped
     assert d["recommended_actions"] == ["Replace filter (human approval)."]
+    assert d["problem"] == "CRAC Unit 1 is overheating." and d["likely_cause"] == "Clogged filter (mr-0042)."
+
+
+def test_gemini_investigation_is_one_request_with_all_tool_results(client, settings, monkeypatch):
+    settings.gemini_api_key = "test"
+    sent = []
+
+    def fake_post(c, s, payload):
+        sent.append(payload)
+        text = '{"problem": "p", "likely_cause": "c", "explanation": "e", "recommended_actions": ["a"], "cited_record_ids": []}'
+        return httpx.Response(200, json={"candidates": [{"content": {"parts": [{"text": text}]}}]},
+                              request=httpx.Request("POST", "http://x"))
+
+    monkeypatch.setattr(agent, "_post", fake_post)
+    d = client.post(f"/api/v1/incidents/{open_cooling_incident(client)}/investigate").json()
+    assert len(sent) == 1 and "tools" not in sent[0]
+    prompt = sent[0]["contents"][0]["parts"][0]["text"]
+    assert all(t in prompt for t in ("get_incident", "estimate_impact", "search_maintenance", "cost_if_it_fails"))
+    assert d["explanation_source"] == "agent" and d["problem"] == "p"
 
 
 def test_parse_rejects_non_json():

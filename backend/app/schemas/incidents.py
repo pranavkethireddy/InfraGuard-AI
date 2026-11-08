@@ -53,6 +53,9 @@ class IncidentDetail(IncidentSummary):
     agent_steps: list[AgentStep] | None = None
     # Set when the live fleet demo queues an automatic AI investigation; None for manual-only incidents.
     investigation_status: InvestigationStatus | None = None
+    # Set by the investigation (additive): the problem in one sentence and its likely cause.
+    problem: str | None = None
+    likely_cause: str | None = None
 
 
 class IncidentPatchRequest(ContractModel):

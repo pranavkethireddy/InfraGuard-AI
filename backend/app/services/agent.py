@@ -1,8 +1,10 @@
 """InfraGuard incident agent.
 
-Gemini plans and calls InfraGuard tools (trained-model results, impact, maintenance search, readings),
-then writes a fix plan that cites maintenance record IDs. Numbers come only from tool results; the
-agent is told never to invent costs or times. Without GEMINI_API_KEY (or if Gemini fails) a
+The backend runs the InfraGuard tools itself (incident and model output, model card, impact, maintenance
+search, recent readings), all local and fast, then makes ONE Gemini request with the results. Gemini
+writes the problem, likely cause, fix plan and money at stake, citing maintenance record IDs. One request
+per incident keeps the free tier lasting about 4x longer than a multi-turn tool loop. Numbers come only
+from tool results; Gemini is told never to invent costs or times. Without GEMINI_API_KEY (or if Gemini fails) a
 deterministic fallback runs the same tools and fills a template, marked explanation_source="rag".
 """
 
@@ -30,32 +32,19 @@ from .store import Store
 log = logging.getLogger(__name__)
 
 API = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-MAX_TURNS = 8
 
-SYSTEM = """You are InfraGuard, an operations agent for a data center. Investigate the incident with the tools.
-Call get_incident first. Then call every other tool you need together in ONE turn (parallel function calls):
-get_recent_readings, estimate_impact, search_maintenance (at least once) and get_model_card if useful.
-Rules: use only numbers returned by tools; never invent costs, times, or records; cite maintenance records by
+SYSTEM = """You are InfraGuard, an operations agent for data centers and crypto mining farms. You get the tool
+results for one incident (incident, model card, impact, maintenance records, recent readings). Write the case
+for the operator: the problem, the likely cause, how to fix it, and what it costs to fix now versus if it fails.
+Rules: use only numbers in the tool results; never invent costs, times, or records; cite maintenance records by
 record_id and say which unit a record is from (records may come from similar equipment); say clearly when
 evidence is missing; a human must approve any physical work.
-Finish with ONLY a JSON object, no markdown:
-{"explanation": "<3-5 sentences: what is wrong, why, likely cause from records, money at stake per hour/day, expected repair time and cost>",
+Answer with ONLY this JSON object:
+{"problem": "<1 sentence: what is wrong, on which machine, where>",
+ "likely_cause": "<1 sentence from the readings and records, or say the cause is unknown>",
+ "explanation": "<3-5 sentences: evidence, likely cause, cost if it fails vs cost to fix now and the savings, repair time>",
  "recommended_actions": ["<step 1>", "<step 2>", "..."],
  "cited_record_ids": ["mr-..."]}"""
-
-TOOLS = [
-    {"name": "get_incident", "description": "Incident status, detector, risk level, evidence and latest model/rule output.",
-     "parameters": {"type": "object", "properties": {}}},
-    {"name": "get_model_card", "description": "How the detector was trained and tested: target, horizon, held-out metrics, limitations.",
-     "parameters": {"type": "object", "properties": {"detector_id": {"type": "string"}}, "required": ["detector_id"]}},
-    {"name": "estimate_impact", "description": "Downtime cost per hour and per day, repair cost and repair time for the asset (labelled assumptions).",
-     "parameters": {"type": "object", "properties": {"asset_id": {"type": "string"}}, "required": ["asset_id"]}},
-    {"name": "search_maintenance", "description": "Search past maintenance records for similar problems and fixes.",
-     "parameters": {"type": "object", "properties": {"query": {"type": "string"}, "asset_id": {"type": "string"}}, "required": ["query"]}},
-    {"name": "get_recent_readings", "description": "Latest sensor readings for the asset (most recent last).",
-     "parameters": {"type": "object", "properties": {"asset_id": {"type": "string"}, "n": {"type": "integer"}}, "required": ["asset_id"]}},
-]
-
 
 class Toolbox:
     def __init__(self, store: Store, inc: IncidentDetail, settings: Settings):
@@ -107,7 +96,7 @@ class Toolbox:
                                self.settings.maintenance_records_path)
         for s in r.items:
             self.sources[s.record_id] = s
-        return {"status": r.status, "records": [{"record_id": s.record_id, "recorded_at": str(s.recorded_at),
+        return {"status": r.status, "records": [{"record_id": s.record_id, "unit": s.asset_id or "site-wide", "recorded_at": str(s.recorded_at),
                                                  "text": s.excerpt} for s in r.items]}
 
     def t_get_recent_readings(self, asset_id: str, n: int = 5) -> dict:
@@ -123,8 +112,8 @@ def _summ(name: str, args: dict, out: dict) -> str:
         ids = [r["record_id"] for r in out["records"]]
         return f"Searched maintenance records for '{args.get('query')}': {', '.join(ids) or 'no evidence'}"
     if name == "estimate_impact":
-        return (f"Impact: ${out['cost_per_hour']:,.0f}/h, ${out['cost_per_day']:,.0f}/day down; repair "
-                f"${out['estimated_repair_cost']:,.0f}, about {out['estimated_repair_hours']} h")
+        return (f"Impact: {_usd(out['cost_per_hour'])}/h, {_usd(out['cost_per_day'])}/day down; "
+                f"{_usd(out['cost_if_it_fails'])} if it fails vs {_usd(out['cost_to_fix_now'])} to fix now")
     if name == "get_model_card":
         return f"Read model card for {args.get('detector_id')} ({out['evaluation_status']})"
     if name == "get_recent_readings":
@@ -143,6 +132,15 @@ def _parse(text: str) -> dict | None:
     if isinstance(d.get("explanation"), str) and isinstance(d.get("recommended_actions"), list):
         return d
     return None
+
+
+def _usd(x: float) -> str:
+    """Whole dollars for big numbers, cents for small ones (a single miner earns a few dollars a day)."""
+    return f"${x:,.0f}" if abs(x) >= 100 else f"${x:,.2f}"
+
+
+def _text(v) -> str | None:
+    return v.strip() if isinstance(v, str) and v.strip() else None
 
 
 RETRY_STATUS = {429, 500, 502, 503, 504}
@@ -232,45 +230,55 @@ def _post(client: httpx.Client, settings: Settings, payload: dict) -> httpx.Resp
         return r
 
 
-def _gemini(box: Toolbox, settings: Settings) -> dict | None:
-    contents = [{"role": "user", "parts": [{"text": f"Investigate incident {box.inc.incident_id}."}]}]
-    body = {"system_instruction": {"parts": [{"text": SYSTEM}]}, "tools": [{"function_declarations": TOOLS}],
-            "generation_config": {"temperature": 0.2}}
-    with httpx.Client(timeout=60) as client:
-        for _ in range(MAX_TURNS):
-            r = _post(client, settings, {**body, "contents": contents})
-            content = r.json()["candidates"][0]["content"]
-            contents.append(content)
-            calls = [p["functionCall"] for p in content.get("parts", []) if "functionCall" in p]
-            if not calls:
-                return _parse("".join(p.get("text", "") for p in content.get("parts", [])))
-            contents.append({"role": "user", "parts": [
-                {"functionResponse": {"name": c["name"], "response": box.call(c["name"], c.get("args") or {})}} for c in calls]})
-    return None
-
-
-def _fallback(box: Toolbox) -> dict:
+def _gather(box: Toolbox) -> dict:
+    """Run every tool locally (milliseconds) so Gemini needs only one request."""
     inc = box.inc
-    box.call("get_incident", {})
-    box.call("get_model_card", {"detector_id": inc.detector_id})
-    imp = box.call("estimate_impact", {"asset_id": inc.asset_id})
     query = " ".join([inc.title] + [e.field.replace("_", " ") for e in inc.evidence])
-    found = box.call("search_maintenance", {"query": query})
-    recs = found.get("records", [])
+    return {
+        "get_incident": box.call("get_incident", {}),
+        "get_recent_readings": box.call("get_recent_readings", {"asset_id": inc.asset_id, "n": 8}),
+        "estimate_impact": box.call("estimate_impact", {"asset_id": inc.asset_id}),
+        "search_maintenance": box.call("search_maintenance", {"query": query}),
+        "get_model_card": box.call("get_model_card", {"detector_id": inc.detector_id}),
+    }
+
+
+def _gemini(box: Toolbox, settings: Settings, context: dict) -> dict | None:
+    body = {
+        "system_instruction": {"parts": [{"text": SYSTEM}]},
+        "contents": [{"role": "user", "parts": [{"text": "Tool results:\n" + json.dumps(context, default=str)}]}],
+        "generation_config": {"temperature": 0.2, "response_mime_type": "application/json"},
+    }
+    with httpx.Client(timeout=45) as client:
+        r = _post(client, settings, body)
+    parts = r.json()["candidates"][0]["content"].get("parts", [])
+    return _parse("".join(p.get("text", "") for p in parts))
+
+
+def _fallback(box: Toolbox, context: dict) -> dict:
+    """Same tool results, filled into a template (no LLM)."""
+    inc = box.inc
+    imp, recs = context["estimate_impact"], context["search_maintenance"].get("records", [])
+    where = context["get_incident"].get("location", "")
     text = inc.explanation
     if "error" not in imp:
-        text += (f" Estimated downtime cost is ${imp['cost_per_hour']:,.0f} per hour (${imp['cost_per_day']:,.0f} per day);"
-                 f" repair is estimated at ${imp['estimated_repair_cost']:,.0f} and about {imp['estimated_repair_hours']} h (assumptions).")
+        text += (f" Downtime costs {_usd(imp['cost_per_hour'])} per hour ({_usd(imp['cost_per_day'])} per day)."
+                 f" If it fails: about {_usd(imp['cost_if_it_fails'])} (downtime plus unplanned repair);"
+                 f" fixing it now: about {_usd(imp['cost_to_fix_now'])}, saving {_usd(imp['savings_if_fixed_now'])}"
+                 f" (assumptions; repair about {imp['estimated_repair_hours']} h).")
     text += f" Most similar past record: {recs[0]['record_id']}: {recs[0]['text']}" if recs else " No similar maintenance records were found."
-    return {"explanation": text, "recommended_actions": inc.recommended_actions, "cited_record_ids": [r["record_id"] for r in recs[:2]]}
+    return {"problem": f"{inc.title} ({where}).", "likely_cause": recs[0]["text"] if recs else None,
+            "explanation": text, "recommended_actions": inc.recommended_actions,
+            "cited_record_ids": [r["record_id"] for r in recs[:2]]}
 
 
 def investigate(store: Store, inc: IncidentDetail, settings: Settings) -> IncidentDetail:
     box = Toolbox(store, inc, settings)
+    context = _gather(box)
     result, source = None, "rag"
     if settings.gemini_keys:
         try:
-            result = _gemini(box, settings)
+            result = _gemini(box, settings, context)
             source = "agent"
             if result is None:
                 log.warning("Gemini gave no usable answer for %s; using fallback", inc.incident_id)
@@ -280,10 +288,11 @@ def investigate(store: Store, inc: IncidentDetail, settings: Settings) -> Incide
             log.warning("Gemini call failed for %s (%s); using fallback", inc.incident_id, reason)
             result = None
     if result is None:
-        box.steps.clear()
-        result, source = _fallback(box), "rag"
+        result, source = _fallback(box, context), "rag"
     cited = [box.sources[r] for r in result.get("cited_record_ids", []) if r in box.sources]
     with store.lock:
+        inc.problem = _text(result.get("problem"))
+        inc.likely_cause = _text(result.get("likely_cause"))
         inc.explanation = result["explanation"]
         inc.recommended_actions = [str(a) for a in result["recommended_actions"]][:8]
         inc.maintenance_sources = cited
