@@ -28,7 +28,9 @@ def test_fallback_without_key_uses_tools_and_real_numbers(client):
     d = IncidentDetail.model_validate(client.post(f"/api/v1/incidents/{open_cooling_incident(client)}/investigate").json())
     assert d.explanation_source == "rag"
     assert [s.tool for s in d.agent_steps] == ["get_incident", "get_recent_readings", "estimate_impact",
-                                               "search_maintenance", "get_model_card", "search_learned_cases"]
+                                               "search_maintenance", "diagnose_readings", "get_model_card",
+                                               "search_learned_cases"]
+    assert d.likely_cause and "unknown" not in d.likely_cause.lower()
     assert "$12,000 per hour ($288,000 per day)" in d.explanation
     # Business case: $48,000 downtime + $3,500 unplanned repair if it fails, vs $900 planned now.
     assert "$51,500" in d.explanation and "$900" in d.explanation and "$50,600" in d.explanation
@@ -153,3 +155,16 @@ def test_main_model_out_of_quota_moves_to_fallback_model(settings, monkeypatch):
         assert agent._post(c, settings, {}).json() == {"ok": True}
         agent._post(c, settings, {})  # main stays parked
     assert models == ["main", "lite", "lite"]
+
+
+def test_diagnosis_names_the_cause_from_the_readings():
+    from backend.app.services import diagnosis
+
+    belt = diagnosis.likely_cause("cooling_unit", {"temperature_c": 36.2, "fan_speed_rpm": 790})
+    assert "fan belt" in belt and "790" in belt
+    assert "filter" in diagnosis.likely_cause("cooling_unit", {"temperature_c": 33.0, "fan_speed_rpm": 1150})
+    assert diagnosis.likely_cause("cooling_unit", {"temperature_c": 23.8, "fan_speed_rpm": 1160}) is None
+    assert "crashed" in diagnosis.likely_cause("gpu_server", {"online": 0, "gpus_online": 0})
+    assert "cooling unit" in diagnosis.likely_cause("gpu_server", {"online": 1, "gpus_online": 8, "gpus_throttled": 5,
+                                                                   "inlet_temp_c": 33.1, "ecc_errors": 0, "psu_ok": 2})
+    assert diagnosis.is_unknown("The cause is unknown based on current readings.")

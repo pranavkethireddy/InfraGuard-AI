@@ -24,6 +24,7 @@ from ..core.errors import ApiError
 from ..schemas.incidents import AgentStep, IncidentDetail
 from ..schemas.maintenance import MaintenanceSearchRequest
 from . import assets as asset_service
+from . import diagnosis
 from . import impact as impact_service
 from . import maintenance
 from .model_registry import list_models
@@ -37,8 +38,10 @@ SYSTEM = """You are InfraGuard, an operations agent for data centers and crypto 
 results for one incident (incident, model card, impact, maintenance records, recent readings). Write the case
 for the operator: the problem, the likely cause, how to fix it, and what it costs to fix now versus if it fails.
 Rules: use only numbers in the tool results; never invent costs, times, or records; cite maintenance records by
-record_id (or learned case_id, from repairs at any InfraGuard site) and say which unit and site it is from; say clearly when
-evidence is missing; a human must approve any physical work.
+record_id (or learned case_id, from repairs at any InfraGuard site) and say which unit and site it is from; records
+from another unit of the same equipment type are valid evidence for this one. diagnose_readings gives the cause the
+latest reading points to: use it as the likely cause unless the records clearly show another one; say the cause is
+unknown only when diagnose_readings has none; a human must approve any physical work.
 Answer with ONLY this JSON object:
 {"problem": "<1 sentence: what is wrong, on which machine, where>",
  "likely_cause": "<1 sentence from the readings and records, or say the cause is unknown>",
@@ -112,6 +115,16 @@ class Toolbox:
             rows = self.store.readings.get(asset_id, [])[-max(1, min(n, 20)):]
         return {"readings": [{"observed_at": r.reading.observed_at.isoformat(), **r.reading.values} for r in rows]}
 
+    def t_diagnose_readings(self, asset_id: str) -> dict:
+        with self.store.lock:
+            rows = self.store.readings.get(asset_id, [])
+            latest = dict(rows[-1].reading.values) if rows else None
+        try:
+            asset_type = asset_service.get_asset(asset_id).asset_type
+        except ApiError:
+            return {"error": "unknown asset"}
+        return {"likely_cause": diagnosis.likely_cause(asset_type, latest)}
+
 
 def _summ(name: str, args: dict, out: dict) -> str:
     if "error" in out:
@@ -127,6 +140,8 @@ def _summ(name: str, args: dict, out: dict) -> str:
     if name == "search_learned_cases":
         ids = [c["case_id"] for c in out["cases"]]
         return f"Checked cases learned at every site: {', '.join(ids) or 'none yet'}"
+    if name == "diagnose_readings":
+        return f"Matched the symptom pattern: {out['likely_cause'] or 'no known pattern'}"
     if name == "get_recent_readings":
         return f"Read {len(out['readings'])} recent readings"
     return f"Read incident {out.get('incident_id')} ({out.get('risk_level')} risk)"
@@ -250,6 +265,7 @@ def _gather(box: Toolbox) -> dict:
         "get_recent_readings": box.call("get_recent_readings", {"asset_id": inc.asset_id, "n": 8}),
         "estimate_impact": box.call("estimate_impact", {"asset_id": inc.asset_id}),
         "search_maintenance": box.call("search_maintenance", {"query": query}),
+        "diagnose_readings": box.call("diagnose_readings", {"asset_id": inc.asset_id}),
         "get_model_card": box.call("get_model_card", {"detector_id": inc.detector_id}),
         "search_learned_cases": box.call("search_learned_cases", {}),
     }
@@ -282,7 +298,8 @@ def _fallback(box: Toolbox, context: dict) -> dict:
     learned = context.get("search_learned_cases", {}).get("cases", [])
     if learned:
         text += f" Learned from an earlier repair ({learned[0]['from']}): {learned[0]['case_id']}: {learned[0]['text']}"
-    return {"problem": f"{inc.title} ({where}).", "likely_cause": recs[0]["text"] if recs else None,
+    cause = context.get("diagnose_readings", {}).get("likely_cause") or (recs[0]["text"] if recs else None)
+    return {"problem": f"{inc.title} ({where}).", "likely_cause": cause,
             "explanation": text, "recommended_actions": inc.recommended_actions,
             "cited_record_ids": [r["record_id"] for r in recs[:2]] + [c["case_id"] for c in learned[:1]]}
 
@@ -307,7 +324,9 @@ def investigate(store: Store, inc: IncidentDetail, settings: Settings) -> Incide
     cited = [box.sources[r] for r in result.get("cited_record_ids", []) if r in box.sources]
     with store.lock:
         inc.problem = _text(result.get("problem"))
-        inc.likely_cause = _text(result.get("likely_cause"))
+        cause = _text(result.get("likely_cause"))
+        found = context.get("diagnose_readings", {}).get("likely_cause")
+        inc.likely_cause = found if found and diagnosis.is_unknown(cause) else cause
         inc.explanation = result["explanation"]
         inc.recommended_actions = [str(a) for a in result["recommended_actions"]][:8]
         inc.maintenance_sources = cited
