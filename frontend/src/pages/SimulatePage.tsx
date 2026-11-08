@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, DATA_MODE, FIXTURE_MUTATION_MESSAGE } from "@/api/client";
 import { fixtures } from "@/api/fixtures";
 import {
-  assetsQuery, modelsQuery, readingsQuery, assetSimulationsQuery, pickRecoverableSimulation, simulationPollInterval, simulationQuery, useResetSimulation, useStartSimulation,
+  simulatorAssetsQuery, modelsQuery, readingsQuery, assetSimulationsQuery, pickRecoverableSimulation, simulationPollInterval, simulationQuery, useResetSimulation, useStartSimulation,
 } from "@/api/queries";
 import type { Scenario, Simulation, SimulationReset } from "@/api/types";
 import { AppLink } from "@/lib/router-adapter";
@@ -61,9 +61,9 @@ function ResetSummary({ r }: { r: SimulationReset }) {
 export function SimulatePage() {
   const fixture = DATA_MODE === "fixture";
   const qc = useQueryClient();
-  const assets = useQuery(assetsQuery());
+  const assets = useQuery(simulatorAssetsQuery());
   const models = useQuery(modelsQuery());
-  const compatible = assets.data?.items.filter((a) => a.compatible_detector === SIM_DETECTOR) ?? [];
+  const compatible = assets.data?.filter((a) => a.compatible_detector === SIM_DETECTOR) ?? [];
   const [assetChoice, setAssetChoice] = useState<string | null>(null);
   const assetId = assetChoice ?? compatible[0]?.asset_id ?? "";
   const [scenario, setScenario] = useState<Scenario>("cooling_anomaly");
@@ -93,6 +93,8 @@ export function SimulatePage() {
   const recovering = !fixture && !!assetId && recovery.isLoading;
   const startDisabledReason =
     fixture ? "Fixture preview" :
+    assets.isLoading || assets.isFetching ? "Loading all compatible assets…" :
+    assets.error ? "Could not load compatible assets" :
     !assetId ? "No compatible asset" :
     recovering ? "Checking for a running simulation…" :
     recovery.error ? "Could not check for a running simulation" :

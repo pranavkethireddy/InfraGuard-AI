@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useIsMutating, useQuery } from '@tanstack/react-query';
 import type { SiteId } from '@/api/fleet-types';
-import { learningCasesQuery, learningMatrixQuery, planQuery, techniciansQuery } from '@/api/ops-queries';
+import { learningCasesQuery, learningMatrixQuery, planQuery } from '@/api/ops-queries';
+import { useCrewStream } from '@/api/ops-stream';
+import { AutoDispatch } from '@/components/AutoDispatch';
+import { StreamStatus } from '@/components/StreamStatus';
 import { AppLink } from '@/lib/router-adapter';
 import { DispatchControl, available } from '@/components/OperationsWorkspace';
 import { Badge, ConsoleButton, Empty, ErrorState, Loading, Mono, PageHeader, Section, inputCls } from '@/components/ui-kit';
@@ -13,13 +16,14 @@ export function OperationsPage({ site, onSiteChange }: { site: SiteId; onSiteCha
     </div><OperationsSite key={site} site={site} /></>;
 }
 function OperationsSite({ site }: { site: SiteId }) {
-  const crew = useQuery(techniciansQuery(site));
+  const crew = useCrewStream(site);
   const plan = useQuery(planQuery(site));
   const matrix = useQuery(learningMatrixQuery());
   const [assetType, setAssetType] = useState('');
   const cases = useQuery(learningCasesQuery(site, assetType || undefined));
   const pending = useIsMutating({ mutationKey: ['ops', 'dispatch'] }) > 0;
   return <div className="space-y-6">
+    <Section title="Automatic dispatch"><AutoDispatch enabled={crew.data?.auto_dispatch} /><div className="mt-3"><StreamStatus stream={crew.stream} /></div></Section>
     <Section title="Repair plan" aside={<Badge>Backend ranking</Badge>}>
       {plan.isLoading ? <Loading /> : !plan.data ? <ErrorState error={plan.error} /> : <>
         {plan.error && <ErrorState error={plan.error} />}<p className="mb-3 text-xs text-muted-foreground">Source: {plan.data.assumptions_source} · DEMO clock {plan.data.demo_time} · total savings {plan.data.total_savings} USD</p>
@@ -30,7 +34,7 @@ function OperationsSite({ site }: { site: SiteId }) {
     </Section>
     <Section title="Crew" aside={<Badge tone="attention">Fictional demo crew</Badge>}>
       {crew.isLoading ? <Loading /> : !crew.data ? <ErrorState error={crew.error} /> : <>
-        {crew.error && <ErrorState error={crew.error} />}<p className="mb-3 text-xs text-muted-foreground">Source: {crew.data.assumptions_source} · {crew.data.demo_time} · {crew.data.demo_minutes_per_tick} DEMO minutes/tick</p>
+        {crew.error && <ErrorState error={crew.error} />}<p className="mb-3 text-xs text-muted-foreground">Source: {crew.data.assumptions_source} · {crew.data.demo_time} · {crew.data.demo_minutes_per_tick} DEMO minutes/tick · {crew.data.walk_cells_per_demo_minute ?? 'Not reported'} cells/DEMO minute</p>
         {crew.data.technicians.length ? <div className="max-w-full min-w-0 overflow-x-auto"><table className="data-table"><thead><tr><th>Technician / skills</th><th>Status / location</th><th>Current work order</th><th>Travel / progress / ETA</th><th>Queued IDs</th></tr></thead><tbody>{crew.data.technicians.map((t) => <tr key={t.technician_id}><td>{t.name}<p className="text-xs text-muted-foreground">{t.role} · {t.skills.join(', ')}</p><Mono>{t.technician_id} · {t.rate_per_hour} USD/h</Mono></td><td>{t.status}<p>{t.location_hall_id}</p></td><td>{t.current_work_order?.title ?? 'None'}<p><Mono>{t.current_work_order?.work_order_id}</Mono></p></td><td>{t.current_work_order ? <>{t.current_work_order.status}<p>{t.current_work_order.hours_done} / {t.current_work_order.hours_total} DEMO h</p><p>Progress (fraction): {t.current_work_order.progress}</p><p>{available(t.current_work_order.eta_minutes)} DEMO minutes</p></> : 'No active work'}</td><td><Mono>{t.queued_work_order_ids.join(', ') || 'None'}</Mono></td></tr>)}</tbody></table></div> : <Empty>No technicians returned for this site.</Empty>}
         <details className="mt-4 border-t border-border pt-3"><summary className="cursor-pointer text-sm">Site work orders</summary>{crew.data.work_orders.length ? <div className="max-w-full min-w-0 overflow-x-auto"><table className="data-table"><thead><tr><th>Work order</th><th>Status</th><th>ETA / progress</th></tr></thead><tbody>{crew.data.work_orders.map((w) => <tr key={w.work_order_id}><td>{w.title}<p><Mono>{w.work_order_id}</Mono></p></td><td>{w.status}</td><td>{available(w.eta_minutes)} DEMO minutes · {w.progress} fraction</td></tr>)}</tbody></table></div> : <Empty>No work orders.</Empty>}</details>
       </>}

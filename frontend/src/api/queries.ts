@@ -1,5 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
+import { listAllAssets } from './all-assets';
 import type { IncidentDetail, IncidentPatch, Simulation, SimulationRequest } from "./types";
 
 const POLL_MS = 15_000;
@@ -10,6 +11,7 @@ export const simulationPollInterval = (status: string | undefined): number | fal
 export const assetsQuery = (limit = 100, offset = 0) =>
   queryOptions({ queryKey: ["assets", { limit, offset }], queryFn: () => api.listAssets({ limit, offset }), refetchInterval: POLL_MS });
 export const assetQuery = (id: string) => queryOptions({ queryKey: ["assets", id], queryFn: () => api.getAsset(id) });
+export const simulatorAssetsQuery = () => queryOptions({ queryKey: ['assets', 'simulator-all'], queryFn: () => listAllAssets(api), refetchInterval: POLL_MS });
 export const readingsQuery = (id: string, limit = 500) =>
   queryOptions({ queryKey: ["assets", id, "readings", limit], queryFn: () => api.getReadings(id, { limit }), refetchInterval: POLL_MS });
 export const incidentsQuery = (status?: "open" | "acknowledged" | "resolved") =>

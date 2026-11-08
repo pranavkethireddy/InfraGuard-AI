@@ -47,6 +47,7 @@ export function AssetDetailPage({ id }: { id: string }) {
     <>
       <PageHeader title={a.name} meta={<>{a.asset_id} · {a.asset_type} · {a.location}</>}
         actions={<><RiskBadge level={a.current_risk_level} /><OriginBadge origin={a.data_origin} /></>} />
+      {a.asset_type === 'gpu_server' && <AppLink to={`/servers/${encodeURIComponent(id)}`} className="mb-5 inline-block text-primary underline">Server / GPU detail →</AppLink>}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="min-w-0 space-y-6">
           <Section title="Temperature trend" aside={readings.data && <Mono>{readings.data.total} readings · limit {readings.data.limit}</Mono>}>

@@ -1,0 +1,321 @@
+{
+  "machine": {
+    "asset_id": "srv-B1-04-3",
+    "name": "Rack B1-04, GPU Server 3",
+    "asset_type": "gpu_server",
+    "criticality": "high",
+    "detector_id": "server-rule-v1",
+    "location": "Hall B, Row B1, Rack B1-04, GPU Server 3",
+    "placement": {
+      "hall_id": "hall-b",
+      "row": "B1",
+      "rack_id": "B1-04",
+      "slot": 3,
+      "x": 10.0,
+      "y": 3.0
+    },
+    "status": "healthy",
+    "risk_level": "low",
+    "risk_score": 0.1,
+    "latest_values": {
+      "inlet_temp_c": 34.73,
+      "online": 1,
+      "gpus_online": 8,
+      "gpus_throttled": 6,
+      "max_gpu_temp_c": 84.3,
+      "min_gpu_clock_pct": 87.1,
+      "compute_pct": 92.8,
+      "ecc_errors": 0,
+      "psu_ok": 2,
+      "power_w": 6096,
+      "gpu1_temp_c": 83.1,
+      "gpu2_temp_c": 83.5,
+      "gpu3_temp_c": 84.2,
+      "gpu4_temp_c": 84.1,
+      "gpu5_temp_c": 83.5,
+      "gpu6_temp_c": 83.0,
+      "gpu7_temp_c": 84.3,
+      "gpu8_temp_c": 84.1,
+      "gpu1_clock_pct": 99.0,
+      "gpu2_clock_pct": 94.8,
+      "gpu3_clock_pct": 88.0,
+      "gpu4_clock_pct": 89.5,
+      "gpu5_clock_pct": 95.2,
+      "gpu6_clock_pct": 99.9,
+      "gpu7_clock_pct": 87.1,
+      "gpu8_clock_pct": 88.7
+    },
+    "last_reading_at": "2026-11-08T03:12:18.389554Z",
+    "chart_fields": [
+      "max_gpu_temp_c",
+      "compute_pct",
+      "inlet_temp_c"
+    ],
+    "active_incident": null,
+    "simulated_fault": null,
+    "history": [
+      {
+        "observed_at": "2026-11-08T03:12:17.979519Z",
+        "values": {
+          "inlet_temp_c": 31.05,
+          "online": 1,
+          "gpus_online": 8,
+          "gpus_throttled": 0,
+          "max_gpu_temp_c": 83.0,
+          "min_gpu_clock_pct": 99.8,
+          "compute_pct": 100.0,
+          "ecc_errors": 0,
+          "psu_ok": 2,
+          "power_w": 6489,
+          "gpu1_temp_c": 79.9,
+          "gpu2_temp_c": 80.8,
+          "gpu3_temp_c": 82.3,
+          "gpu4_temp_c": 81.7,
+          "gpu5_temp_c": 80.4,
+          "gpu6_temp_c": 79.4,
+          "gpu7_temp_c": 83.0,
+          "gpu8_temp_c": 83.0,
+          "gpu1_clock_pct": 100.0,
+          "gpu2_clock_pct": 100.0,
+          "gpu3_clock_pct": 100.0,
+          "gpu4_clock_pct": 100.0,
+          "gpu5_clock_pct": 100.0,
+          "gpu6_clock_pct": 100.0,
+          "gpu7_clock_pct": 99.8,
+          "gpu8_clock_pct": 100.0
+        }
+      },
+      {
+        "observed_at": "2026-11-08T03:12:18.184523Z",
+        "values": {
+          "inlet_temp_c": 32.55,
+          "online": 1,
+          "gpus_online": 8,
+          "gpus_throttled": 4,
+          "max_gpu_temp_c": 83.8,
+          "min_gpu_clock_pct": 91.6,
+          "compute_pct": 97.5,
+          "ecc_errors": 0,
+          "psu_ok": 2,
+          "power_w": 6385,
+          "gpu1_temp_c": 81.1,
+          "gpu2_temp_c": 81.8,
+          "gpu3_temp_c": 83.2,
+          "gpu4_temp_c": 83.4,
+          "gpu5_temp_c": 82.3,
+          "gpu6_temp_c": 81.1,
+          "gpu7_temp_c": 83.8,
+          "gpu8_temp_c": 83.6,
+          "gpu1_clock_pct": 100.0,
+          "gpu2_clock_pct": 100.0,
+          "gpu3_clock_pct": 98.2,
+          "gpu4_clock_pct": 96.1,
+          "gpu5_clock_pct": 100.0,
+          "gpu6_clock_pct": 100.0,
+          "gpu7_clock_pct": 91.6,
+          "gpu8_clock_pct": 94.5
+        }
+      },
+      {
+        "observed_at": "2026-11-08T03:12:18.389554Z",
+        "values": {
+          "inlet_temp_c": 34.73,
+          "online": 1,
+          "gpus_online": 8,
+          "gpus_throttled": 6,
+          "max_gpu_temp_c": 84.3,
+          "min_gpu_clock_pct": 87.1,
+          "compute_pct": 92.8,
+          "ecc_errors": 0,
+          "psu_ok": 2,
+          "power_w": 6096,
+          "gpu1_temp_c": 83.1,
+          "gpu2_temp_c": 83.5,
+          "gpu3_temp_c": 84.2,
+          "gpu4_temp_c": 84.1,
+          "gpu5_temp_c": 83.5,
+          "gpu6_temp_c": 83.0,
+          "gpu7_temp_c": 84.3,
+          "gpu8_temp_c": 84.1,
+          "gpu1_clock_pct": 99.0,
+          "gpu2_clock_pct": 94.8,
+          "gpu3_clock_pct": 88.0,
+          "gpu4_clock_pct": 89.5,
+          "gpu5_clock_pct": 95.2,
+          "gpu6_clock_pct": 99.9,
+          "gpu7_clock_pct": 87.1,
+          "gpu8_clock_pct": 88.7
+        }
+      }
+    ],
+    "power_state": "at_risk",
+    "power_reason": null,
+    "shutdown_eta_minutes": 9.9,
+    "work_order": null
+  },
+  "rack_id": "B1-04",
+  "inlet_temp_c": 34.73,
+  "online": true,
+  "psus_ok": 2,
+  "psus_total": 2,
+  "ecc_errors": 0,
+  "power_w": 6096.0,
+  "gpus": [
+    {
+      "index": 1,
+      "temp_c": 83.1,
+      "clock_pct": 99.0,
+      "status": "ok",
+      "throttle_c": 83.0
+    },
+    {
+      "index": 2,
+      "temp_c": 83.5,
+      "clock_pct": 94.8,
+      "status": "throttling",
+      "throttle_c": 83.0
+    },
+    {
+      "index": 3,
+      "temp_c": 84.2,
+      "clock_pct": 88.0,
+      "status": "throttling",
+      "throttle_c": 83.0
+    },
+    {
+      "index": 4,
+      "temp_c": 84.1,
+      "clock_pct": 89.5,
+      "status": "throttling",
+      "throttle_c": 83.0
+    },
+    {
+      "index": 5,
+      "temp_c": 83.5,
+      "clock_pct": 95.2,
+      "status": "throttling",
+      "throttle_c": 83.0
+    },
+    {
+      "index": 6,
+      "temp_c": 83.0,
+      "clock_pct": 99.9,
+      "status": "ok",
+      "throttle_c": 83.0
+    },
+    {
+      "index": 7,
+      "temp_c": 84.3,
+      "clock_pct": 87.1,
+      "status": "throttling",
+      "throttle_c": 83.0
+    },
+    {
+      "index": 8,
+      "temp_c": 84.1,
+      "clock_pct": 88.7,
+      "status": "throttling",
+      "throttle_c": 83.0
+    }
+  ],
+  "job": {
+    "job_id": "job-B1",
+    "name": "Training job B1",
+    "row": "B1",
+    "hall_id": "hall-b",
+    "server_ids": [
+      "srv-B1-01-1",
+      "srv-B1-01-2",
+      "srv-B1-01-3",
+      "srv-B1-01-4",
+      "srv-B1-02-1",
+      "srv-B1-02-2",
+      "srv-B1-02-3",
+      "srv-B1-02-4",
+      "srv-B1-03-1",
+      "srv-B1-03-2",
+      "srv-B1-03-3",
+      "srv-B1-03-4",
+      "srv-B1-04-1",
+      "srv-B1-04-2",
+      "srv-B1-04-3",
+      "srv-B1-04-4"
+    ],
+    "gpus": 128,
+    "gpus_running": 128,
+    "pace_pct": 87.1,
+    "gpus_throttled": 27,
+    "servers_down": [],
+    "lost_usd_per_hour": 41.28,
+    "gpu_hour_usd": 2.5,
+    "reasons": [
+      "27 GPUs are throttling from heat; the job runs at the slowest GPU's speed"
+    ],
+    "assumptions_source": "demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote"
+  },
+  "cooled_by": [
+    {
+      "asset_id": "cooling-03",
+      "name": "CRAC Unit 3",
+      "asset_type": "cooling_unit",
+      "criticality": "high",
+      "detector_id": "cooling-rule-v1",
+      "location": "Hall B",
+      "placement": {
+        "hall_id": "hall-b",
+        "row": null,
+        "rack_id": null,
+        "slot": null,
+        "x": 1.0,
+        "y": 3.0
+      },
+      "status": "warning",
+      "risk_level": "medium",
+      "risk_score": 0.5,
+      "latest_values": {
+        "temperature_c": 34.74,
+        "fan_speed_rpm": 696.4
+      },
+      "last_reading_at": "2026-11-08T03:12:18.389554Z",
+      "chart_fields": [
+        "temperature_c",
+        "fan_speed_rpm"
+      ],
+      "active_incident": null,
+      "simulated_fault": {
+        "asset_id": "cooling-03",
+        "kind": "cooling_failure",
+        "phase": "ramping",
+        "injected_at": "2026-11-08T03:12:17.380820Z",
+        "progress": 1.0
+      },
+      "history": [
+        {
+          "observed_at": "2026-11-08T03:12:17.979519Z",
+          "values": {
+            "temperature_c": 30.76,
+            "fan_speed_rpm": 821.9
+          }
+        },
+        {
+          "observed_at": "2026-11-08T03:12:18.184523Z",
+          "values": {
+            "temperature_c": 32.66,
+            "fan_speed_rpm": 784.5
+          }
+        },
+        {
+          "observed_at": "2026-11-08T03:12:18.389554Z",
+          "values": {
+            "temperature_c": 34.74,
+            "fan_speed_rpm": 696.4
+          }
+        }
+      ],
+      "power_state": "on",
+      "power_reason": null,
+      "shutdown_eta_minutes": null,
+      "work_order": null
+    }
+  ]
+}

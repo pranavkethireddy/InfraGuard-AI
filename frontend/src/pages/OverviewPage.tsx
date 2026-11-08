@@ -5,6 +5,11 @@ import type { SiteId } from '@/api/fleet-types';
 import { FleetButton, FleetFloor, FleetMachines, FleetMetrics, FleetRackPane } from '@/components/FleetWorkspace';
 import { Badge, Empty, ErrorState, Loading, PageHeader, Section } from '@/components/ui-kit';
 import { AppLink } from '@/lib/router-adapter';
+import { GpuJobs } from '@/components/GpuJobs';
+import { api } from '@/api/client';
+import { useCrewStream } from '@/api/ops-stream';
+import { SiteFloor } from '@/components/SiteFloor';
+import { StreamStatus } from '@/components/StreamStatus';
 
 export function OverviewPage({ site = 'datacenter', onSiteChange = () => {} }: { site?: SiteId; onSiteChange?: (site: SiteId) => void }) {
   return <FacilityOverview key={site} site={site} onSiteChange={onSiteChange} />;
@@ -12,6 +17,12 @@ export function OverviewPage({ site = 'datacenter', onSiteChange = () => {} }: {
 function FacilityOverview({ site, onSiteChange }: { site: SiteId; onSiteChange: (site: SiteId) => void }) {
   const map = useQuery(fleetMapQuery(site));
   const status = useQuery(fleetStatusQuery(site));
+  const floor = useQuery({ queryKey: ['ops', site, 'floor'], queryFn: async () => {
+    const value = await api.opsFloor(site);
+    if (!Array.isArray(value.halls) || value.site_id !== site || !Number.isFinite(value.width) || !Number.isFinite(value.depth)) throw new Error('Invalid floor response');
+    return value;
+  } });
+  const crew = useCrewStream(site);
   const [selected, setSelected] = useState<string | null>(null);
   const rack = useQuery({ ...fleetRackQuery(site, selected ?? ''), enabled: selected !== null });
   const machines = status.data?.machines ?? [];
@@ -24,7 +35,9 @@ function FacilityOverview({ site, onSiteChange }: { site: SiteId; onSiteChange: 
     <div role="tablist" aria-label="Overview site" className="mb-5 flex flex-wrap gap-2">{(['datacenter', 'mining'] as const).map((id) => <FleetButton key={id} role="tab" aria-selected={site === id} primary={site === id} onClick={() => onSiteChange(id)}>{id === 'datacenter' ? 'Data center' : 'Crypto mining site'}</FleetButton>)}</div>
     <div className="space-y-6">
       <Section title="Facility floor map">
-        {map.isLoading ? <Loading label="Loading facility map…" /> : map.error ? <ErrorState error={map.error} /> : map.data?.halls.length ? <FleetFloor halls={map.data.halls} gridUnit={map.data.grid_unit} selected={selected} onSelect={setSelected} /> : <Empty>No facility map returned.</Empty>}
+        <div className="mb-4 flex flex-wrap items-center gap-4"><Badge>Auto dispatch: {crew.data?.auto_dispatch == null ? 'Not reported' : crew.data.auto_dispatch ? 'ON' : 'OFF'}</Badge><StreamStatus stream={crew.stream} /></div>
+        {crew.error && <ErrorState error={crew.error} />}
+        {map.isLoading || floor.isLoading ? <Loading label="Loading facility map…" /> : map.error ? <ErrorState error={map.error} /> : floor.data && map.data ? <SiteFloor key={site} floor={floor.data} halls={map.data.halls} technicians={crew.data?.technicians ?? []} selected={selected} onSelect={setSelected} /> : <>{floor.error && <ErrorState error={floor.error} />}{map.data?.halls.length ? <FleetFloor halls={map.data.halls} gridUnit={map.data.grid_unit} selected={selected} onSelect={setSelected} /> : <Empty>No facility map returned.</Empty>}</>}
       </Section>
       <Section title="Facility status">
         {status.isLoading ? <Loading label="Loading facility status…" /> : status.error ? <ErrorState error={status.error} /> : status.data ? <>
@@ -33,6 +46,7 @@ function FacilityOverview({ site, onSiteChange }: { site: SiteId; onSiteChange: 
         </> : <Empty>No facility status reported.</Empty>}
       </Section>
       {selected && <Section title={`Rack investigation · ${selected}`} aside={<FleetButton aria-label="Close rack details" onClick={() => setSelected(null)}>×</FleetButton>}>{rack.isLoading ? <Loading /> : rack.error ? <ErrorState error={rack.error} /> : rack.data ? <FleetRackPane rack={rack.data} /> : <Empty>No rack details returned.</Empty>}</Section>}
+      <Section title="GPU jobs">{map.isLoading ? <Loading /> : map.error ? <ErrorState error={map.error} /> : <GpuJobs jobs={map.data?.jobs} />}</Section>
       <Section title="Affected machines — backend order" flush>{status.isLoading ? <Loading /> : status.error ? <ErrorState error={status.error} /> : affected.length ? <FleetMachines machines={affected} /> : <Empty>No affected machines reported. Power availability may be unreported.</Empty>}</Section>
       <Section title="Incident queue" aside={<AppLink to="/incidents" className="text-primary underline">All incidents</AppLink>} flush>{status.isLoading ? <Loading /> : status.error ? <ErrorState error={status.error} /> : incidents.length ? <FleetMachines machines={incidents} /> : <Empty>No active incidents reported.</Empty>}</Section>
     </div>

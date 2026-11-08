@@ -52,13 +52,15 @@ export function FleetFloor({ halls, gridUnit, selected, onSelect }: { halls: Hal
 }
 // Units are encoded in contract field names; no reading, score or financial value is calculated.
 export function fieldUnit(field: string): string {
+  if (field.endsWith('_temp_c') || field === 'max_gpu_temp_c') return '°C';
+  if (field.endsWith('_pct')) return '%';
   const suffix: Record<string, string> = { temperature_c: '°C', chip_temp_c: '°C', air_temperature_k: 'K', process_temperature_k: 'K', fan_speed_rpm: 'rpm', rotational_speed_rpm: 'rpm', hashrate_ths: 'TH/s', rated_hashrate_ths: 'TH/s', power_w: 'W', hw_error_pct: '%', power_on_hours: 'h', torque_nm: 'N·m', tool_wear_min: 'min' };
   return suffix[field] ?? 'count';
 }
 export function FleetMachines({ machines }: { machines: MachineStatus[] }) {
   if (!machines.length) return <Empty>No machines returned.</Empty>;
   return <div className="overflow-x-auto"><table className="data-table"><caption className="sr-only">Machine status, backend ordering</caption><thead><tr><th>Machine</th><th>Status / simulated fault</th><th>Latest readings</th><th>Incident / investigation</th></tr></thead><tbody>{machines.map((m) => <tr key={m.asset_id}>
-    <td><AppLink to={`/assets/${m.asset_id}`} className="font-mono text-primary underline">{m.asset_id}</AppLink><p>{m.name}</p><p className="text-xs text-muted-foreground">{m.asset_type} · {m.detector_id}</p></td>
+    <td><AppLink to={m.asset_type === 'gpu_server' ? `/servers/${encodeURIComponent(m.asset_id)}` : `/assets/${m.asset_id}`} className="font-mono text-primary underline">{m.asset_id}</AppLink><p>{m.name}</p><p className="text-xs text-muted-foreground">{m.asset_type} · {m.detector_id}</p></td>
     <td><HealthBadge status={m.status} /><PowerDetails item={m} />{m.simulated_fault && <p className="mt-1 text-xs text-attention-foreground">Simulated fault: {m.simulated_fault.kind} · {m.simulated_fault.phase}</p>}{m.work_order && <div className="mt-2 text-xs"><p>Work order: <Mono>{m.work_order.work_order_id}</Mono></p><p>{m.work_order.technician_name} · {m.work_order.technician_id}</p><p>{m.work_order.status} · {m.work_order.option ?? 'Option not reported'}</p><p>Progress: <Mono>{m.work_order.progress}</Mono></p><p>ETA: {m.work_order.eta_minutes == null ? 'Not reported' : `${m.work_order.eta_minutes} DEMO minutes`}</p></div>}</td>
     <td className="font-mono text-xs">{m.latest_values ? Object.entries(m.latest_values).map(([k, v]) => <div key={k}>{k}: {v == null ? 'No data' : `${String(v)} ${fieldUnit(k)}`}</div>) : 'No data'}</td>
     <td>{m.active_incident ? <><AppLink to={`/incidents/${m.active_incident.incident_id}`} className="font-mono text-primary underline">{m.active_incident.incident_id}</AppLink><p>{m.active_incident.title}</p><p className="text-xs">Investigation: {m.active_incident.investigation_status ?? 'Not queued'}</p></> : <span className="text-muted-foreground">None</span>}</td>
@@ -70,6 +72,7 @@ export function FleetRackPane({ rack }: { rack: RackDetail }) {
     <ul className="list-disc pl-5 text-sm">{rack.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
     <p className="text-xs">Cooled by: {rack.cooled_by.map((id) => <AppLink key={id} to={`/assets/${id}`} className="mr-2 font-mono text-primary underline">{id}</AppLink>)}</p>
     <p className="text-xs">Incidents: {rack.open_incident_ids.length ? rack.open_incident_ids.map((id) => <AppLink key={id} to={`/incidents/${id}`} className="mr-2 font-mono text-primary underline">{id}</AppLink>) : 'None'}</p>
+    <div className="text-sm"><h3 className="eyebrow">GPU servers</h3>{rack.server_ids?.length ? <ul className="mt-2 space-y-2">{rack.server_ids.map((id) => <li key={id}><AppLink to={`/servers/${encodeURIComponent(id)}`} className="font-mono text-primary underline">{id}</AppLink></li>)}</ul> : <p>{rack.server_ids ? 'No server IDs returned.' : 'Server IDs not reported.'}</p>}</div>
     <FleetMachines machines={rack.machines} />
     {rack.cooling_units.length > 0 && <><h3 className="eyebrow">Cooling units</h3><FleetMachines machines={rack.cooling_units} /></>}
     {[...rack.machines, ...rack.cooling_units].map((m) => <div key={m.asset_id}><h3 className="eyebrow mb-2">{m.asset_id} · returned history</h3><div className="grid gap-3 sm:grid-cols-2">{m.chart_fields.map((field) => <div key={field} className="min-w-0">{m.history.length ? <ReadingsChart readings={m.history.map((r) => ({ ...r, data_origin: 'simulated' }))} field={field} label={field.replaceAll('_', ' ')} unit={fieldUnit(field)} height={180} /> : <Empty>No history.</Empty>}</div>)}</div></div>)}

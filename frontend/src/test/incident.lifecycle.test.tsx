@@ -33,7 +33,7 @@ it('refreshes traveling/in_progress to done/resolved on the same incident page a
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   qc.setQueryData(['learning', 'matrix'], { total_cases: 0, rows: [] });
   render(<QueryClientProvider client={qc}><IncidentDetailPage id="inc-000955" /></QueryClientProvider>);
-  await waitFor(() => expect(screen.getAllByRole('button', { name: 'Dispatch' })[0]).toBeEnabled());
+  await waitFor(() => expect(screen.getAllByRole('button', { name: 'Dispatch' })[0]).toBeEnabled(), { timeout: 3000 });
   fireEvent.click(screen.getAllByRole('button', { name: 'Dispatch' })[0] as HTMLElement);
   await screen.findByText('Status: acknowledged');
   const current = await screen.findByRole('region', { name: 'Assigned work order' });

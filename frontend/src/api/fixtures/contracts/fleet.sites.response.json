@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-11-08T01:25:12.663059Z",
+  "generated_at": "2026-11-08T02:56:18.218879Z",
   "live": {
     "status": "running",
     "run_id": "live-000001",
     "seed": 42,
     "tick_seconds": 1.0,
-    "started_at": "2026-11-08T01:25:01.245285Z",
+    "started_at": "2026-11-08T02:56:06.294360Z",
     "stopped_at": null,
     "ticks": 12,
     "auto_investigate": true,
@@ -14,35 +14,35 @@
         "asset_id": "cooling-02",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "drive-05",
         "kind": "drive_degradation",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "mill-02",
         "kind": "machine_overstrain",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "miner-05",
         "kind": "fan_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "fanwall-m3",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       }
     ]
@@ -51,12 +51,12 @@
     {
       "site_id": "datacenter",
       "name": "InfraGuard Demo Data Center",
-      "machines": 42,
+      "machines": 114,
       "racks": 18,
       "summary": {
-        "machines": 42,
+        "machines": 114,
         "racks": 18,
-        "healthy": 39,
+        "healthy": 111,
         "warning": 0,
         "critical": 3,
         "no_data": 0,
@@ -66,7 +66,7 @@
         "currency": "USD",
         "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured",
         "machines_powered_off": 0,
-        "machines_at_risk_of_shutdown": 10,
+        "machines_at_risk_of_shutdown": 30,
         "cost_if_all_fail": 75900.0,
         "cost_to_fix_all_now": 2800.0,
         "savings_if_fixed_now": 73100.0
@@ -75,7 +75,7 @@
         {
           "key": "healthy_pct",
           "label": "Machines healthy",
-          "value": 92.9,
+          "value": 97.4,
           "unit": "%",
           "source": "live readings (simulated)"
         },
@@ -92,6 +92,27 @@
           "value": 0.0,
           "unit": "of 4",
           "source": "crew model (configs/operations.json, demo assumption)"
+        },
+        {
+          "key": "gpus_throttling",
+          "label": "GPUs slowed by heat",
+          "value": 75.0,
+          "unit": "of 576",
+          "source": "live GPU readings (simulated)"
+        },
+        {
+          "key": "gpu_compute_lost_per_hour",
+          "label": "GPU compute lost right now",
+          "value": 93.2,
+          "unit": "USD/h",
+          "source": "live GPU readings (simulated) x GPU-hour price (demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote)"
+        },
+        {
+          "key": "gpu_jobs_full_speed",
+          "label": "GPU jobs at full speed",
+          "value": 3.0,
+          "unit": "of 4",
+          "source": "live GPU readings (simulated)"
         },
         {
           "key": "drives_at_risk",
@@ -213,7 +234,7 @@
         {
           "key": "curtailed_now",
           "label": "In curtailment window (power costs more than mining earns)",
-          "value": 1.0,
+          "value": 0.0,
           "unit": "bool",
           "source": "demo assumption shaped like a Texas summer day-ahead curve, not real market data"
         }

@@ -1,0 +1,10 @@
+import server from './fixtures/contracts/fleet.server.response.json';
+import crashed from './fixtures/contracts/fleet.server.crashed.response.json';
+import jobs from './fixtures/contracts/fleet.jobs.excerpt.json';
+import whatif from './fixtures/contracts/incident.server.whatif.response.json';
+import type { ServerDetail, GpuJob, SiteMetric } from './fleet-types';
+import type { WhatIfResponse } from './ops-types';
+import type { JsonShape } from './ops-fixtures';
+const checks: [JsonShape<ServerDetail>, JsonShape<ServerDetail>, JsonShape<{ jobs: GpuJob[]; site_metrics: SiteMetric[] }>, JsonShape<WhatIfResponse>] = [server, crashed, jobs, whatif];
+void checks;
+export const gpuFixtures = { server: server as ServerDetail, crashed: crashed as ServerDetail, jobs, whatif: whatif as WhatIfResponse };
