@@ -4,7 +4,7 @@ import { assetQuery, modelsQuery, readingsQuery } from "@/api/queries";
 import type { Reading } from "@/api/types";
 import { AppLink } from "@/lib/router-adapter";
 import { ReadingsChart } from "@/components/ReadingsChart";
-import { Badge, Empty, ErrorState, Fields, Loading, Mono, OriginBadge, PageHeader, RiskBadge, Section, dt, money, val } from "@/components/ui-kit";
+import { Badge, Empty, ErrorState, Fields, Loading, Mono, OriginBadge, PageHeader, RiskBadge, Section, SourceDetails, dt, money, val } from "@/components/ui-kit";
 
 export function NotFoundState({ what, back, backLabel }: { what: string; back: string; backLabel: string }) {
   return (
@@ -24,7 +24,7 @@ export function ReadingsTable({ readings }: { readings: Reading[] }) {
         <thead><tr><th>Observed (UTC)</th>{fields.map((f) => <th key={f} className="text-right">{f}</th>)}<th>Data</th></tr></thead>
         <tbody className="font-mono text-[12.5px]">
           {readings.map((r) => (
-            <tr key={r.observed_at}><td>{dt(r.observed_at)}</td>{fields.map((f) => <td key={f} className="text-right">{val(r.values[f])}</td>)}<td className="font-sans">{r.data_origin}</td></tr>
+            <tr key={r.observed_at}><td>{dt(r.observed_at)}</td>{fields.map((f) => <td key={f} className="text-right">{val(r.values[f])}</td>)}<td className="font-sans"><OriginBadge origin={r.data_origin} /></td></tr>
           ))}
         </tbody>
       </table>
@@ -78,7 +78,7 @@ export function AssetDetailPage({ id }: { id: string }) {
                   ["Cost per hour", <Mono>{money(ia.cost_per_hour, ia.currency)}</Mono>],
                   ["Repair cost", <Mono>{money(ia.estimated_repair_cost, ia.currency)}</Mono>],
                 ]} />
-                {ia.assumptions_source && <p className="mt-2 border-t border-border pt-2 text-xs text-attention-foreground">Source: {ia.assumptions_source}</p>}
+                <div className="mt-2 border-t border-border pt-2"><SourceDetails><p>assumptions_source: {ia.assumptions_source ?? "Not reported"}</p><p>Scenario estimates; not measured costs or actual billing.</p></SourceDetails></div>
                 <p className="mt-1 text-xs text-muted-foreground">Editing assumptions is not yet available.</p>
               </>
             ) : <Empty>No impact assumptions provided.</Empty>}

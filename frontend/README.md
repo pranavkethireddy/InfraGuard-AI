@@ -19,9 +19,9 @@ npm --prefix frontend run build          # output: frontend/dist
 | `VITE_DATA_MODE` | Behaviour |
 | --- | --- |
 | `fixture` (explicit offline preview/tests) | Serves the approved contract fixtures in `src/api/fixtures/contracts/` verbatim through the same typed client (404 for anything without a fixture). A persistent "Fixture preview — illustrative data, not live" banner is shown. All mutations are disabled. Fleet snapshots are static; the approved mining status fixture is available, but no mining map/rack fixture exists. |
-| `live` (default) | Calls `VITE_API_BASE_URL` (default `http://localhost:8000/api/v1`). Errors (`{error:{code,message,details,request_id}}`, HTTP 404/409/422/503 or network) are shown with the request ID. **There is never a fallback to fixtures.** |
+| `live` (default) | Calls `VITE_API_BASE_URL` (default `/api/v1` on the origin where the app is opened). Errors (`{error:{code,message,details,request_id}}`, HTTP 404/409/422/503 or network) are shown with the request ID. **There is never a fallback to fixtures.** |
 
-The FastAPI backend must allow CORS from the dev origin (`http://localhost:5173`).
+Vite preserves the `/api` prefix and proxies requests and EventSource streams to `http://127.0.0.1:8000`: `/api/v1/ops/stream` remains `/api/v1/ops/stream` upstream. The browser uses the frontend origin, including when opened by LAN IP. Start the existing backend separately; no backend configuration is changed by this export. An explicit absolute `VITE_API_BASE_URL` (e.g. `https://api.example.org/api/v1`) works for both fetch and streams; that API must already permit your frontend origin. The Vite proxy is development-only: deployed hosting needs an existing same-origin `/api` reverse proxy or an explicitly configured reachable absolute API URL.
 `VITE_*` values are bundled into the browser — never put secrets in them.
 
 ## Fixtures
@@ -49,11 +49,11 @@ Overview combines `GET /ops/floor?site=` with hall-local fleet coordinates trans
 
 `/pager?technician=tech-03` defaults to Sam Rivera; select another returned technician via the floor link or technician ID field. Initial `GET /ops/pager/{encodedId}` and `event: pager` from `/ops/stream?technician_id=` share the configured `VITE_API_BASE_URL` (including `/api/v1`). Monotonic versions protect against older GET/POST/SSE responses. Stream state reports connecting/live/reconnecting/error/stale while retaining last good data; fixture mode opens no EventSource. Claim/release are explicit bodyless POSTs only, never automatic on mount/unmount. Actions POST `{action,work_order_id}` and render only returned accept/decline/done permissions; no Arrived endpoint. Pending requests block duplicates. 409 NOT_YOUR_JOB/NOT_PAGED/NOT_STARTED refetch authoritative state for manual review/retry. Device-controlled is demo backend state, not security identity. Operations has an explicit automatic-dispatch switch; Overview only displays the returned state.
 
-For a local iPad on the same Wi-Fi, configure your existing backend/frontend yourself (these steps do not change server settings):
+For a local iPad, use the same trusted Wi-Fi as the laptop, or use an already deployed public URL. A proxy alone does **not** make a laptop reachable across separate networks. No tunnel, deployment, router port forwarding or backend CORS/env changes are performed here.
 
-1. Run FastAPI with `--host 0.0.0.0`; include the frontend LAN origin, e.g. `http://192.168.1.20:5173`, in backend `CORS_ORIGINS`.
-2. Set `VITE_API_BASE_URL=http://LAN_IP:8000/api/v1` and `VITE_DATA_MODE=live` in your local frontend environment (replace LAN_IP with the laptop address).
-3. Run `npm --prefix frontend run dev -- --host 0.0.0.0` and open `http://LAN_IP:5173/pager?technician=tech-03` on the iPad. Restrict access to your trusted local network; this is not deployment or authentication.
+1. Run your existing FastAPI backend locally at `127.0.0.1:8000`; it need not be LAN-exposed for the Vite proxy.
+2. Keep `VITE_API_BASE_URL=/api/v1` and `VITE_DATA_MODE=live` (the defaults).
+3. When you choose to start development, `npm --prefix frontend run dev` has LAN host support (`0.0.0.0`). Open `http://LAN_IP:5173/pager?technician=tech-03` on the same-Wi-Fi iPad, using the laptop address. Local firewall/network restrictions may still prevent access. Restrict access to your trusted network; this is not deployment or authentication.
 
 Pager controls have 44px+ touch targets, keyboard focus, and locally scrolling tables for portrait/landscape. Community impact #44 is not implemented because its contract is not approved.
 
@@ -72,6 +72,7 @@ Pager controls have 44px+ touch targets, keyboard focus, and locally scrolling t
 - The hosted Lovable preview remains fixture by default. This standalone export remains live by default; Vitest explicitly sets fixture mode unless a test mocks live HTTP. No Gemini or other private key belongs in `VITE_*`.
 
 - All risk levels, scores, costs, impact and priority values are displayed exactly as the API returns them; the browser never computes them.
+- Compact Estimate indicators open source/provenance details: repair/GPU prices are demo assumptions, never actual billing. Historical mining hashprice source/date stays inspectable separately from repair assumptions. Job pace, lost USD/hour and site GPU money remain directly visible. Synthetic data and score types remain labelled; the fixture banner is always prominent.
 - `heuristic` and `model_score` values are labelled "not a probability"; only `calibrated_probability` is called a probability.
 - Models without returned metrics show "Not evaluated" (or "not applicable" for rules). No metrics are invented.
 - Impact assumptions are read-only (editing deferred). There is no approve/handoff action.

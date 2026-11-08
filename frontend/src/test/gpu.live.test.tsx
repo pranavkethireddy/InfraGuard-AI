@@ -64,7 +64,16 @@ it('targets explicit server fault without a kind selector and blocks duplicate p
 it('links returned rack server IDs explicitly and renders exact job reasons/prices without financial calculations', () => {
   mount(<><FleetRackPane rack={f.rack} /><GpuJobs jobs={g.jobs.jobs} /></>);
   for (const id of f.rack.server_ids ?? []) expect(screen.getAllByRole('link', { name: id })[0]).toHaveAttribute('href', `/servers/${id}`);
-  expect(screen.getByText('48.96')).toBeInTheDocument(); expect(screen.getByText('84.7 %')).toBeInTheDocument(); expect(screen.getByText("34 GPUs are throttling from heat; the job runs at the slowest GPU's speed")).toBeInTheDocument(); expect(screen.getAllByText(/demo price, not an actual bill/)).toHaveLength(4);
+  expect(screen.getByText('48.96')).toBeVisible(); expect(screen.getByText('84.7 %')).toBeVisible(); expect(screen.getByText("34 GPUs are throttling from heat; the job runs at the slowest GPU's speed")).toBeVisible();
+  const prices = screen.getAllByText(/demo price, not an actual bill/);
+  expect(prices).toHaveLength(4);
+  for (const price of prices) {
+    expect(price).not.toBeVisible();
+    const details = price.closest('details');
+    if (!details) throw new Error('Missing price disclosure');
+    fireEvent.click(within(details).getByText('Source details', { selector: 'summary' }));
+    expect(price).toBeVisible();
+  }
 });
 function assetsBackend(fail = false) {
   h.fetch.mockImplementation(async (url: string) => {

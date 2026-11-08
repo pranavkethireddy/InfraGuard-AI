@@ -37,7 +37,7 @@ export function SiteFloor({ floor, halls, technicians, selected, onSelect }: { f
                 <text x={r.x + r.width / 2} y={r.y + r.depth / 2} textAnchor="middle" fontSize="0.24" className="pointer-events-none fill-foreground font-mono">{r.rack_id}</text>
                 <text x={r.x + r.width / 2} y={r.y + r.depth * .8} textAnchor="middle" fontSize="0.18" className="pointer-events-none fill-foreground">{r.status} · {r.power_state ?? '?'}</text>
               </g>)}
-              {hall?.machines.map((m) => <circle key={m.asset_id} role="img" aria-label={`${m.name}: ${m.status} · Power: ${m.power_state ?? 'Not reported'}`} cx={m.placement.x} cy={m.placement.y} r="0.12" className={`${healthClass[m.status]} ${powerClass(m.power_state)}`} strokeWidth="0.04"><title>{m.asset_id} · {m.power_reason ?? 'Power not reported'}</title></circle>)}
+              {hall?.machines.map((m) => <circle key={m.asset_id} role="img" aria-label={`${m.name}: ${m.status} · Power: ${m.power_state ?? 'Not reported'}`} cx={m.placement.x} cy={m.placement.y} r="0.12" className={`pointer-events-none ${healthClass[m.status]} ${powerClass(m.power_state)}`} strokeWidth="0.04"><title>{m.asset_id} · {m.power_reason ?? 'Power not reported'}</title></circle>)}
             </g>
             <path d={`M ${f.door.x} ${f.door.y} V ${floor.corridor_y}`} className="stroke-rule-strong" strokeWidth="0.08" />
             <circle cx={f.door.x} cy={f.door.y} r="0.22" className="fill-chart-line"><title>{f.name} door</title></circle>

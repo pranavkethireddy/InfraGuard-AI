@@ -1,5 +1,5 @@
 import type { DetectorModel, EvaluationMetrics } from "@/api/types";
-import { Badge, Fields, Mono, SCORE_KIND_LABEL, Section, val } from "./ui-kit";
+import { Badge, Fields, Mono, SCORE_KIND_LABEL, Section, SourceDetails, val } from "./ui-kit";
 
 export function evaluationLabel(m: DetectorModel): string {
   if (m.evaluation_status === "evaluated" && m.metrics) return "Evaluated";
@@ -54,7 +54,6 @@ export function ModelCard({ model: m }: { model: DetectorModel }) {
         {m.status === "available" ? <Badge tone="accent">Available</Badge> : <Badge tone="attention">Unavailable</Badge>}
         <Badge>{m.kind === "rule" ? "Rule" : "ML"}</Badge>
         <Badge>{evaluationLabel(m)}</Badge>
-        {synthetic && <Badge tone="attention">Synthetic benchmark data</Badge>}
       </div>
       <Fields rows={[
         ["Score type", SCORE_KIND_LABEL[m.score_kind]],
@@ -62,7 +61,6 @@ export function ModelCard({ model: m }: { model: DetectorModel }) {
         ["Asset types", <Mono>{m.asset_types.join(", ")}</Mono>],
         ["Horizon", m.prediction_horizon_hours == null ? "None (not a forecast)" : <Mono>{horizonLabel(m.prediction_horizon_hours)}</Mono>],
         ["Evaluation", evaluationLabel(m)],
-        ["Source dataset", m.source_dataset ?? "—"],
         ["Risk thresholds", m.risk_thresholds ? <Mono>{Object.entries(m.risk_thresholds).map(([k, v]) => `${k} ≥ ${v}`).join(" · ")}</Mono> : "—"],
         ["Model card", m.model_card_url ? <Mono>{m.model_card_url}</Mono> : "—"],
       ]} />
@@ -82,12 +80,11 @@ export function ModelCard({ model: m }: { model: DetectorModel }) {
       ) : (
         <p className="mt-3 text-[13px] text-muted-foreground">No evaluation metrics returned by the API.</p>
       )}
-      {m.limitations.length > 0 && (
-        <div className="mt-3 border-t border-border pt-2">
-          <p className="eyebrow">Limitations</p>
-          <ul className="mt-1 list-disc pl-5 text-[13px]">{m.limitations.map((l) => <li key={l}>{l}</li>)}</ul>
-        </div>
-      )}
+      <div className="mt-3 border-t border-border pt-2"><SourceDetails>
+        <p>Source dataset: {m.source_dataset ?? 'Not reported'}</p>
+        {synthetic && <p>Synthetic benchmark data; not validated production observations.</p>}
+        {m.limitations.length > 0 && <ul className="list-disc pl-5">{m.limitations.map((l) => <li key={l}>{l}</li>)}</ul>}
+      </SourceDetails></div>
     </Section>
   );
 }

@@ -5,7 +5,7 @@ import { FleetMachines, PowerDetails, HealthBadge, fieldUnit } from '@/component
 import { GpuJobs } from '@/components/GpuJobs';
 import { ReadingsChart } from '@/components/ReadingsChart';
 import { AppLink } from '@/lib/router-adapter';
-import { Badge, ConsoleButton, Empty, ErrorMessage, ErrorState, Fields, Loading, PageHeader, Section } from '@/components/ui-kit';
+import { Badge, ConsoleButton, Empty, ErrorMessage, ErrorState, Fields, Loading, PageHeader, Section, SourceDetails } from '@/components/ui-kit';
 const reported = (v: unknown) => v == null ? 'Not reported' : String(v);
 export function ServerPage({ id, gpuIndex, onGpuChange }: { id: string; gpuIndex: number | undefined; onGpuChange: (index: number) => void }) {
   return <ServerWorkspace key={id} id={id} gpuIndex={gpuIndex} onGpuChange={onGpuChange} />;
@@ -21,7 +21,7 @@ function ServerWorkspace({ id, gpuIndex, onGpuChange }: { id: string; gpuIndex: 
   const fields = selected ? [`gpu${selected.index}_temp_c`, `gpu${selected.index}_clock_pct`] : [];
   const histories = fields.filter((f) => m.history.some((r) => r.values[f] != null));
   return <>
-    <PageHeader title={m.name} meta={<>{id} · <AppLink to="/fleet?site=datacenter" className="text-primary underline">Rack {s.rack_id} · Live fleet</AppLink></>} actions={<><HealthBadge status={m.status} /><Badge>Simulated GPU rule · heuristic, not a probability</Badge></>} />
+    <PageHeader title={m.name} meta={<>{id} · <AppLink to="/fleet?site=datacenter" className="text-primary underline">Rack {s.rack_id} · Live fleet</AppLink></>} actions={<><HealthBadge status={m.status} /><span className="text-xs text-muted-foreground">Heuristic score — not a probability</span><SourceDetails><p>data_origin: simulated</p><p>Synthetic GPU rule scenario; not production observations.</p></SourceDetails></>} />
     {q.error && <ErrorState error={q.error} />}
     <div className="space-y-6">
       <Section title="Server state">

@@ -58,7 +58,11 @@ export function StatusBadge({ status }: { status: IncidentStatus }) {
 }
 
 export function OriginBadge({ origin }: { origin: DataOrigin }) {
-  return origin === "simulated" ? <Badge>Simulated data</Badge> : <Badge tone="accent">Observed data</Badge>;
+  return <SourceDetails><p>data_origin: {origin}</p>{origin === 'simulated' && <p>Synthetic scenario data; not production observations.</p>}</SourceDetails>;
+}
+
+export function SourceDetails({ children }: { children: ReactNode }) {
+  return <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Source details</summary><div className="mt-2 space-y-1 break-words">{children}</div></details>;
 }
 
 export const SCORE_KIND_LABEL: Record<ScoreKind, string> = {

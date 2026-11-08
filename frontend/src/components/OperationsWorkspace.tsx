@@ -6,7 +6,7 @@ import { ApiError, DATA_MODE, FIXTURE_MUTATION_MESSAGE } from '@/api/client';
 import { learningCasesQuery, techniciansQuery, useDispatch, whatIfQuery } from '@/api/ops-queries';
 import type { DispatchResponse, RepairOption, WhatIfResponse } from '@/api/ops-types';
 import type { SiteId } from '@/api/fleet-types';
-import { Badge, ConsoleButton, Empty, ErrorMessage, ErrorState, Fields, Loading, Mono, Section, inputCls, val } from './ui-kit';
+import { Badge, ConsoleButton, Empty, ErrorMessage, ErrorState, Fields, Loading, Mono, Section, SourceDetails, inputCls, val } from './ui-kit';
 
 export const available = (v: unknown) => v == null ? 'Unavailable' : String(v);
 const colors = ['var(--primary)', 'var(--chart-line)', 'var(--attention)'];
@@ -67,10 +67,10 @@ function WhatIfWorkspace({ id, resolved, workOrderId }: { id: string; resolved: 
   const [technician, setTechnician] = useState('');
   const assigned = crew.data?.work_orders.find((w) => workOrderId ? w.work_order_id === workOrderId : w.incident_id === id);
   const alreadyDispatched = !resolved && assigned?.status !== 'done' && (!!assigned || !!workOrderId);
-  return <Section title="What-if" aside={<Badge tone="attention">DEMO assumptions · human review required</Badge>}>
+  return <Section title="What-if" aside="Human review required">
     {q.isLoading ? <Loading /> : !q.data ? <ErrorState error={q.error} /> : <div className="space-y-5">
       {q.error && <ErrorState error={q.error} />}
-      <p className="text-xs text-muted-foreground">Source: {q.data.assumptions_source} · demo clock {q.data.demo_time}</p>
+      <p className="text-xs text-muted-foreground">DEMO clock {q.data.demo_time}</p><SourceDetails><p>assumptions_source: {q.data.assumptions_source}</p><p>Prototype scenario repair/revenue estimates; not production observations or actual billing.</p></SourceDetails>
       <p><strong>Backend recommendation: </strong>{available(q.data.recommended)} · {q.data.reason}</p>
       <Fields rows={[["Current value", `${available(q.data.current_value)} ${available(q.data.unit)}`], ["Trend per DEMO hour", available(q.data.trend_per_hour)], ["Shutdown threshold", available(q.data.shutdown_threshold)], ["Shutdown in DEMO hours", available(q.data.shutdown_in_hours)], ["Window", `${q.data.window.label}: ${q.data.window.starts_in_hours}–${q.data.window.ends_in_hours} DEMO h`], ["Breakeven USD/MWh", available(q.data.window.breakeven_usd_per_mwh)], ["Savings vs worst (USD)", available(q.data.savings_vs_worst)]]} />
       <WhatIfCurves data={q.data} />
@@ -79,13 +79,13 @@ function WhatIfWorkspace({ id, resolved, workOrderId }: { id: string; resolved: 
         <h3 className="mb-3 font-semibold">Assigned work order · current backend state</h3>
         {assigned ? <>
           <Fields rows={[["Work order", assigned.work_order_id], ["Title", assigned.title], ["Technician", crew.data?.technicians.find((t) => t.technician_id === assigned.technician_id)?.name ?? assigned.technician_id], ["Status", assigned.status], ["Progress (fraction)", assigned.progress], ["ETA", `${available(assigned.eta_minutes)} DEMO minutes`], ["Completed at", available(assigned.completed_at)]]} />
-          {assigned.cost && <div className="max-w-full min-w-0 overflow-x-auto"><table className="data-table mt-3"><caption className="text-left text-xs">Completed work-order cost · USD · returned demo values</caption><tbody>{Object.entries(assigned.cost).map(([key, value]) => <tr key={key}><td>{key}</td><td>{value}</td></tr>)}</tbody></table></div>}
+          {assigned.cost && <div className="max-w-full min-w-0 overflow-x-auto"><table className="data-table mt-3"><caption className="text-left text-xs">Completed work-order cost · USD</caption><tbody>{Object.entries(assigned.cost).map(([key, value]) => <tr key={key}><td>{key}</td><td>{value}</td></tr>)}</tbody></table></div>}
         </> : <p>{crew.isLoading ? 'Loading assigned work order…' : 'Assigned work-order status unavailable.'}</p>}
       </div>}
       {resolved && <div role="region" aria-label="Repair learning result" className="border-t border-border py-4">
         <h3 className="mb-3 font-semibold">Returned learning result</h3>
         {learned.isLoading ? <Loading /> : learned.error ? <ErrorState error={learned.error} /> : learned.data?.items.some((c) => c.asset_id === q.data?.asset_id) ?
-          <div className="max-w-full min-w-0 overflow-x-auto"><table className="data-table"><thead><tr><th>Case</th><th>Outcome / source</th><th>Fix</th><th>Repair / cost</th></tr></thead><tbody>{learned.data.items.filter((c) => c.asset_id === q.data?.asset_id).map((c) => <tr key={c.case_id}><td>{c.case_id}</td><td>{c.outcome} · {c.source}</td><td>{c.fix}</td><td>{c.repair_hours} DEMO h · {c.cost} USD</td></tr>)}</tbody></table></div> : <Empty>No learned result returned for this asset.</Empty>}
+          <div className="max-w-full min-w-0 overflow-x-auto"><table className="data-table"><thead><tr><th>Case</th><th>Outcome / source</th><th>Fix</th><th>Repair / cost</th></tr></thead><tbody>{learned.data.items.filter((c) => c.asset_id === q.data?.asset_id).map((c) => <tr key={c.case_id}><td>{c.case_id}</td><td>{c.outcome}<SourceDetails><p>Source: {c.source}</p></SourceDetails></td><td>{c.fix}</td><td>{c.repair_hours} DEMO h · {c.cost} USD</td></tr>)}</tbody></table></div> : <Empty>No learned result returned for this asset.</Empty>}
       </div>}
       <label className="block max-w-sm text-xs">Technician (optional explicit choice)<select className={`${inputCls} mt-1`} value={technician} onChange={(e) => setTechnician(e.target.value)} disabled={DATA_MODE === 'fixture' || crew.isLoading || !!crew.error}>
         <option value="">Backend selection</option>{crew.data?.technicians.map((t) => <option key={t.technician_id} value={t.technician_id}>{t.name} · {t.role} · {t.status}</option>)}
@@ -94,7 +94,7 @@ function WhatIfWorkspace({ id, resolved, workOrderId }: { id: string; resolved: 
       <div className="divide-y divide-border">{q.data.options.map((o) => <article key={o.option} className="py-5">
         <h3 className="mb-2 font-semibold">{o.label} {o.option === q.data?.recommended && <Badge tone="accent">Backend recommended</Badge>}</h3><p className="mb-3 text-sm">{o.description}</p>
         <Fields rows={[["Technician", o.technician_name ?? 'Unavailable'], ["Displaced job", o.displaces ?? 'None reported'], ["Start / done", `${available(o.start_in_hours)} / ${available(o.done_in_hours)} DEMO h`], ["Shutdown / downtime", `${available(o.shutdown_at_hours)} / ${available(o.downtime_hours)} DEMO h`]]} />
-        <div className="max-w-full min-w-0 overflow-x-auto"><table className="data-table my-3"><caption className="text-left text-xs text-muted-foreground">Itemized costs · USD · returned demo estimates</caption><tbody>{Object.entries(o.costs).map(([k, v]) => <tr key={k}><td>{k.replaceAll('_', ' ')}</td><td><Mono>{available(v)}</Mono></td></tr>)}</tbody></table></div>
+        <div className="max-w-full min-w-0 overflow-x-auto"><table className="data-table my-3"><caption className="text-left text-xs text-muted-foreground">Itemized costs · USD</caption><tbody>{Object.entries(o.costs).map(([k, v]) => <tr key={k}><td>{k.replaceAll('_', ' ')}</td><td><Mono>{available(v)}</Mono></td></tr>)}</tbody></table></div>
         {o.risk_note && <p className="mb-3 text-attention-foreground">{o.risk_note}</p>}
         <DispatchControl incidentId={id} option={o.option} technicianId={technician || undefined} disabled={resolved || !!alreadyDispatched || crew.isFetching || !!crew.error || q.isFetching} />
       </article>)}</div>
