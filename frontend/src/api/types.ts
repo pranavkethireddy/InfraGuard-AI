@@ -151,6 +151,7 @@ export interface IncidentDetail extends IncidentSummary {
   agent_steps?: AgentStep[] | null;
   problem?: string | null;
   likely_cause?: string | null;
+  work_order_id?: string | null;
 }
 
 export interface AgentStep {

@@ -9,6 +9,7 @@ import { IncidentsPage } from "@/pages/IncidentsPage";
 import { IncidentDetailPage } from "@/pages/IncidentDetailPage";
 import { ModelsPage } from "@/pages/ModelsPage";
 import { FleetPage } from '@/pages/FleetPage';
+import { OperationsPage } from '@/pages/OperationsPage';
 
 function RRLink({ to, className = "", activeClassName, exact, onClick, children }: AppLinkProps) {
   return (
@@ -36,6 +37,11 @@ function OverviewRoute() {
   const site = search.get('site') === 'mining' ? 'mining' : 'datacenter';
   return <OverviewPage site={site} onSiteChange={(next) => setSearch((prev) => { const p = new URLSearchParams(prev); p.set('site', next); return p; })} />;
 }
+function OperationsRoute() {
+  const [search, setSearch] = useSearchParams();
+  const site = search.get('site') === 'mining' ? 'mining' : 'datacenter';
+  return <OperationsPage site={site} onSiteChange={(next) => setSearch((prev) => { const p = new URLSearchParams(prev); p.set('site', next); return p; })} />;
+}
 
 export function App() {
   return (
@@ -44,6 +50,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<OverviewRoute />} />
           <Route path="/fleet" element={<FleetRoute />} />
+          <Route path="/operations" element={<OperationsRoute />} />
           <Route path="/assets" element={<AssetsPage />} />
           <Route path="/assets/:id" element={<AssetDetailRoute />} />
           <Route path="/simulate" element={<SimulatePage />} />

@@ -5,6 +5,8 @@ import type {
 import { fixtures } from "./fixtures";
 import { DEFAULT_DATA_MODE } from "./mode-default";
 import { fleetFixtures } from './fleet-fixtures';
+import { opsFixtures } from './ops-fixtures';
+import type { DispatchRequest, DispatchResponse, LearningCases, LearningMatrix, PlanResponse, TechniciansResponse, WhatIfResponse } from './ops-types';
 import type { ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, LiveStartRequest, LiveStatus, RackDetail, SiteId, SitesResponse } from './fleet-types';
 
 // VITE_* values are bundled into the browser. Never put secrets in them.
@@ -59,6 +61,12 @@ export interface ApiClient {
   stopFleet(): Promise<LiveStatus>;
   injectFaults(body: FaultRequest): Promise<FaultResponse>;
   clearFleet(): Promise<ClearResponse>;
+  incidentWhatIf(id: string): Promise<WhatIfResponse>;
+  opsTechnicians(site: SiteId): Promise<TechniciansResponse>;
+  opsPlan(site: SiteId): Promise<PlanResponse>;
+  dispatch(body: DispatchRequest): Promise<DispatchResponse>;
+  learningMatrix(): Promise<LearningMatrix>;
+  learningCases(site: SiteId, assetType?: string): Promise<LearningCases>;
 }
 
 function qs(params: Record<string, string | number | undefined>): string {
@@ -124,6 +132,12 @@ export function createLiveClient(baseUrl = API_BASE_URL, fetchImpl: typeof fetch
     stopFleet: () => req('/fleet/live/stop', json('POST')),
     injectFaults: (body) => req('/fleet/faults', json('POST', body)),
     clearFleet: () => req('/fleet/clear', json('POST')),
+    incidentWhatIf: (id) => req(`/incidents/${enc(id)}/whatif`),
+    opsTechnicians: (site) => req(`/ops/technicians${qs({ site })}`),
+    opsPlan: (site) => req(`/ops/plan${qs({ site })}`),
+    dispatch: (body) => req('/ops/dispatch', json('POST', body)),
+    learningMatrix: () => req('/learning/matrix'),
+    learningCases: (site, asset_type) => req(`/learning/cases${qs({ site, asset_type })}`),
   };
 }
 
@@ -158,6 +172,12 @@ export function createFixtureClient(): ApiClient {
     fleetStatus: (site) => later(site === 'mining' ? fleetFixtures.mining : fleetFixtures.status),
     fleetRack: (id) => id === fleetFixtures.rack.rack_id ? later(fleetFixtures.rack) : Promise.reject(notFound(`Rack ${id} (no approved fixture)`)),
     startFleet: disabled, stopFleet: disabled, injectFaults: disabled, clearFleet: disabled,
+    incidentWhatIf: (id) => id === opsFixtures.whatif.incident_id ? later(opsFixtures.whatif) : Promise.reject(notFound(`What-if for ${id} (no approved fixture)`)),
+    opsTechnicians: (site) => later({ ...opsFixtures.technicians, technicians: opsFixtures.technicians.technicians.filter((t) => t.site_id === site), work_orders: opsFixtures.technicians.work_orders.filter((w) => w.site_id === site) }),
+    opsPlan: (site) => site === opsFixtures.plan.site_id ? later(opsFixtures.plan) : Promise.reject(notFound(`Plan for ${site} (no approved fixture)`)),
+    dispatch: disabled,
+    learningMatrix: () => later(opsFixtures.matrix),
+    learningCases: (site, type) => { const items = opsFixtures.cases.items.filter((c) => c.site_id === site && (!type || c.asset_type === type)); return later({ items, total: items.length }); },
   };
 }
 

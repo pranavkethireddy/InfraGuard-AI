@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import type { IncidentPatch, Simulation, SimulationRequest } from "./types";
+import type { IncidentDetail, IncidentPatch, Simulation, SimulationRequest } from "./types";
 
 const POLL_MS = 15_000;
 /** Simulation status and readings are polled every 2 s while a run is active. */
@@ -15,7 +15,9 @@ export const readingsQuery = (id: string, limit = 500) =>
 export const incidentsQuery = (status?: "open" | "acknowledged" | "resolved") =>
   queryOptions({ queryKey: ["incidents", { status }], queryFn: () => api.listIncidents({ status, limit: 100 }), refetchInterval: POLL_MS });
 export const investigationPollInterval = (status: string | null | undefined): number | false => status === 'queued' || status === 'running' ? 1_000 : false;
-export const incidentQuery = (id: string) => queryOptions({ queryKey: ["incident", id], queryFn: () => api.getIncident(id), refetchInterval: (q) => investigationPollInterval(q.state.data?.investigation_status) });
+export const incidentPollInterval = (incident: Pick<IncidentDetail, 'status' | 'work_order_id' | 'investigation_status'> | undefined): number | false =>
+  incident?.work_order_id && incident.status !== 'resolved' ? 1_000 : investigationPollInterval(incident?.investigation_status);
+export const incidentQuery = (id: string) => queryOptions({ queryKey: ["incident", id], queryFn: () => api.getIncident(id), refetchInterval: (q) => incidentPollInterval(q.state.data) });
 export const modelsQuery = () => queryOptions({ queryKey: ["models"], queryFn: () => api.listModels() });
 /** Recovery: all runs for an asset in backend order; the page picks the active one (see pickRecoverableSimulation). */
 export const assetSimulationsQuery = (assetId: string) =>
