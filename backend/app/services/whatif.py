@@ -188,7 +188,7 @@ def compute(store: Store, settings: Settings, incident_id: str) -> WhatIf:
         asset = all_assets()[inc.asset_id]
         lay = site_of(inc.asset_id)
         hall = lay.placements[inc.asset_id].hall_id
-        cands = ops.candidates(st, settings, lay.site_id, asset.asset_type, hall)
+        cands = ops.candidates(st, settings, lay.site_id, asset.asset_type, hall, asset.asset_id)
         win = ops.window(lay.site_id, st, settings)
         t_demo = ops.demo_now(st, settings)
     imp = impact_service.for_asset(settings.impact_assumptions_path, asset.asset_id, asset.asset_type)
@@ -304,7 +304,7 @@ def plan(store: Store, settings: Settings, site: str):
         rec = next(o for o in w.options if o.option == w.recommended)
         with store.lock:
             cands = ops.candidates(ops.state(store, settings), settings, site, asset.asset_type,
-                                   lay.placements[asset.asset_id].hall_id)
+                                   lay.placements[asset.asset_id].hall_id, asset.asset_id)
         pick = next((c for c in cands if c.tech.cfg["technician_id"] == rec.technician_id
                      and rec.technician_id not in taken), None) or next(
             (c for c in cands if c.tech.cfg["technician_id"] not in taken), None)

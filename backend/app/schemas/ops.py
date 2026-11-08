@@ -8,9 +8,40 @@ from .common import ContractModel, RiskLevel
 
 TechStatus = Literal["idle", "traveling", "working"]
 WorkKind = Literal["repair", "routine"]
-WorkStatus = Literal["scheduled", "traveling", "in_progress", "paused", "done"]
+# paged: sent to a technician's pager, waiting for them to accept (device-controlled technicians only).
+# awaiting_confirmation: the planned hours are used up; the technician confirms "done" on the pager.
+WorkStatus = Literal["scheduled", "paged", "traveling", "in_progress", "awaiting_confirmation", "paused", "done"]
 OptionId = Literal["fix_now", "wait_for_window", "buy_time"]
 PowerState = Literal["on", "at_risk", "off"]
+
+
+class FloorPoint(ContractModel):
+    """A point on the site floor plan (GET /ops/floor), in floor cells. hall_id is None in the corridor."""
+
+    x: float
+    y: float
+    hall_id: str | None
+
+
+class FloorHall(ContractModel):
+    hall_id: str
+    name: str
+    # Hall origin on the site floor: a hall-local point (x, y) from the fleet map is at (x + this.x, y + this.y).
+    x: float
+    y: float
+    width: float
+    depth: float
+    door: FloorPoint
+
+
+class FloorPlan(ContractModel):
+    site_id: str
+    width: float
+    depth: float
+    corridor_y: float
+    lane_offset: float
+    grid_unit: str
+    halls: list[FloorHall]
 
 
 class WorkOrderCost(ContractModel):
@@ -42,6 +73,9 @@ class WorkOrder(ContractModel):
     completed_at: AwareDatetime | None
     displaced_work_order_id: str | None
     cost: WorkOrderCost | None
+    # Where the work happens on the floor plan (the aisle in front of the rack, or beside the unit).
+    spot: FloorPoint | None = None
+    asset_name: str | None = None
 
 
 class Technician(ContractModel):
@@ -55,11 +89,20 @@ class Technician(ContractModel):
     location_hall_id: str
     current_work_order: WorkOrder | None
     queued_work_order_ids: list[str]
+    # Live position on the floor plan and the waypoints still to walk (empty when not walking).
+    position: FloorPoint | None = None
+    path: list[FloorPoint] = []
+    walking_minutes_left: float | None = None
+    # True while a pager (e.g. an iPad) has claimed this technician: they accept and finish jobs themselves.
+    device_controlled: bool = False
 
 
 class TechniciansResponse(ContractModel):
     demo_time: AwareDatetime
     demo_minutes_per_tick: float
+    # New incidents are sent to the closest qualified technician automatically.
+    auto_dispatch: bool = False
+    walk_cells_per_demo_minute: float = 0.0
     technicians: list[Technician]
     work_orders: list[WorkOrder]
     assumptions_source: str
@@ -206,3 +249,42 @@ class LearningMatrix(ContractModel):
 class LearnedCases(ContractModel):
     items: list[LearnedCase]
     total: int
+
+
+PagerAction = Literal["accept", "decline", "done"]
+
+
+class PagerJob(ContractModel):
+    work_order: WorkOrder
+    asset_id: str | None
+    asset_name: str | None
+    location: str | None
+    incident_id: str | None
+    risk_level: RiskLevel | None
+    problem: str | None
+    likely_cause: str | None
+    steps: list[str]
+    # Why this technician: e.g. "Closest qualified technician: 1.4 demo minutes away".
+    why_you: str
+    savings_if_fixed_now: float | None
+    cost_per_hour_while_down: float | None
+    walking_minutes_left: float | None
+    actions: list[PagerAction]
+
+
+class PagerView(ContractModel):
+    technician: Technician
+    job: PagerJob | None
+    queue: list[WorkOrder]
+    demo_time: AwareDatetime
+    # Increases on every change; the stream sends a new view only when it changes.
+    version: int
+
+
+class PagerActionRequest(ContractModel):
+    action: PagerAction
+    work_order_id: str
+
+
+class AutoDispatchRequest(ContractModel):
+    enabled: bool

@@ -4,6 +4,8 @@
   "demo_minutes_per_tick": 2,
   "timezone": "America/Chicago",
   "travel_minutes": 10,
+  "walk_cells_per_demo_minute": 2.0,
+  "walk_note": "demo pace: walking plus collecting tools and parts, in floor cells per demo minute",
   "overtime_multiplier": 1.5,
   "projection_hours": 12,
   "thermal": {

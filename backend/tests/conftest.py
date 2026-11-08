@@ -17,6 +17,7 @@ def settings(tmp_path) -> Settings:
         gemini_api_key=None,  # tests never call Gemini live
         gemini_api_key_2=None,
         learned_cases_path=str(tmp_path / "learned_cases.json"),
+        auto_dispatch=False,  # tests dispatch explicitly; test_pager covers automatic dispatch
     )
 
 

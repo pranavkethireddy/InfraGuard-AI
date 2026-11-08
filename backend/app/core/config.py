@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     live_tick_seconds: float = 1.0
     live_history_limit: int = 300
     auto_investigate: bool = True
+    # Page the closest qualified technician as soon as an incident opens (can be switched at /ops/auto-dispatch).
+    auto_dispatch: bool = True
     impact_assumptions_path: str = "configs/impact_assumptions.json"
     maintenance_records_path: str = "data/maintenance/records.json"
     gemini_api_key: str | None = None

@@ -27,7 +27,7 @@ from ..core.errors import ApiError
 from ..schemas.fleet import ClearResponse, FaultInfo, FaultRequest, FaultResponse, LiveStartRequest, LiveStatus
 from ..schemas.predictions import PredictionRequest
 from ..schemas.readings import Reading, ReadingsRequest
-from . import agent, ops, predictions
+from . import agent, ops, pager, predictions
 from .assets import all_assets
 from .incidents import now
 from .store import Store
@@ -331,6 +331,7 @@ def _update_power(store: Store, run: LiveRun, settings: Settings) -> None:
 def _tick(store: Store, run: LiveRun, settings: Settings) -> None:
     fleet = _fleet()
     ts = now()
+    opened: list[str] = []
     with store.lock:
         _update_power(store, run, settings)
         off = set(run.power_off)
@@ -366,8 +367,15 @@ def _tick(store: Store, run: LiveRun, settings: Settings) -> None:
             continue
         if pred.incident_id and settings.auto_investigate:
             _maybe_queue(store, pred.incident_id, settings)
+        if pred.incident_id:
+            with store.lock:
+                inc = store.incidents.get(pred.incident_id)
+                if inc is not None and inc.prediction_count == 1:
+                    opened.append(pred.incident_id)
     with store.lock:
         ops.advance(store, settings, off)
+    for incident_id in opened:  # page the closest technician (no-op when automatic dispatch is off)
+        pager.auto_dispatch(store, settings, incident_id)
 
 
 def _maybe_queue(store: Store, incident_id: str, settings: Settings) -> None:
