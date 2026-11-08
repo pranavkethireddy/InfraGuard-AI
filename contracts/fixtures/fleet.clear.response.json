@@ -1,17 +1,17 @@
 {
-  "readings_deleted": 462,
-  "predictions_deleted": 462,
-  "incidents_deleted": 3,
-  "faults_cleared": 3,
+  "readings_deleted": 2280,
+  "predictions_deleted": 2280,
+  "incidents_deleted": 5,
+  "faults_cleared": 5,
   "simulations_reset": 0,
   "live": {
     "status": "running",
     "run_id": "live-000001",
     "seed": 42,
     "tick_seconds": 1.0,
-    "started_at": "2026-11-07T23:45:00.660713Z",
+    "started_at": "2026-11-08T00:09:57.407433Z",
     "stopped_at": null,
-    "ticks": 11,
+    "ticks": 12,
     "auto_investigate": true,
     "active_faults": []
   }

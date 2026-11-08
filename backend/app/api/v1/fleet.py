@@ -4,25 +4,32 @@ from fastapi import APIRouter, Body, Query
 
 from ...schemas.errors import ErrorResponse
 from ...schemas.fleet import (ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, HealthStatus,
-                              LiveStartRequest, LiveStatus, RackDetail)
+                              LiveStartRequest, LiveStatus, RackDetail, SiteId, SitesResponse)
 from ...services import fleet_view, live
 from ..deps import SettingsDep, StoreDep
 
 router = APIRouter(prefix="/fleet", tags=["fleet"])
 History = Annotated[int, Query(ge=0, le=300, description="Recent readings to include per machine")]
+Site = Annotated[SiteId, Query(description="datacenter or mining (crypto mining farm)")]
+
+
+@router.get("/sites", response_model=SitesResponse)
+def get_sites(store: StoreDep, settings: SettingsDep) -> SitesResponse:
+    """Both sites with summary and metric tiles, for the data center / crypto switch."""
+    return fleet_view.sites(store, settings)
 
 
 @router.get("/map", response_model=FleetMap)
-def get_map(store: StoreDep, settings: SettingsDep, history: History = 0) -> FleetMap:
+def get_map(store: StoreDep, settings: SettingsDep, history: History = 0, site: Site = "datacenter") -> FleetMap:
     """Whole site for the overview: halls, racks with positions and status, and every machine."""
-    return fleet_view.fleet_map(store, settings, history)
+    return fleet_view.fleet_map(store, settings, history, site)
 
 
 @router.get("/status", response_model=FleetStatus)
 def get_status(store: StoreDep, settings: SettingsDep, history: History = 30, status: HealthStatus | None = None,
-               hall_id: str | None = None) -> FleetStatus:
+               hall_id: str | None = None, site: Site = "datacenter") -> FleetStatus:
     """Every machine with status, latest values and recent history; worst first."""
-    return fleet_view.fleet_status(store, settings, history, status, hall_id)
+    return fleet_view.fleet_status(store, settings, history, status, hall_id, site)
 
 
 @router.get("/racks/{rack_id}", response_model=RackDetail, responses={404: {"model": ErrorResponse}})

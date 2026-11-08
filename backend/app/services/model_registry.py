@@ -11,6 +11,8 @@ from ..schemas.models import InputField, ModelInfo, ModelMetrics, RiskThresholds
 COOLING_RULE_ID = "cooling-rule-v1"
 INDUSTRIAL_ID = "industrial-failure-v1"
 DRIVE_ID = "drive-failure-v1"
+MINER_RULE_ID = "miner-rule-v1"
+RULE_IDS = (COOLING_RULE_ID, MINER_RULE_ID)
 DRIVE_FEATURES = [
     ("reallocated_sectors", "count"), ("reported_uncorrectable", "count"), ("command_timeout", "count"),
     ("pending_sectors", "count"), ("offline_uncorrectable", "count"), ("crc_errors", "count"),
@@ -88,6 +90,35 @@ def list_models(settings: Settings) -> list[ModelInfo]:
             ],
         ),
         _drive(settings),
+        ModelInfo(
+            detector_id=MINER_RULE_ID,
+            model_name="miner-rule",
+            model_version="1.0.0",
+            kind="rule",
+            asset_types=["asic_miner"],
+            score_kind="heuristic",
+            target="sustained ASIC miner fault: hashrate drop, chip overheat, fan failure or hardware errors",
+            prediction_horizon_hours=None,
+            input_fields=[
+                InputField(name="hashrate_ths", unit="TH/s", required=True),
+                InputField(name="rated_hashrate_ths", unit="TH/s", required=True),
+                InputField(name="chip_temp_c", unit="C", required=True),
+                InputField(name="fan_speed_rpm", unit="rpm", required=True),
+                InputField(name="power_w", unit="W", required=False),
+                InputField(name="hw_error_pct", unit="%", required=False),
+            ],
+            risk_thresholds=RiskThresholds(medium=0.4, high=0.7),
+            # Demo assumptions in the range of public miner spec sheets; not vendor limits.
+            rule_config={"min_hashrate_ratio": 0.85, "max_chip_temp_c": 85.0, "min_fan_speed_rpm": 1500.0,
+                         "max_hw_error_pct": 0.5, "consecutive_readings": 3, "cooldown_readings": 3},
+            status="available",
+            evaluation_status="not_applicable",
+            metrics=None,
+            source_dataset=None,
+            model_card_url=None,
+            limitations=["No public labelled ASIC failure dataset exists; this is a transparent rule, not a trained model.",
+                         "Thresholds are demo assumptions, not vendor limits."],
+        ),
     ]
 
 

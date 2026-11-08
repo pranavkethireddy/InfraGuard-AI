@@ -1,14 +1,24 @@
-"""Demo assets from configs/datacenter_layout.json. In-memory until the SQLite layer (backend/app/db) lands."""
+"""Demo assets from both site layouts in configs/ (data center and mining farm). In-memory until the SQLite layer (backend/app/db) lands."""
 
 from ..core.errors import not_found
 from ..schemas.assets import AssetDetail, AssetSummary
 from .impact import for_asset
-from .layout import get_layout
+from functools import lru_cache
+
+from .layout import load, site_paths
 from .store import Store
 
 
+@lru_cache
+def _union(paths: tuple[str, ...]) -> dict[str, AssetDetail]:
+    out: dict[str, AssetDetail] = {}
+    for p in paths:
+        out |= load(p).assets
+    return out
+
+
 def all_assets() -> dict[str, AssetDetail]:
-    return get_layout().assets
+    return _union(tuple(site_paths().values()))
 
 
 def with_state(asset: AssetDetail, store: Store | None, assumptions_path: str | None) -> AssetDetail:

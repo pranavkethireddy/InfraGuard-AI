@@ -3,7 +3,7 @@ import unittest
 
 from simulator import fleet
 
-TYPES = ("cooling_unit", "storage_drive", "industrial_machine")
+TYPES = ("cooling_unit", "storage_drive", "industrial_machine", "asic_miner")
 
 
 class FleetTests(unittest.TestCase):
@@ -50,8 +50,28 @@ class FleetTests(unittest.TestCase):
         self.assertEqual(fleet.fault_phase("drive_degradation", 39), ("holding", 1.0))
         self.assertEqual(fleet.fault_phase("drive_degradation", 40), ("ended", 0.0))
 
+    def test_healthy_miner_within_rule_limits_and_faults_break_them(self):
+        for i in range(30):
+            p = fleet.profile("asic_miner", f"m{i}", 42)
+            r = fleet.rng_for(42, f"m{i}")
+            for k in range(200):
+                s = fleet.sample("asic_miner", p, k, r)
+                self.assertGreater(s["hashrate_ths"] / s["rated_hashrate_ths"], 0.9)
+                self.assertLess(s["chip_temp_c"], 80)
+                self.assertGreater(s["fan_speed_rpm"], 3000)
+                self.assertLess(s["hw_error_pct"], 0.1)
+            board = fleet.sample("asic_miner", p, 0, r, 1.0, "hashboard_failure")
+            self.assertLess(board["hashrate_ths"] / board["rated_hashrate_ths"], 0.75)
+            self.assertGreater(board["hw_error_pct"], 1.0)
+            fan = fleet.sample("asic_miner", p, 0, r, 1.0, "fan_failure")
+            self.assertLess(fan["fan_speed_rpm"], 1000)
+            self.assertGreater(fan["chip_temp_c"], 88)
+
     def test_every_type_has_a_fault_kind(self):
         self.assertEqual(set(fleet.FAULT_KINDS), set(TYPES))
+        self.assertEqual(set(fleet.FAULT_CHOICES), set(TYPES))
+        for kinds in fleet.FAULT_CHOICES.values():
+            self.assertTrue(all(k in fleet.FAULT_TICKS for k in kinds))
         with self.assertRaises(ValueError):
             fleet.profile("toaster", "t", 1)
 

@@ -11,7 +11,8 @@ from .incidents import IncidentSummary
 # incident, or (racks) a cooling unit serving the rack is not healthy; healthy: latest risk low; no_data: no readings.
 HealthStatus = Literal["healthy", "warning", "critical", "no_data"]
 LiveState = Literal["running", "stopped"]
-FaultKind = Literal["cooling_failure", "drive_degradation", "machine_overstrain"]
+FaultKind = Literal["cooling_failure", "drive_degradation", "machine_overstrain", "fan_failure", "hashboard_failure"]
+SiteId = Literal["datacenter", "mining"]
 FaultPhase = Literal["ramping", "holding", "recovering", "ended"]
 
 
@@ -86,7 +87,7 @@ class RackStatus(ContractModel):
 class HallMap(ContractModel):
     hall_id: str
     name: str
-    kind: Literal["data_hall", "plant_room"]
+    kind: Literal["data_hall", "plant_room", "mining_container"]
     width: float
     depth: float
     status: HealthStatus
@@ -106,6 +107,20 @@ class FleetSummary(ContractModel):
     downtime_cost_per_day_at_risk: float
     currency: str
     assumptions_source: str | None
+    # Business case over unresolved incidents (additive): what they cost if they fail vs fixing them now.
+    cost_if_all_fail: float = 0.0
+    cost_to_fix_all_now: float = 0.0
+    savings_if_fixed_now: float = 0.0
+
+
+class SiteMetric(ContractModel):
+    """One headline number for the site's metric tiles. source says where the number comes from."""
+
+    key: str
+    label: str
+    value: float | None
+    unit: str
+    source: str
 
 
 class LiveStatus(ContractModel):
@@ -121,19 +136,38 @@ class LiveStatus(ContractModel):
 
 
 class FleetMap(ContractModel):
+    site_id: SiteId = "datacenter"
     site_name: str
     grid_unit: str
     generated_at: AwareDatetime
     live: LiveStatus
     summary: FleetSummary
+    site_metrics: list[SiteMetric] = []
     halls: list[HallMap]
 
 
 class FleetStatus(ContractModel):
+    site_id: SiteId = "datacenter"
     generated_at: AwareDatetime
     live: LiveStatus
     summary: FleetSummary
+    site_metrics: list[SiteMetric] = []
     machines: list[MachineStatus]
+
+
+class SiteInfo(ContractModel):
+    site_id: SiteId
+    name: str
+    machines: int
+    racks: int
+    summary: FleetSummary
+    site_metrics: list[SiteMetric]
+
+
+class SitesResponse(ContractModel):
+    generated_at: AwareDatetime
+    live: LiveStatus
+    sites: list[SiteInfo]
 
 
 class RackDetail(RackStatus):
@@ -149,6 +183,8 @@ class LiveStartRequest(ContractModel):
 
 class FaultRequest(ContractModel):
     count: int = Field(default=3, ge=1, le=10)
+    # Only pick machines from this site when asset_ids is not given; None picks from both sites.
+    site: SiteId | None = None
     asset_ids: list[str] | None = Field(default=None, min_length=1, max_length=10)
 
 
