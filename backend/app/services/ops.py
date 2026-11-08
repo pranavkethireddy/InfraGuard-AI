@@ -421,18 +421,18 @@ SAFETY_TYPES = {"smoke_detector", "fire_suppression"}
 
 
 def _level(store: Store | None, o: Order) -> tuple:
-    """How urgent a repair is; smaller is more urgent: life safety first, then priority rank (1 = fix first),
+    """How urgent a repair is; smaller is more urgent: life safety first, then priority rank (5 = most urgent),
     then risk."""
     inc = store.incidents.get(o.incident_id) if store is not None and o.incident_id else None
     asset = all_assets().get(o.asset_id) if o.asset_id else None
     safety = 0 if asset is not None and asset.asset_type in SAFETY_TYPES else 1
-    rank = inc.priority_rank if inc is not None and inc.priority_rank else 6
-    return (safety, rank, -_risk(o))
+    rank = inc.priority_rank if inc is not None and inc.priority_rank else 0
+    return (safety, -rank, -_risk(o))
 
 
 def _describe(store: Store | None, o: Order) -> str:
     safety, rank, _ = _level(store, o)
-    return ("life safety, " if safety == 0 else "") + (f"priority {rank}, " if rank <= 5 else "") + f"{o.risk_level or 'unknown'} risk"
+    return ("life safety, " if safety == 0 else "") + (f"priority {-rank}, " if rank else "") + f"{o.risk_level or 'unknown'} risk"
 
 
 def _worse(st: OpsState, new: Order, cur: Order, store: Store | None = None) -> bool:

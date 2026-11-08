@@ -41,9 +41,9 @@ def priority(risk_level: str, criticality: str, total_impact: float | None, sett
 
 
 def rank(priority_index: float | None) -> int:
-    """1 = fix first ... 5 = can wait."""
+    """5 = most urgent (fix first) ... 1 = least urgent (can wait)."""
     p = priority_index or 0.0
-    return 1 if p >= 0.8 else 2 if p >= 0.6 else 3 if p >= 0.4 else 4 if p >= 0.2 else 5
+    return 5 if p >= 0.8 else 4 if p >= 0.6 else 3 if p >= 0.4 else 2 if p >= 0.2 else 1
 
 
 APPROVAL = "A human must approve physical work."
@@ -72,13 +72,14 @@ def open_or_update(store: Store, pred: PredictionResponse, asset, settings: Sett
         inc.last_seen_at = pred.observed_at
         inc.prediction_count += 1
         inc.latest_prediction = pred
-        if pred.risk_level != inc.risk_level:  # re-rank: medium -> high moves it up the queue
-            inc.priority_index = priority(pred.risk_level, asset.criticality,
-                                          inc.impact.estimated_total_impact if inc.impact else None, settings)
-            new = rank(inc.priority_index)
-            if inc.priority_rank is not None and new < inc.priority_rank and inc.incident_id not in store.escalated:
-                store.escalated.append(inc.incident_id)
-            inc.priority_rank = new
+        if pred.risk_level != inc.risk_level:  # re-rank: medium -> high moves it up the queue; never back down
+            idx = priority(pred.risk_level, asset.criticality,
+                           inc.impact.estimated_total_impact if inc.impact else None, settings)
+            new = rank(idx)
+            if inc.priority_rank is None or new > inc.priority_rank:
+                if inc.priority_rank is not None and inc.incident_id not in store.escalated:
+                    store.escalated.append(inc.incident_id)
+                inc.priority_index, inc.priority_rank = idx, new
         inc.risk_level = pred.risk_level
         inc.evidence = pred.evidence
         if inc.failure_mode is None or inc.prediction_count % 5 == 0:

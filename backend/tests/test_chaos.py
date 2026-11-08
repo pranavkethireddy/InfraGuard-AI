@@ -139,3 +139,23 @@ def test_chaos_reaches_every_kind_of_equipment(client, settings):
     kinds = {k for _, k in picks}
     assert {"ups", "gen", "pdu", "tor", "chiller", "cdu", "smoke", "door", "srv", "cooling"} <= types
     assert {"memory_fault", "nic_failure", "server_fan_failure", "ups_on_battery", "door_forced"} <= kinds
+
+
+def test_reprioritize_only_makes_an_incident_more_urgent(client, settings):
+    import random
+
+    from backend.app.services.live import LiveRun
+    from backend.tests.test_pager import server_incident
+
+    store = client.app.state.store
+    iid = server_incident(client)
+    run = LiveRun(run_id="r", seed=1, tick_seconds=1, started_at=None, profiles={}, rngs={})
+    with store.lock:
+        inc = store.incidents[iid]
+        run.chaos_assets.add(inc.asset_id)
+        inc.priority_rank = 1
+    for seed in range(30):
+        before = inc.priority_rank
+        chaos._reprioritize(store, run, settings, random.Random(seed))
+        assert inc.priority_rank >= before
+    assert inc.priority_rank == 5

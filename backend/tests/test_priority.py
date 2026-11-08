@@ -22,13 +22,13 @@ def _others(st):
 
 
 def _setup(client, settings):
-    """Sam on a priority-3 GPU repair; a priority-1 one waits in his queue. Nobody else may take it."""
+    """Sam on a priority-3 GPU repair; a priority-5 (most urgent) one waits in his queue. Nobody else may take it."""
     store = client.app.state.store
     low_id, high_id = server_incident(client, "srv-B1-01-2"), server_incident(client, "srv-B1-01-3")
     with store.lock:
         st = ops.state(store, settings)
         store.incidents[low_id].priority_rank = 3
-        store.incidents[high_id].priority_rank = 1
+        store.incidents[high_id].priority_rank = 5
         sam = st.techs[SAM]
         low = _order(st, settings, SAM, "srv-B1-01-2", low_id)
         sam.current, low.status = low.work_order_id, "in_progress"
