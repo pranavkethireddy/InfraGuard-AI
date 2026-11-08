@@ -1,12 +1,12 @@
 {
   "site_id": "mining",
-  "generated_at": "2026-11-08T01:25:12.666959Z",
+  "generated_at": "2026-11-08T02:56:18.224459Z",
   "live": {
     "status": "running",
     "run_id": "live-000001",
     "seed": 42,
     "tick_seconds": 1.0,
-    "started_at": "2026-11-08T01:25:01.245285Z",
+    "started_at": "2026-11-08T02:56:06.294360Z",
     "stopped_at": null,
     "ticks": 12,
     "auto_investigate": true,
@@ -15,35 +15,35 @@
         "asset_id": "cooling-02",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "drive-05",
         "kind": "drive_degradation",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "mill-02",
         "kind": "machine_overstrain",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "miner-05",
         "kind": "fan_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "fanwall-m3",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       }
     ]
@@ -147,7 +147,7 @@
     {
       "key": "curtailed_now",
       "label": "In curtailment window (power costs more than mining earns)",
-      "value": 1.0,
+      "value": 0.0,
       "unit": "bool",
       "source": "demo assumption shaped like a Texas summer day-ahead curve, not real market data"
     }
@@ -175,17 +175,17 @@
         "temperature_c": 35.34,
         "fan_speed_rpm": 746.6
       },
-      "last_reading_at": "2026-11-08T01:25:12.293517Z",
+      "last_reading_at": "2026-11-08T02:56:17.594211Z",
       "chart_fields": [
         "temperature_c",
         "fan_speed_rpm"
       ],
       "active_incident": {
-        "incident_id": "inc-002023",
+        "incident_id": "inc-002815",
         "title": "Sustained high temperature on Fan Wall M3",
         "status": "open",
         "risk_level": "high",
-        "opened_at": "2026-11-08T01:25:11.293211Z",
+        "opened_at": "2026-11-08T02:56:16.589134Z",
         "estimated_total_impact": 6116.73,
         "cost_per_day": 233.47,
         "investigation_status": "completed"
@@ -194,26 +194,26 @@
         "asset_id": "fanwall-m3",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       "history": [
         {
-          "observed_at": "2026-11-08T01:25:10.288137Z",
+          "observed_at": "2026-11-08T02:56:15.584036Z",
           "values": {
             "temperature_c": 35.14,
             "fan_speed_rpm": 723.6
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:11.293211Z",
+          "observed_at": "2026-11-08T02:56:16.589134Z",
           "values": {
             "temperature_c": 35.56,
             "fan_speed_rpm": 753.9
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:12.293517Z",
+          "observed_at": "2026-11-08T02:56:17.594211Z",
           "values": {
             "temperature_c": 35.34,
             "fan_speed_rpm": 746.6
@@ -251,7 +251,7 @@
         "power_w": 2830,
         "hw_error_pct": 0.325
       },
-      "last_reading_at": "2026-11-08T01:25:12.293517Z",
+      "last_reading_at": "2026-11-08T02:56:17.594211Z",
       "chart_fields": [
         "hashrate_ths",
         "chip_temp_c",
@@ -259,11 +259,11 @@
         "hw_error_pct"
       ],
       "active_incident": {
-        "incident_id": "inc-001573",
+        "incident_id": "inc-002221",
         "title": "ASIC miner fault: Rack M1-01, Slot 5",
         "status": "open",
         "risk_level": "high",
-        "opened_at": "2026-11-08T01:25:09.283065Z",
+        "opened_at": "2026-11-08T02:56:14.578991Z",
         "estimated_total_impact": 569.45,
         "cost_per_day": 6.49,
         "investigation_status": "completed"
@@ -272,12 +272,12 @@
         "asset_id": "miner-05",
         "kind": "fan_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       "history": [
         {
-          "observed_at": "2026-11-08T01:25:10.288137Z",
+          "observed_at": "2026-11-08T02:56:15.584036Z",
           "values": {
             "hashrate_ths": 145.2,
             "rated_hashrate_ths": 200.0,
@@ -288,7 +288,7 @@
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:11.293211Z",
+          "observed_at": "2026-11-08T02:56:16.589134Z",
           "values": {
             "hashrate_ths": 148.1,
             "rated_hashrate_ths": 200.0,
@@ -299,7 +299,7 @@
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:12.293517Z",
+          "observed_at": "2026-11-08T02:56:17.594211Z",
           "values": {
             "hashrate_ths": 147.0,
             "rated_hashrate_ths": 200.0,

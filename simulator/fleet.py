@@ -9,6 +9,10 @@ ramps one machine toward a failure signature over a few ticks, holds it, then en
 - fan_failure (ASIC miner): fans slow and chips heat up; the miner throttles its hashrate, then recovers.
 - hashboard_failure (ASIC miner): one of three hashboards drops out (hashrate and power fall by a third,
   hardware errors climb) and stays out until the fault ends, which models the board being swapped.
+- GPU server (8 GPUs): GPU temperatures follow the inlet air from the rack's cooling unit; a GPU above
+  THROTTLE_C slows its clock to protect itself. gpu_fault: one GPU heats up and logs memory (ECC) errors,
+  then drops off the bus. psu_failure: one of two power supplies dies (no lost compute, no redundancy).
+  server_crash: the server stops (the management controller still reports).
 Values are demo assumptions, not facility specifications. No risk scores or costs are produced here.
 """
 
@@ -23,9 +27,11 @@ FAULT_KINDS = {
     "storage_drive": "drive_degradation",
     "industrial_machine": "machine_overstrain",
     "asic_miner": "hashboard_failure",
+    "gpu_server": "gpu_fault",
 }
 # Every fault an asset type can get; FAULT_KINDS holds the default one.
-FAULT_CHOICES = {t: (k,) for t, k in FAULT_KINDS.items()} | {"asic_miner": ("hashboard_failure", "fan_failure")}
+FAULT_CHOICES = {t: (k,) for t, k in FAULT_KINDS.items()} | {"asic_miner": ("hashboard_failure", "fan_failure"),
+                                                          "gpu_server": ("gpu_fault", "psu_failure", "server_crash")}
 # (ramp, hold, recover) in ticks.
 FAULT_TICKS = {
     "cooling_failure": (6, 30, 6),
@@ -33,6 +39,9 @@ FAULT_TICKS = {
     "machine_overstrain": (6, 30, 6),
     "fan_failure": (5, 30, 5),
     "hashboard_failure": (3, 37, 0),
+    "gpu_fault": (4, 36, 0),
+    "psu_failure": (2, 38, 0),
+    "server_crash": (1, 39, 0),
 }
 # Faults that keep getting worse while nobody fixes them: degrees added per unit of progress above 1.
 # Progress may go up to MAX_ESCALATION for these (the backend drives it from configs/operations.json).
@@ -41,6 +50,10 @@ MAX_ESCALATION = 2.0
 # ASIC miner spec-sheet-class demo values (about 200 TH/s at 3.5 kW); must match configs/mining_layout.json.
 MINER_RATED_THS = 200.0
 MINER_RATED_W = 3500.0
+# GPU server demo values (8 GPUs, data-center accelerator class); must match configs/datacenter_layout.json.
+GPUS_PER_SERVER = 8
+THROTTLE_C = 83.0  # GPU temperature where the clock starts to drop
+GPU_HEAT_C = 50.0  # GPU temperature above inlet air at full load
 
 
 def rng_for(seed: int, asset_id: str) -> random.Random:
@@ -63,6 +76,9 @@ def profile(asset_type: str, asset_id: str, seed: int) -> dict:
                        "torque_nm": r.uniform(36, 44), "wear0": r.uniform(10, 60)}
     if asset_type == "asic_miner":
         return base | {"eff": r.uniform(0.97, 1.02), "chip_c": r.uniform(64, 74), "fan_rpm": r.uniform(4200, 5400)}
+    if asset_type == "gpu_server":
+        return base | {"load": r.uniform(0.86, 0.96), "offsets": [r.uniform(-3, 5) for _ in range(GPUS_PER_SERVER)],
+                       "faulty_gpu": r.randrange(GPUS_PER_SERVER)}
     raise ValueError(f"unknown asset_type {asset_type!r}")
 
 
@@ -84,9 +100,10 @@ def fault_phase(kind: str, ticks_since_injected: int) -> tuple[str, float]:
 
 
 def sample(asset_type: str, prof: dict, tick: int, rng: random.Random, progress: float = 0.0,
-           kind: str | None = None) -> dict:
+           kind: str | None = None, inlet_c: float | None = None) -> dict:
     """One reading for one machine. progress is the fault severity (0 healthy, 1 full failure signature);
-    kind picks the signature for types with several faults (default FAULT_KINDS[asset_type])."""
+    kind picks the signature for types with several faults (default FAULT_KINDS[asset_type]).
+    inlet_c (GPU servers only) is the supply air temperature of the rack's cooling unit."""
     cap = MAX_ESCALATION if (kind or FAULT_KINDS.get(asset_type)) in ESCALATING else 1.0
     p = min(max(progress, 0.0), cap)
     wave = math.sin(tick / 6 + prof["phase"])
@@ -103,6 +120,8 @@ def sample(asset_type: str, prof: dict, tick: int, rng: random.Random, progress:
                 "temperature_c": round(prof["temp_c"] + 1.2 * wave + rng.uniform(-0.4, 0.4) + 4 * p, 1)}
     if asset_type == "asic_miner":
         return miner_sample(prof, wave, rng, p, kind or FAULT_KINDS["asic_miner"])
+    if asset_type == "gpu_server":
+        return server_sample(prof, wave, rng, p, kind or FAULT_KINDS["gpu_server"], 23.5 if inlet_c is None else inlet_c)
     if asset_type == "industrial_machine":
         air = prof["air_k"] + 0.4 * wave + rng.uniform(-0.1, 0.1)
         return {"type": prof["type"], "air_temperature_k": round(air, 2),
@@ -124,3 +143,45 @@ def miner_sample(prof: dict, wave: float, rng: random.Random, p: float, kind: st
             "fan_speed_rpm": round((prof["fan_rpm"] + 120 * wave + rng.uniform(-60, 60)) * max(0.0, 1 - 0.9 * min(fan, 1.0))),
             "power_w": round(MINER_RATED_W * (1 - board / 3) * (1 - 0.2 * min(fan, 1.0)) + rng.uniform(-30, 30)),
             "hw_error_pct": round(max(0.0, 0.02 + rng.uniform(-0.015, 0.015) + 2.0 * board + 0.3 * min(fan, 1.0)), 3)}
+
+
+def gpu_throttle(raw_c: float) -> tuple[float, float]:
+    """(reported temperature, clock fraction) for a GPU whose unthrottled temperature would be raw_c.
+    Above THROTTLE_C the clock drops 3.5% per degree (to at most half speed), which holds the
+    temperature down to a fraction of the excess."""
+    if raw_c <= THROTTLE_C:
+        return raw_c, 1.0
+    return THROTTLE_C + 0.35 * (raw_c - THROTTLE_C), max(0.5, 1 - 0.035 * (raw_c - THROTTLE_C))
+
+
+def server_sample(prof: dict, wave: float, rng: random.Random, p: float, kind: str, inlet_c: float) -> dict:
+    """GPU server reading: per-GPU temperature and clock, plus server totals. Values are demo assumptions."""
+    inlet = inlet_c + rng.uniform(-0.3, 0.3)
+    crashed = kind == "server_crash" and p > 0
+    bad = prof["faulty_gpu"] if kind == "gpu_fault" else None
+    dead = bad is not None and p >= 1.0
+    temps, clocks = [], []
+    for i, off in enumerate(prof["offsets"]):
+        if crashed or (dead and i == bad):
+            temps.append(round(inlet + 4 + rng.uniform(-0.5, 0.5), 1))
+            clocks.append(0.0)
+            continue
+        raw = inlet + GPU_HEAT_C * prof["load"] + off + 1.0 * wave + rng.uniform(-0.6, 0.6)
+        if i == bad:
+            raw += 18 * p
+        t, c = gpu_throttle(raw)
+        temps.append(round(t, 1))
+        clocks.append(round(c, 3))
+    online = [c for c in clocks if c > 0]
+    values = {
+        "inlet_temp_c": round(inlet, 2), "online": 0 if crashed else 1, "gpus_online": len(online),
+        "gpus_throttled": sum(1 for c in online if c < 0.99),
+        "max_gpu_temp_c": max(temps), "min_gpu_clock_pct": round(100 * min(online), 1) if online else 0.0,
+        "compute_pct": round(100 * sum(clocks) / GPUS_PER_SERVER, 1),
+        "ecc_errors": round(60 * min(p, 1.0)) if bad is not None else 0,
+        "psu_ok": 1 if kind == "psu_failure" and p >= 0.5 else 2,
+        "power_w": round(250 if crashed else 1200 + sum(700 * prof["load"] * c for c in clocks) + rng.uniform(-40, 40)),
+    }
+    values |= {f"gpu{i + 1}_temp_c": t for i, t in enumerate(temps)}
+    values |= {f"gpu{i + 1}_clock_pct": round(100 * c, 1) for i, c in enumerate(clocks)}
+    return values

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, Query
 
 from ...schemas.errors import ErrorResponse
 from ...schemas.fleet import (ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, HealthStatus,
-                              LiveStartRequest, LiveStatus, RackDetail, SiteId, SitesResponse)
+                              LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteId, SitesResponse)
 from ...services import fleet_view, live
 from ..deps import SettingsDep, StoreDep
 
@@ -35,6 +35,12 @@ def get_status(store: StoreDep, settings: SettingsDep, history: History = 30, st
 @router.get("/racks/{rack_id}", response_model=RackDetail, responses={404: {"model": ErrorResponse}})
 def get_rack(rack_id: str, store: StoreDep, settings: SettingsDep, history: History = 60) -> RackDetail:
     return fleet_view.rack_detail(store, settings, rack_id, history)
+
+
+@router.get("/servers/{server_id}", response_model=ServerDetail, responses={404: {"model": ErrorResponse}})
+def get_server(server_id: str, store: StoreDep, settings: SettingsDep, history: History = 60) -> ServerDetail:
+    """One GPU server: per-GPU temperature and clock, power supplies, inlet air and its job's cost right now."""
+    return fleet_view.server_detail(store, settings, server_id, history)
 
 
 @router.get("/live", response_model=LiveStatus)

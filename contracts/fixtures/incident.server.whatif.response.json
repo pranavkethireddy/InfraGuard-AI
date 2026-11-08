@@ -1,0 +1,471 @@
+{
+  "incident_id": "inc-002373",
+  "asset_id": "srv-A1-02-3",
+  "asset_name": "Rack A1-02, GPU Server 3",
+  "site_id": "datacenter",
+  "generated_at": "2026-11-08T02:56:21.817501Z",
+  "demo_time": "2026-11-07T21:20:00-06:00",
+  "metric": "compute_pct",
+  "unit": "%",
+  "current_value": 0.0,
+  "trend_per_hour": 0.0,
+  "shutdown_threshold": null,
+  "shutdown_in_hours": null,
+  "window": {
+    "kind": "maintenance_window",
+    "label": "Nightly maintenance window",
+    "starts_in_hours": 4.67,
+    "ends_in_hours": 7.67,
+    "breakeven_usd_per_mwh": null
+  },
+  "options": [
+    {
+      "option": "fix_now",
+      "label": "Fix now",
+      "description": "Send Dev Patel now, moving Dev Patel off \"Firmware update, Row A1 drives\".",
+      "technician_id": "tech-02",
+      "technician_name": "Dev Patel",
+      "displaces": "Firmware update, Row A1 drives",
+      "start_in_hours": 0.0,
+      "done_in_hours": 2.0,
+      "shutdown_at_hours": null,
+      "downtime_hours": 0.0,
+      "costs": {
+        "labor": 210.0,
+        "parts": 1200.0,
+        "downtime_or_lost_revenue": 800.0,
+        "mitigation": 0.0,
+        "displaced_work": 4.0,
+        "total": 2214.0
+      },
+      "risk_note": null,
+      "curve": [
+        {
+          "hour": 0.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 0.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 1.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 1.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 2.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 2.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 3.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 3.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 4.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 4.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 12.0,
+          "value": 0.0,
+          "power_state": "on"
+        }
+      ]
+    },
+    {
+      "option": "wait_for_window",
+      "label": "Wait for the nightly maintenance window",
+      "description": "Repair in the nightly maintenance window, starting in 4.7 h.",
+      "technician_id": "tech-03",
+      "technician_name": "Sam Rivera",
+      "displaces": null,
+      "start_in_hours": 4.67,
+      "done_in_hours": 6.67,
+      "shutdown_at_hours": null,
+      "downtime_hours": 0.0,
+      "costs": {
+        "labor": 150.0,
+        "parts": 1200.0,
+        "downtime_or_lost_revenue": 2680.0,
+        "mitigation": 0.0,
+        "displaced_work": 0.0,
+        "total": 4030.0
+      },
+      "risk_note": null,
+      "curve": [
+        {
+          "hour": 0.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 0.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 1.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 1.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 2.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 2.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 3.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 3.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 4.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 4.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 12.0,
+          "value": 0.0,
+          "power_state": "on"
+        }
+      ]
+    },
+    {
+      "option": "buy_time",
+      "label": "Buy time, then fix in the window",
+      "description": "Restart the job from its last checkpoint without this server now, then repair in the nightly maintenance window.",
+      "technician_id": "tech-03",
+      "technician_name": "Sam Rivera",
+      "displaces": null,
+      "start_in_hours": 4.67,
+      "done_in_hours": 6.67,
+      "shutdown_at_hours": null,
+      "downtime_hours": 0.0,
+      "costs": {
+        "labor": 150.0,
+        "parts": 1200.0,
+        "downtime_or_lost_revenue": 134.0,
+        "mitigation": 0.0,
+        "displaced_work": 0.0,
+        "total": 1484.0
+      },
+      "risk_note": null,
+      "curve": [
+        {
+          "hour": 0.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 0.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 1.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 1.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 2.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 2.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 3.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 3.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 4.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 4.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.0,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.5,
+          "value": 0.0,
+          "power_state": "on"
+        },
+        {
+          "hour": 12.0,
+          "value": 0.0,
+          "power_state": "on"
+        }
+      ]
+    }
+  ],
+  "recommended": "buy_time",
+  "reason": "Lowest total cost: $1,484 (vs fix now $2,214, wait for the nightly maintenance window $4,030).",
+  "savings_vs_worst": 2546.0,
+  "assumptions_source": "demo assumption (configs/operations.json), not measured; demo assumption (configs/impact_assumptions.json), not measured; downtime stalls Training job A1: 160 GPUs x $2.50/GPU-hour (demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote)"
+}

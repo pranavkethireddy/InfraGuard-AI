@@ -10,6 +10,8 @@ from ..schemas.impact import Impact, ImpactAssumptions
 
 # Entries with "cost_basis": "hashprice" price downtime as lost mining revenue from the daily hashprice.
 HASHPRICE = "hashprice"
+# Entries with "cost_basis": "gpu_job" price downtime as the whole row's GPU job standing still.
+GPU_JOB = "gpu_job"
 
 
 def _parse(raw: dict, section: str) -> dict[str, tuple[ImpactAssumptions, str | None]]:
@@ -64,7 +66,24 @@ def for_asset(path: str, asset_id: str, asset_type: str) -> ImpactAssumptions | 
     if entry is None:
         return None
     a, basis = entry
-    return _priced(asset_id, a) if basis == HASHPRICE else a
+    if basis == HASHPRICE:
+        return _priced(asset_id, a)
+    if basis == GPU_JOB:
+        return _gpu_job(asset_id, a)
+    return a
+
+
+def _gpu_job(asset_id: str, a: ImpactAssumptions) -> ImpactAssumptions:
+    """cost_per_hour = GPUs in the server's job x GPU-hour price: a stopped server stalls the whole job."""
+    from . import gpus
+
+    job = gpus.job_rate(asset_id)
+    if job is None:
+        return a
+    name, n_gpus, per_gpu = job
+    src = f"{a.assumptions_source}; downtime stalls {name}: {n_gpus} GPUs x ${per_gpu:.2f}/GPU-hour ({gpus.PRICE_SOURCE})"
+    return a.model_copy(update={"cost_per_hour": round(n_gpus * per_gpu, 2), "cost_per_day": round(n_gpus * per_gpu * 24, 2),
+                                "assumptions_source": src})
 
 
 def compute(a: ImpactAssumptions) -> Impact:

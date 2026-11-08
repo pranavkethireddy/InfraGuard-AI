@@ -8,7 +8,7 @@ from ..schemas.predictions import PredictionRequest, PredictionResponse
 from ..schemas.readings import ReadingsRequest, StoredReading
 from . import assets as asset_service
 from . import detectors, incidents
-from .model_registry import COOLING_RULE_ID, MINER_RULE_ID, list_models
+from .model_registry import COOLING_RULE_ID, MINER_RULE_ID, SERVER_RULE_ID, list_models
 from .store import RuleState, Store, StoredReadingRow
 
 
@@ -41,6 +41,9 @@ def predict(store: Store, req: PredictionRequest, settings: Settings) -> tuple[P
             source = "rule"
         elif req.detector_id == MINER_RULE_ID:
             result = detectors.miner(info, req.readings, store.rule_state.setdefault(req.asset_id, RuleState()))
+            source = "rule"
+        elif req.detector_id == SERVER_RULE_ID:
+            result = detectors.server(info, req.readings, store.rule_state.setdefault(req.asset_id, RuleState()))
             source = "rule"
         else:
             if info.status != "available":

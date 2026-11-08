@@ -416,9 +416,9 @@ def _finish(store: Store, settings: Settings, st: OpsState, tech: Tech, o: Order
 
 
 def _already_failed(store: Store, asset_id: str) -> bool:
-    """A hashboard or drive fault means the part already failed (unplanned part cost), even with no shutdown."""
+    """A hashboard, drive or GPU server fault means the part already failed (unplanned part cost), even with no shutdown."""
     f = store.live.faults.get(asset_id) if store.live is not None else None
-    return f is not None and f.kind in ("hashboard_failure", "drive_degradation")
+    return f is not None and f.kind in ("hashboard_failure", "drive_degradation", "gpu_fault", "psu_failure", "server_crash")
 
 
 def cfg_cooldown(settings: Settings) -> int:

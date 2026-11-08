@@ -24,6 +24,8 @@ ACTIONS = {
                          "Schedule a hot-swap replacement (human review required)."],
     "miner-rule-v1": ["Check the miner's fans and intake for dust or blockage (human review required).",
                       "If one hashboard is down, schedule a hashboard swap and move the unit to repair."],
+    "server-rule-v1": ["Check the server's GPUs, power supplies and logs, then reseat or swap the failed part (human review required).",
+                       "Restart the row's job from its last checkpoint without this server so the other GPUs keep working."],
 }
 
 
@@ -54,6 +56,7 @@ def open_or_update(store: Store, pred: PredictionResponse, asset, settings: Sett
         "cooling-rule-v1": f"Sustained high temperature on {asset.name}",
         "drive-failure-v1": f"Predicted drive failure within 30 days: {asset.name}",
         "miner-rule-v1": f"ASIC miner fault: {asset.name}",
+        "server-rule-v1": f"GPU server fault: {asset.name}",
     }.get(pred.detector_id, f"Elevated failure risk on {asset.name}")
     inc = IncidentDetail(
         incident_id=store.next_id("inc"), asset_id=pred.asset_id, detector_id=pred.detector_id, status="open",

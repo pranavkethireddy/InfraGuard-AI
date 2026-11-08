@@ -36,11 +36,11 @@ def until(fn, timeout=15.0):
 def test_map_layout_before_start(client):
     m = FleetMap.model_validate(client.get("/api/v1/fleet/map").json())
     assert [h.hall_id for h in m.halls] == ["hall-a", "hall-b", "plant"]
-    assert m.summary.machines == 42 and m.summary.racks == 18 and m.summary.no_data == 42
+    assert m.summary.machines == 114 and m.summary.racks == 18 and m.summary.no_data == 114
     assert m.live.status == "stopped" and m.halls[0].status == "no_data"
     a = m.halls[0]
     rack = next(r for r in a.racks if r.rack_id == "A1-01")
-    assert rack.machine_ids == ["drive-01", "drive-02"] and rack.cooled_by == ["cooling-01"]
+    assert rack.machine_ids == ["drive-01", "drive-02"] + [f"srv-A1-01-{i}" for i in range(1, 5)] and rack.cooled_by == ["cooling-01"]
     d1 = next(x for x in a.machines if x.asset_id == "drive-01")
     assert d1.placement.rack_id == "A1-01" and d1.placement.slot == 1 and "Rack A1-01" in d1.location
 
@@ -57,7 +57,7 @@ def test_live_readings_are_healthy_then_stop_freezes(fleet):
     assert fleet.post("/api/v1/fleet/live/start").json()["run_id"] == s.run_id  # idempotent
     st = until(lambda: (x := FleetStatus.model_validate(fleet.get("/api/v1/fleet/status?history=5").json()))
                .live.ticks >= 6 and x)
-    assert st.summary.healthy == 42 and st.summary.open_incidents == 0
+    assert st.summary.healthy == 114 and st.summary.open_incidents == 0
     m = st.machines[0]
     assert m.latest_values and len(m.history) == 5 and m.chart_fields
     stopped = LiveStatus.model_validate(fleet.post("/api/v1/fleet/live/stop").json())
@@ -87,7 +87,8 @@ def test_faults_open_incidents_and_rack_status(fleet):
     assert "not measured" in m.summary.assumptions_source
 
     rd = RackDetail.model_validate(fleet.get("/api/v1/fleet/racks/A1-03").json())
-    assert [x.asset_id for x in rd.machines] == ["drive-05", "drive-06"]
+    assert [x.asset_id for x in rd.machines] == ["drive-05", "drive-06"] + [f"srv-A1-03-{i}" for i in range(1, 5)]
+    assert rd.server_ids == [f"srv-A1-03-{i}" for i in range(1, 5)]
     assert rd.machines[0].simulated_fault.kind == "drive_degradation" and rd.incidents
     assert rd.cooling_units[0].asset_id == "cooling-01"
 
@@ -105,14 +106,15 @@ def test_faults_open_incidents_and_rack_status(fleet):
 @needs_models
 def test_random_faults_pick_each_type_and_clear_resets(fleet):
     f = FaultResponse.model_validate(fleet.post("/api/v1/fleet/faults", json={"count": 3, "site": "datacenter"}).json())
-    types = {"cooling": "cooling_failure", "drive": "drive_degradation", "mill": "machine_overstrain"}
-    assert sorted(x.kind for x in f.injected) == sorted(types.values())
+    kinds = sorted(x.kind for x in f.injected)  # one cooling unit, one GPU server, one drive
+    assert "cooling_failure" in kinds and "drive_degradation" in kinds
+    assert set(kinds) - {"cooling_failure", "drive_degradation"} <= {"gpu_fault", "psu_failure", "server_crash"}
     until(lambda: fleet.get("/api/v1/incidents").json()["total"] >= 3)
     c = ClearResponse.model_validate(fleet.post("/api/v1/fleet/clear").json())
     assert c.incidents_deleted >= 3 and c.faults_cleared == 3 and c.readings_deleted > 0
     assert c.live.status == "running" and c.live.active_faults == []
     assert fleet.get("/api/v1/incidents").json()["total"] == 0
-    st = until(lambda: (x := fleet.get("/api/v1/fleet/status").json())["summary"]["healthy"] == 42 and x)
+    st = until(lambda: (x := fleet.get("/api/v1/fleet/status").json())["summary"]["healthy"] == 114 and x)
     assert st["summary"]["open_incidents"] == 0
 
 
@@ -144,7 +146,7 @@ def test_mining_site_layout_and_sites_switch(client):
     hp = next(x for x in m.site_metrics if x.key == "hashprice_usd_per_th_day")
     assert hp.value and "CloudMineCrypto" in hp.source
     sites = client.get("/api/v1/fleet/sites").json()["sites"]
-    assert [(s["site_id"], s["machines"]) for s in sites] == [("datacenter", 42), ("mining", 148)]
+    assert [(s["site_id"], s["machines"]) for s in sites] == [("datacenter", 114), ("mining", 148)]
     assert client.get("/api/v1/fleet/map?site=moon").status_code == 422
     rack = RackDetail.model_validate(client.get("/api/v1/fleet/racks/M1-01").json())
     assert rack.cooled_by == ["fanwall-m1"] and len(rack.machines) == 6

@@ -1,12 +1,12 @@
 {
   "site_id": "datacenter",
-  "generated_at": "2026-11-08T01:25:12.654400Z",
+  "generated_at": "2026-11-08T02:56:18.202917Z",
   "live": {
     "status": "running",
     "run_id": "live-000001",
     "seed": 42,
     "tick_seconds": 1.0,
-    "started_at": "2026-11-08T01:25:01.245285Z",
+    "started_at": "2026-11-08T02:56:06.294360Z",
     "stopped_at": null,
     "ticks": 12,
     "auto_investigate": true,
@@ -15,43 +15,43 @@
         "asset_id": "cooling-02",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "drive-05",
         "kind": "drive_degradation",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "mill-02",
         "kind": "machine_overstrain",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "miner-05",
         "kind": "fan_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       {
         "asset_id": "fanwall-m3",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       }
     ]
   },
   "summary": {
-    "machines": 42,
+    "machines": 114,
     "racks": 18,
-    "healthy": 39,
+    "healthy": 111,
     "warning": 0,
     "critical": 3,
     "no_data": 0,
@@ -61,7 +61,7 @@
     "currency": "USD",
     "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured",
     "machines_powered_off": 0,
-    "machines_at_risk_of_shutdown": 10,
+    "machines_at_risk_of_shutdown": 30,
     "cost_if_all_fail": 75900.0,
     "cost_to_fix_all_now": 2800.0,
     "savings_if_fixed_now": 73100.0
@@ -70,7 +70,7 @@
     {
       "key": "healthy_pct",
       "label": "Machines healthy",
-      "value": 92.9,
+      "value": 97.4,
       "unit": "%",
       "source": "live readings (simulated)"
     },
@@ -87,6 +87,27 @@
       "value": 0.0,
       "unit": "of 4",
       "source": "crew model (configs/operations.json, demo assumption)"
+    },
+    {
+      "key": "gpus_throttling",
+      "label": "GPUs slowed by heat",
+      "value": 75.0,
+      "unit": "of 576",
+      "source": "live GPU readings (simulated)"
+    },
+    {
+      "key": "gpu_compute_lost_per_hour",
+      "label": "GPU compute lost right now",
+      "value": 93.2,
+      "unit": "USD/h",
+      "source": "live GPU readings (simulated) x GPU-hour price (demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote)"
+    },
+    {
+      "key": "gpu_jobs_full_speed",
+      "label": "GPU jobs at full speed",
+      "value": 3.0,
+      "unit": "of 4",
+      "source": "live GPU readings (simulated)"
     },
     {
       "key": "drives_at_risk",
@@ -126,17 +147,17 @@
         "temperature_c": 37.21,
         "fan_speed_rpm": 754.3
       },
-      "last_reading_at": "2026-11-08T01:25:12.293517Z",
+      "last_reading_at": "2026-11-08T02:56:17.594211Z",
       "chart_fields": [
         "temperature_c",
         "fan_speed_rpm"
       ],
       "active_incident": {
-        "incident_id": "inc-001717",
+        "incident_id": "inc-002365",
         "title": "Sustained high temperature on CRAC Unit 2",
         "status": "open",
         "risk_level": "high",
-        "opened_at": "2026-11-08T01:25:10.288137Z",
+        "opened_at": "2026-11-08T02:56:15.584036Z",
         "estimated_total_impact": 51500.0,
         "cost_per_day": 288000.0,
         "investigation_status": "completed"
@@ -145,26 +166,26 @@
         "asset_id": "cooling-02",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       "history": [
         {
-          "observed_at": "2026-11-08T01:25:10.288137Z",
+          "observed_at": "2026-11-08T02:56:15.584036Z",
           "values": {
             "temperature_c": 37.41,
             "fan_speed_rpm": 764.3
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:11.293211Z",
+          "observed_at": "2026-11-08T02:56:16.589134Z",
           "values": {
             "temperature_c": 37.55,
             "fan_speed_rpm": 774.7
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:12.293517Z",
+          "observed_at": "2026-11-08T02:56:17.594211Z",
           "values": {
             "temperature_c": 37.21,
             "fan_speed_rpm": 754.3
@@ -204,18 +225,18 @@
         "power_on_hours": 34913,
         "temperature_c": 37.1
       },
-      "last_reading_at": "2026-11-08T01:25:12.293517Z",
+      "last_reading_at": "2026-11-08T02:56:17.594211Z",
       "chart_fields": [
         "temperature_c",
         "reallocated_sectors",
         "pending_sectors"
       ],
       "active_incident": {
-        "incident_id": "inc-000769",
+        "incident_id": "inc-001065",
         "title": "Predicted drive failure within 30 days: Rack A1-03, Drive Bay 1",
         "status": "open",
         "risk_level": "high",
-        "opened_at": "2026-11-08T01:25:05.267573Z",
+        "opened_at": "2026-11-08T02:56:10.559878Z",
         "estimated_total_impact": 3400.0,
         "cost_per_day": 36000.0,
         "investigation_status": "completed"
@@ -224,12 +245,12 @@
         "asset_id": "drive-05",
         "kind": "drive_degradation",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       "history": [
         {
-          "observed_at": "2026-11-08T01:25:10.288137Z",
+          "observed_at": "2026-11-08T02:56:15.584036Z",
           "values": {
             "reallocated_sectors": 5000,
             "reported_uncorrectable": 300,
@@ -242,7 +263,7 @@
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:11.293211Z",
+          "observed_at": "2026-11-08T02:56:16.589134Z",
           "values": {
             "reallocated_sectors": 5000,
             "reported_uncorrectable": 300,
@@ -255,7 +276,7 @@
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:12.293517Z",
+          "observed_at": "2026-11-08T02:56:17.594211Z",
           "values": {
             "reallocated_sectors": 5000,
             "reported_uncorrectable": 300,
@@ -299,18 +320,18 @@
         "torque_nm": 72.7,
         "tool_wear_min": 230
       },
-      "last_reading_at": "2026-11-08T01:25:12.293517Z",
+      "last_reading_at": "2026-11-08T02:56:17.594211Z",
       "chart_fields": [
         "torque_nm",
         "rotational_speed_rpm",
         "tool_wear_min"
       ],
       "active_incident": {
-        "incident_id": "inc-001565",
+        "incident_id": "inc-002213",
         "title": "Elevated failure risk on AI4I Benchmark Machine 2",
         "status": "open",
         "risk_level": "high",
-        "opened_at": "2026-11-08T01:25:09.283065Z",
+        "opened_at": "2026-11-08T02:56:14.578991Z",
         "estimated_total_impact": 21000.0,
         "cost_per_day": 48000.0,
         "investigation_status": "completed"
@@ -319,12 +340,12 @@
         "asset_id": "mill-02",
         "kind": "machine_overstrain",
         "phase": "holding",
-        "injected_at": "2026-11-08T01:25:04.765296Z",
+        "injected_at": "2026-11-08T02:56:09.809216Z",
         "progress": 1.0
       },
       "history": [
         {
-          "observed_at": "2026-11-08T01:25:10.288137Z",
+          "observed_at": "2026-11-08T02:56:15.584036Z",
           "values": {
             "type": "L",
             "air_temperature_k": 300.8,
@@ -335,7 +356,7 @@
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:11.293211Z",
+          "observed_at": "2026-11-08T02:56:16.589134Z",
           "values": {
             "type": "L",
             "air_temperature_k": 300.82,
@@ -346,7 +367,7 @@
           }
         },
         {
-          "observed_at": "2026-11-08T01:25:12.293517Z",
+          "observed_at": "2026-11-08T02:56:17.594211Z",
           "values": {
             "type": "L",
             "air_temperature_k": 300.96,

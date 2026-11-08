@@ -1,0 +1,208 @@
+{
+  "jobs": [
+    {
+      "job_id": "job-A1",
+      "name": "Training job A1",
+      "row": "A1",
+      "hall_id": "hall-a",
+      "server_ids": [
+        "srv-A1-01-1",
+        "srv-A1-01-2",
+        "srv-A1-01-3",
+        "srv-A1-01-4",
+        "srv-A1-02-1",
+        "srv-A1-02-2",
+        "srv-A1-02-3",
+        "srv-A1-02-4",
+        "srv-A1-03-1",
+        "srv-A1-03-2",
+        "srv-A1-03-3",
+        "srv-A1-03-4",
+        "srv-A1-04-1",
+        "srv-A1-04-2",
+        "srv-A1-04-3",
+        "srv-A1-04-4",
+        "srv-A1-05-1",
+        "srv-A1-05-2",
+        "srv-A1-05-3",
+        "srv-A1-05-4"
+      ],
+      "gpus": 160,
+      "gpus_running": 0,
+      "pace_pct": 0.0,
+      "gpus_throttled": 0,
+      "servers_down": [
+        "srv-A1-02-3"
+      ],
+      "lost_usd_per_hour": 400.0,
+      "gpu_hour_usd": 2.5,
+      "reasons": [
+        "Rack A1-02, GPU Server 3 is not responding"
+      ],
+      "assumptions_source": "demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote"
+    },
+    {
+      "job_id": "job-A2",
+      "name": "Training job A2",
+      "row": "A2",
+      "hall_id": "hall-a",
+      "server_ids": [
+        "srv-A2-01-1",
+        "srv-A2-01-2",
+        "srv-A2-01-3",
+        "srv-A2-01-4",
+        "srv-A2-02-1",
+        "srv-A2-02-2",
+        "srv-A2-02-3",
+        "srv-A2-02-4",
+        "srv-A2-03-1",
+        "srv-A2-03-2",
+        "srv-A2-03-3",
+        "srv-A2-03-4",
+        "srv-A2-04-1",
+        "srv-A2-04-2",
+        "srv-A2-04-3",
+        "srv-A2-04-4",
+        "srv-A2-05-1",
+        "srv-A2-05-2",
+        "srv-A2-05-3",
+        "srv-A2-05-4"
+      ],
+      "gpus": 160,
+      "gpus_running": 160,
+      "pace_pct": 100.0,
+      "gpus_throttled": 0,
+      "servers_down": [],
+      "lost_usd_per_hour": 0.0,
+      "gpu_hour_usd": 2.5,
+      "reasons": [],
+      "assumptions_source": "demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote"
+    },
+    {
+      "job_id": "job-B1",
+      "name": "Training job B1",
+      "row": "B1",
+      "hall_id": "hall-b",
+      "server_ids": [
+        "srv-B1-01-1",
+        "srv-B1-01-2",
+        "srv-B1-01-3",
+        "srv-B1-01-4",
+        "srv-B1-02-1",
+        "srv-B1-02-2",
+        "srv-B1-02-3",
+        "srv-B1-02-4",
+        "srv-B1-03-1",
+        "srv-B1-03-2",
+        "srv-B1-03-3",
+        "srv-B1-03-4",
+        "srv-B1-04-1",
+        "srv-B1-04-2",
+        "srv-B1-04-3",
+        "srv-B1-04-4"
+      ],
+      "gpus": 128,
+      "gpus_running": 128,
+      "pace_pct": 85.1,
+      "gpus_throttled": 33,
+      "servers_down": [],
+      "lost_usd_per_hour": 47.68,
+      "gpu_hour_usd": 2.5,
+      "reasons": [
+        "33 GPUs are throttling from heat; the job runs at the slowest GPU's speed"
+      ],
+      "assumptions_source": "demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote"
+    },
+    {
+      "job_id": "job-B2",
+      "name": "Training job B2",
+      "row": "B2",
+      "hall_id": "hall-b",
+      "server_ids": [
+        "srv-B2-01-1",
+        "srv-B2-01-2",
+        "srv-B2-01-3",
+        "srv-B2-01-4",
+        "srv-B2-02-1",
+        "srv-B2-02-2",
+        "srv-B2-02-3",
+        "srv-B2-02-4",
+        "srv-B2-03-1",
+        "srv-B2-03-2",
+        "srv-B2-03-3",
+        "srv-B2-03-4",
+        "srv-B2-04-1",
+        "srv-B2-04-2",
+        "srv-B2-04-3",
+        "srv-B2-04-4"
+      ],
+      "gpus": 128,
+      "gpus_running": 128,
+      "pace_pct": 100.0,
+      "gpus_throttled": 0,
+      "servers_down": [],
+      "lost_usd_per_hour": 0.0,
+      "gpu_hour_usd": 2.5,
+      "reasons": [],
+      "assumptions_source": "demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote"
+    }
+  ],
+  "site_metrics": [
+    {
+      "key": "healthy_pct",
+      "label": "Machines healthy",
+      "value": 98.2,
+      "unit": "%",
+      "source": "live readings (simulated)"
+    },
+    {
+      "key": "powered_off",
+      "label": "Machines powered off",
+      "value": 0.0,
+      "unit": "machines",
+      "source": "live readings (simulated)"
+    },
+    {
+      "key": "technicians_on_repairs",
+      "label": "Technicians on repairs",
+      "value": 0.0,
+      "unit": "of 4",
+      "source": "crew model (configs/operations.json, demo assumption)"
+    },
+    {
+      "key": "gpus_throttling",
+      "label": "GPUs slowed by heat",
+      "value": 33.0,
+      "unit": "of 576",
+      "source": "live GPU readings (simulated)"
+    },
+    {
+      "key": "gpu_compute_lost_per_hour",
+      "label": "GPU compute lost right now",
+      "value": 447.68,
+      "unit": "USD/h",
+      "source": "live GPU readings (simulated) x GPU-hour price (demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote)"
+    },
+    {
+      "key": "gpu_jobs_full_speed",
+      "label": "GPU jobs at full speed",
+      "value": 2.0,
+      "unit": "of 4",
+      "source": "live GPU readings (simulated)"
+    },
+    {
+      "key": "drives_at_risk",
+      "label": "Drives predicted to fail (30 days)",
+      "value": 0.0,
+      "unit": "drives",
+      "source": "drive-failure-v1, trained on Backblaze Drive Stats"
+    },
+    {
+      "key": "max_supply_temp_c",
+      "label": "Hottest cooling unit",
+      "value": 34.91,
+      "unit": "C",
+      "source": "live readings (simulated)"
+    }
+  ]
+}

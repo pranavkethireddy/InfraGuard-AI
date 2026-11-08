@@ -33,8 +33,8 @@
   },
   "technicians": [
     {"technician_id": "tech-01", "name": "Maya Ortiz", "role": "HVAC mechanic", "site": "datacenter", "skills": ["cooling_unit"], "rate_per_hour": 95.0, "home": "hall-a"},
-    {"technician_id": "tech-02", "name": "Dev Patel", "role": "Data center technician", "site": "datacenter", "skills": ["storage_drive"], "rate_per_hour": 70.0, "home": "hall-a"},
-    {"technician_id": "tech-03", "name": "Sam Rivera", "role": "Data center technician", "site": "datacenter", "skills": ["storage_drive", "cooling_unit"], "rate_per_hour": 75.0, "home": "hall-b"},
+    {"technician_id": "tech-02", "name": "Dev Patel", "role": "Data center technician", "site": "datacenter", "skills": ["storage_drive", "gpu_server"], "rate_per_hour": 70.0, "home": "hall-a"},
+    {"technician_id": "tech-03", "name": "Sam Rivera", "role": "Data center technician", "site": "datacenter", "skills": ["storage_drive", "gpu_server", "cooling_unit"], "rate_per_hour": 75.0, "home": "hall-b"},
     {"technician_id": "tech-04", "name": "Ana Brooks", "role": "Millwright", "site": "datacenter", "skills": ["industrial_machine"], "rate_per_hour": 90.0, "home": "plant"},
     {"technician_id": "tech-05", "name": "Leo Kim", "role": "Mining technician", "site": "mining", "skills": ["asic_miner"], "rate_per_hour": 55.0, "home": "container-1"},
     {"technician_id": "tech-06", "name": "Rosa Nguyen", "role": "Mining technician", "site": "mining", "skills": ["asic_miner", "cooling_unit"], "rate_per_hour": 60.0, "home": "container-2"},
