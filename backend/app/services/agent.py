@@ -271,6 +271,39 @@ def _gather(box: Toolbox) -> dict:
     }
 
 
+_vultr_models: dict[str, str] = {}
+
+
+def _vultr_model(client: httpx.Client, settings: Settings, headers: dict) -> str:
+    if settings.vultr_model:
+        return settings.vultr_model
+    if settings.vultr_inference_url not in _vultr_models:
+        r = client.get(f"{settings.vultr_inference_url}/models", headers=headers)
+        r.raise_for_status()
+        ids = [m["id"] for m in r.json().get("data", []) if "embed" not in m["id"].lower()]
+        if not ids:
+            raise ValueError("no Vultr chat models")
+        _vultr_models[settings.vultr_inference_url] = ids[0]
+    return _vultr_models[settings.vultr_inference_url]
+
+
+def _vultr(settings: Settings, context: dict) -> dict | None:
+    """One chat completion on Vultr Serverless Inference with the same prompt and tool results."""
+    headers = {"Authorization": f"Bearer {settings.vultr_inference_api_key}"}
+    with httpx.Client(timeout=60) as client:
+        body = {"model": _vultr_model(client, settings, headers), "temperature": 0.2, "max_tokens": 1200,
+                "messages": [{"role": "system", "content": SYSTEM},
+                             {"role": "user", "content": "Tool results:\n" + json.dumps(context, default=str)}]}
+        for wait in (*RETRY_DELAYS[:2], None):
+            r = client.post(f"{settings.vultr_inference_url}/chat/completions", headers=headers, json=body)
+            if r.status_code in RETRY_STATUS and wait is not None:
+                time.sleep(wait)
+                continue
+            r.raise_for_status()
+            break
+    return _parse(r.json()["choices"][0]["message"].get("content") or "")
+
+
 def _gemini(box: Toolbox, settings: Settings, context: dict) -> dict | None:
     body = {
         "system_instruction": {"parts": [{"text": SYSTEM}]},
@@ -308,7 +341,17 @@ def investigate(store: Store, inc: IncidentDetail, settings: Settings) -> Incide
     box = Toolbox(store, inc, settings)
     context = _gather(box)
     result, source = None, "rag"
-    if settings.gemini_keys:
+    if settings.vultr_inference_api_key:
+        try:
+            result = _vultr(settings, context)
+            source = "agent"
+            if result is None:
+                log.warning("Vultr gave no usable answer for %s; trying the next provider", inc.incident_id)
+        except (httpx.HTTPError, KeyError, IndexError, ValueError) as e:
+            reason = e.response.status_code if isinstance(e, httpx.HTTPStatusError) else type(e).__name__
+            log.warning("Vultr call failed for %s (%s); trying the next provider", inc.incident_id, reason)
+            result = None
+    if result is None and settings.gemini_keys:
         try:
             result = _gemini(box, settings, context)
             source = "agent"

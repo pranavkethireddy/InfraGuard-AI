@@ -168,3 +168,47 @@ def test_diagnosis_names_the_cause_from_the_readings():
     assert "cooling unit" in diagnosis.likely_cause("gpu_server", {"online": 1, "gpus_online": 8, "gpus_throttled": 5,
                                                                    "inlet_temp_c": 33.1, "ecc_errors": 0, "psu_ok": 2})
     assert diagnosis.is_unknown("The cause is unknown based on current readings.")
+
+
+def test_vultr_writes_the_explanation_when_its_key_is_set(client, settings, monkeypatch):
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, status, data):
+            self.status_code, self._data = status, data
+
+        def json(self):
+            return self._data
+
+        def raise_for_status(self):
+            pass
+
+    class FakeClient:
+        def __init__(self, timeout):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        get = lambda self, url, headers: fake_get(url, headers)
+        post = lambda self, url, headers, json: fake_post(url, headers, json)
+
+    def fake_get(url, headers):
+        calls.append(("GET", url))
+        return FakeResponse(200, {"data": [{"id": "text-embed-x"}, {"id": "chat-model-1"}]})
+
+    def fake_post(url, headers, json):
+        calls.append(("POST", url, json["model"]))
+        assert headers["Authorization"] == "Bearer vk-test" and "diagnose_readings" in json["messages"][1]["content"]
+        text = '{"problem": "p", "likely_cause": "Slipping fan belt.", "explanation": "e", "recommended_actions": ["a"], "cited_record_ids": []}'
+        return FakeResponse(200, {"choices": [{"message": {"content": text}}]})
+
+    monkeypatch.setattr(agent, "_vultr_models", {})
+    monkeypatch.setattr(agent.httpx, "Client", FakeClient)
+    monkeypatch.setattr(settings, "vultr_inference_api_key", "vk-test")
+    d = client.post(f"/api/v1/incidents/{open_cooling_incident(client)}/investigate").json()
+    assert d["explanation_source"] == "agent" and d["likely_cause"] == "Slipping fan belt."
+    assert calls[0][0] == "GET" and calls[1] == ("POST", "https://api.vultrinference.com/v1/chat/completions", "chat-model-1")
