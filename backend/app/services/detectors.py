@@ -124,6 +124,18 @@ def server(info: ModelInfo, readings: dict[str, ReadingValue], state: RuleState)
         (v["psu_ok"] < cfg["psus"], False,
          Evidence(type="sensor_rule", field="psu_ok", value=v["psu_ok"], threshold=cfg["psus"], unit="PSUs"),
          "one power supply failed; the server has no power redundancy"),
+        (v.get("nic_links_up", 2) < cfg.get("nics", 2), True,
+         Evidence(type="sensor_rule", field="nic_links_up", value=v.get("nic_links_up", 2), threshold=cfg.get("nics", 2), unit="links"),
+         "a network link is down; the server has dropped out of the job's network"),
+        (v.get("dimm_max_ecc", 0) > cfg.get("max_dimm_ecc", 100), False,
+         Evidence(type="sensor_rule", field="dimm_max_ecc", value=v.get("dimm_max_ecc", 0), threshold=cfg.get("max_dimm_ecc", 100), unit="count"),
+         f"a memory DIMM is logging errors ({v.get('dimm_max_ecc', 0):.0f})"),
+        (v.get("nic_crc_errors", 0) > cfg.get("max_nic_crc", 100), False,
+         Evidence(type="sensor_rule", field="nic_crc_errors", value=v.get("nic_crc_errors", 0), threshold=cfg.get("max_nic_crc", 100), unit="count"),
+         "a network port is corrupting packets"),
+        (0 <= v.get("min_fan_rpm", 9000) < cfg.get("min_fan_rpm", 3000), False,
+         Evidence(type="sensor_rule", field="min_fan_rpm", value=v.get("min_fan_rpm", 9000), threshold=cfg.get("min_fan_rpm", 3000), unit="rpm"),
+         "a chassis fan has slowed or stopped"),
     ]
     broken = [c for c in checks if c[0] and not (c[2].field != "online" and v["online"] < 1)]
     if broken:

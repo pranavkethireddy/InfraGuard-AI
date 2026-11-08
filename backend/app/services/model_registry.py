@@ -13,6 +13,13 @@ INDUSTRIAL_ID = "industrial-failure-v1"
 DRIVE_ID = "drive-failure-v1"
 MINER_RULE_ID = "miner-rule-v1"
 SERVER_RULE_ID = "server-rule-v1"
+SERVER_PART_FIELDS = (
+    *[(f"cpu{i}_temp_c", "C") for i in (1, 2)], ("cpu_util_pct", "%"), ("max_cpu_temp_c", "C"),
+    *[(f"dimm{i}_ecc", "count") for i in range(1, 17)], ("dimm_max_ecc", "count"),
+    *[(f"fan{i}_rpm", "rpm") for i in range(1, 7)], ("min_fan_rpm", "rpm"),
+    ("psu1_w", "W"), ("psu2_w", "W"), ("nic1_link", None), ("nic2_link", None), ("nic_links_up", "links"),
+    ("nic_crc_errors", "count"), ("nvme1_wear_pct", "%"), ("nvme2_wear_pct", "%"), ("nvme_temp_c", "C"), ("bmc_ok", None),
+)
 RULE_IDS = (COOLING_RULE_ID, MINER_RULE_ID, SERVER_RULE_ID)
 GPUS_PER_SERVER = 8
 DRIVE_FEATURES = [
@@ -143,6 +150,8 @@ def list_models(settings: Settings) -> list[ModelInfo]:
                 InputField(name="power_w", unit="W", required=False),
                 *[InputField(name=f"gpu{i}_{f}", unit=u, required=False)
                   for i in range(1, GPUS_PER_SERVER + 1) for f, u in (("temp_c", "C"), ("clock_pct", "%"))],
+                # Server parts (all optional): CPUs, memory DIMMs, fans, PSUs, network ports, NVMe drives, BMC.
+                *[InputField(name=n, unit=u, required=False) for n, u in SERVER_PART_FIELDS],
             ],
             risk_thresholds=RiskThresholds(medium=0.4, high=0.7),
             # Demo assumptions; not vendor limits.

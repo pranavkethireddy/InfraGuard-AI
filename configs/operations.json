@@ -196,7 +196,11 @@
     "site": "datacenter",
     "kinds": [
       "gpu_fault",
-      "server_crash"
+      "server_crash",
+      "psu_failure",
+      "memory_fault",
+      "nic_failure",
+      "server_fan_failure"
     ],
     "fault_every_ticks": 20,
     "max_active_faults": 6,

@@ -231,14 +231,14 @@ def inject(store: Store, req: FaultRequest, settings: Settings) -> FaultResponse
                 from .layout import get_layout
                 pool = {a: assets[a] for a in get_layout(req.site).assets}
             if req.kind is not None:  # e.g. "a GPU server goes down": only machines that can have that fault
-                pool = {a: x for a, x in pool.items() if req.kind in fleet.FAULT_CHOICES.get(x.asset_type, ())}
+                pool = {a: x for a, x in pool.items() if req.kind in _kinds(fleet, x.asset_type)}
             chosen = _pick(store, run, pool, req.count)
             if not chosen:
                 raise ApiError(409, "NO_HEALTHY_ASSETS", "Every machine already has a fault or an open incident; clear first.", {})
         at = now()
         rng = random.Random(f"{run.seed}:kinds:{run.injections}")
         if req.kind is not None:
-            wrong = [a for a in chosen if req.kind not in fleet.FAULT_CHOICES.get(assets[a].asset_type, ())]
+            wrong = [a for a in chosen if req.kind not in _kinds(fleet, assets[a].asset_type)]
             if wrong:
                 raise ApiError(422, "FAULT_KIND_NOT_SUPPORTED", f"'{req.kind}' cannot happen on these machines.",
                                {"asset_ids": wrong, "kind": req.kind})
@@ -248,6 +248,11 @@ def inject(store: Store, req: FaultRequest, settings: Settings) -> FaultResponse
         run.injections += 1
         injected = [_fault_info(run, run.faults[a]) for a in chosen]
     return FaultResponse(injected=injected, live=status(store, settings))
+
+
+def _kinds(fleet, asset_type: str) -> tuple[str, ...]:
+    """Every fault this type can be given by kind: the random ones plus explicit-only ones."""
+    return (*fleet.FAULT_CHOICES.get(asset_type, ()), *getattr(fleet, "FAULT_EXPLICIT", {}).get(asset_type, ()))
 
 
 def _pick(store: Store, run: LiveRun, assets, count: int) -> list[str]:

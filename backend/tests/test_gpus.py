@@ -118,3 +118,26 @@ def test_inject_a_chosen_fault_kind(client):
     r = client.post("/api/v1/fleet/faults", json={"asset_ids": ["cooling-01"], "kind": "gpu_fault"})
     assert r.status_code == 422 and r.json()["error"]["code"] == "FAULT_KIND_NOT_SUPPORTED"
     client.post("/api/v1/fleet/live/stop")
+
+
+def test_server_parts_and_part_page(client, settings):
+    settings.live_tick_seconds = 0.05
+    try:
+        client.post("/api/v1/fleet/live/start", json={"seed": 3})
+        until(lambda: client.get("/api/v1/fleet/servers/srv-A1-01-1/components").json()["components"])
+        parts = client.get("/api/v1/fleet/servers/srv-A1-01-1/components").json()["components"]
+        kinds = {p["kind"] for p in parts}
+        assert kinds == {"gpu", "cpu", "dimm", "fan", "psu", "nic", "nvme", "bmc"} and len(parts) == 39
+        r = client.post("/api/v1/fleet/faults", json={"asset_ids": ["srv-A1-01-1"], "kind": "nic_failure"})
+        assert r.status_code == 201, r.text
+
+        def nic_down():
+            d = client.get("/api/v1/fleet/servers/srv-A1-01-1/components/nic1").json()
+            n2 = client.get("/api/v1/fleet/servers/srv-A1-01-1/components/nic2").json()
+            return any(x["component"]["status"] == "failed" for x in (d, n2)) and (d if d["component"]["status"] == "failed" else n2)
+        d = until(nic_down)
+        assert d["history"] and d["failure_mode"]["mode_id"].startswith("server-nic")
+        assert client.get("/api/v1/fleet/servers/srv-A1-01-1/components/zzz").status_code == 404
+        assert client.get("/api/v1/fleet/servers/drive-01/components").status_code == 404
+    finally:
+        client.post("/api/v1/fleet/live/stop")
