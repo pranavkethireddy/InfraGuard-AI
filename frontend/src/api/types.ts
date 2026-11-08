@@ -4,8 +4,8 @@ export type RiskLevel = "low" | "medium" | "high";
 export type DataOrigin = "simulated" | "observed";
 export type ScoreKind = "heuristic" | "model_score" | "calibrated_probability";
 export type IncidentStatus = "open" | "acknowledged" | "resolved";
-export type AssetType = "cooling_unit" | "industrial_machine";
-export type ExplanationSource = "rule" | "template" | "rag";
+export type AssetType = "cooling_unit" | "industrial_machine" | "storage_drive";
+export type ExplanationSource = "rule" | "template" | "rag" | "agent";
 
 export interface Paginated<T> {
   items: T[];
@@ -120,6 +120,9 @@ export interface IncidentSummary {
 export interface Impact extends ImpactAssumptions {
   estimated_downtime_cost: number | null;
   estimated_total_impact: number | null;
+  /** Optional backend demo assumptions (newer API). Displayed as returned, never computed. */
+  cost_per_day?: number | null;
+  estimated_repair_hours?: number | null;
 }
 
 export interface IncidentNote {
@@ -138,6 +141,13 @@ export interface IncidentDetail extends IncidentSummary {
   impact: Impact | null;
   priority_weights: Record<string, number> | null;
   notes: IncidentNote[];
+  /** Optional: tool steps reported by the backend investigation agent. */
+  agent_steps?: AgentStep[] | null;
+}
+
+export interface AgentStep {
+  tool: string;
+  summary: string;
 }
 
 export interface IncidentPatch {

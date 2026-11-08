@@ -3,10 +3,15 @@ import type {
   IncidentSummary, Paginated, ReadingsPage, Simulation, SimulationRequest, SimulationReset,
 } from "./types";
 import { fixtures } from "./fixtures";
+import { DEFAULT_DATA_MODE } from "./mode-default";
 
 // VITE_* values are bundled into the browser. Never put secrets in them.
 export type DataMode = "fixture" | "live";
-export const DATA_MODE: DataMode = import.meta.env.VITE_DATA_MODE === "live" ? "live" : "fixture";
+/** Explicit VITE_DATA_MODE wins; otherwise the build target's default (preview: fixture, frontend/ export: live). */
+export function resolveDataMode(raw: string | undefined, fallback: DataMode): DataMode {
+  return raw === "live" || raw === "fixture" ? raw : fallback;
+}
+export const DATA_MODE: DataMode = resolveDataMode(import.meta.env.VITE_DATA_MODE, DEFAULT_DATA_MODE);
 export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 
 export class ApiError extends Error {
@@ -37,6 +42,8 @@ export interface ApiClient {
   listIncidents(q?: ListQuery): Promise<Paginated<IncidentSummary>>;
   getIncident(id: string): Promise<IncidentDetail>;
   patchIncident(id: string, body: IncidentPatch): Promise<IncidentDetail>;
+  /** POST /incidents/{id}/investigate (no body). May take 10-30 s or longer. */
+  investigateIncident(id: string): Promise<IncidentDetail>;
   listSimulations(q: SimulationListQuery): Promise<Paginated<Simulation>>;
   getSimulation(id: string): Promise<Simulation>;
   startSimulation(body: SimulationRequest): Promise<Simulation>;
@@ -93,6 +100,7 @@ export function createLiveClient(baseUrl = API_BASE_URL, fetchImpl: typeof fetch
     listIncidents: (q = {}) => req(`/incidents${qs({ limit: q.limit, offset: q.offset, status: q.status })}`),
     getIncident: (id) => req(`/incidents/${enc(id)}`),
     patchIncident: (id, body) => req(`/incidents/${enc(id)}`, json("PATCH", body)),
+    investigateIncident: (id) => req(`/incidents/${enc(id)}/investigate`, json("POST")),
     listSimulations: (q) => req(`/simulations${qs({ status: q.status, asset_id: q.asset_id })}`),
     getSimulation: (id) => req(`/simulations/${enc(id)}`),
     startSimulation: (body) => req(`/simulations`, json("POST", body)),
@@ -120,6 +128,7 @@ export function createFixtureClient(): ApiClient {
       later({ ...f.incidentsList, items: f.incidentsList.items.filter((i) => !q.status || i.status === q.status) }),
     getIncident: (id) => (id === f.incidentDetail.incident_id ? later(f.incidentDetail) : Promise.reject(notFound(`Incident "${id}"`))),
     patchIncident: disabled,
+    investigateIncident: disabled,
     // No running simulation is reported in fixture mode: no fake live progress.
     listSimulations: () => later<Paginated<Simulation>>({ items: [], total: 0, limit: 50, offset: 0 }),
     getSimulation: (id) => (id === f.simulationStatus.simulation_id ? later(f.simulationStatus) : Promise.reject(notFound(`Simulation "${id}"`))),

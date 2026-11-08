@@ -1,0 +1,36 @@
+{
+  "_comment": "TEST-ONLY EXAMPLE for storage_drive / drive-failure-v1 shapes. Not an approved fixture.",
+  "asset": {
+    "asset_id": "drive-01",
+    "name": "Example Drive",
+    "asset_type": "storage_drive",
+    "location": "Example",
+    "criticality": "medium",
+    "compatible_detector": "drive-failure-v1",
+    "data_origin": "observed",
+    "current_risk_level": "low",
+    "active_incident_id": null,
+    "last_reading_at": null
+  },
+  "model": {
+    "detector_id": "drive-failure-v1",
+    "model_name": "drive-failure",
+    "model_version": "1",
+    "kind": "ml",
+    "asset_types": [
+      "storage_drive"
+    ],
+    "score_kind": "model_score",
+    "target": "drive_failure",
+    "prediction_horizon_hours": 720,
+    "input_fields": [],
+    "risk_thresholds": null,
+    "rule_config": null,
+    "status": "available",
+    "evaluation_status": "not_evaluated",
+    "metrics": null,
+    "source_dataset": null,
+    "model_card_url": null,
+    "limitations": []
+  }
+}

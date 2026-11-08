@@ -50,7 +50,7 @@ describe("SimulatePage (live API, mocked HTTP)", () => {
     expect(Array.from((select as HTMLSelectElement).options).map((o) => o.value)).toEqual(["cooling-01"]);
   });
 
-  it("starts, polls to completed, keeps the run available, then resets", async () => {
+  it("starts, polls every 2 s to completed, keeps the run available, then resets", { timeout: 15000 }, async () => {
     let polls = 0;
     let started = false;
     backend({
@@ -63,7 +63,7 @@ describe("SimulatePage (live API, mocked HTTP)", () => {
       },
       "GET /simulations/sim-demo-001": () => {
         polls += 1;
-        return json(polls < 3 ? sim({ samples_emitted: polls * 10 }) : sim({ status: "completed", samples_emitted: 30, completed_at: "2026-11-07T20:01:00Z" }));
+        return json(polls < 2 ? sim({ samples_emitted: polls * 10 }) : sim({ status: "completed", samples_emitted: 30, completed_at: "2026-11-07T20:01:00Z" }));
       },
       "POST /simulations/sim-demo-001/reset": () => { started = false; return json(fixtures.simulationReset); },
     });
@@ -72,12 +72,15 @@ describe("SimulatePage (live API, mocked HTTP)", () => {
     fireEvent.click(startBtn());
     expect(await screen.findByText("Status: running")).toBeInTheDocument();
     expect(startBtn()).toBeDisabled();
-    expect(await screen.findByText("Status: completed", {}, { timeout: 3000 })).toBeInTheDocument();
-    expect(polls).toBeGreaterThanOrEqual(3);
+    expect(await screen.findByText("Status: completed", {}, { timeout: 8000 })).toBeInTheDocument();
+    expect(polls).toBeGreaterThanOrEqual(2);
     expect(await screen.findByRole("img", { name: /Temperature/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reset simulation" })).toBeInTheDocument();
+    const readsBefore = h.fetch.mock.calls.filter((c) => String(c[0]).includes("/readings")).length;
     fireEvent.click(screen.getByRole("button", { name: "Reset simulation" }));
     expect(await screen.findByText("Readings deleted")).toBeInTheDocument();
     expect(screen.getAllByText("12").length).toBe(2);
+    await waitFor(() => expect(h.fetch.mock.calls.filter((c) => String(c[0]).includes("/readings")).length).toBeGreaterThan(readsBefore));
   });
 
   it("recovers a running simulation after reload and disables start", async () => {
@@ -132,6 +135,17 @@ describe("SimulatePage (live API, mocked HTTP)", () => {
     await waitFor(() => expect(startBtn()).toBeEnabled());
     fireEvent.change(screen.getByLabelText(/Seed/), { target: { value: "4.5" } });
     expect(startBtn()).toBeDisabled();
-    expect(screen.getByText("Seed must be a whole number.")).toBeInTheDocument();
+    expect(screen.getByText("Seed must be a whole number of 0 or more.")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Seed/), { target: { value: "-1" } });
+    expect(startBtn()).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/Seed/), { target: { value: "0" } });
+    expect(startBtn()).toBeEnabled();
+  });
+
+  it("keeps start disabled while a recovered run is still loading", async () => {
+    backend({ ...common, "GET /simulations": () => json(page([sim()])), "GET /simulations/sim-demo-001": () => new Promise<Response>(() => {}) });
+    renderPage();
+    expect(await screen.findByText("Loading recovered simulation…", { selector: "span" })).toBeInTheDocument();
+    expect(startBtn()).toBeDisabled();
   });
 });

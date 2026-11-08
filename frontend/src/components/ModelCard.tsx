@@ -60,7 +60,7 @@ export function ModelCard({ model: m }: { model: DetectorModel }) {
         ["Score type", SCORE_KIND_LABEL[m.score_kind]],
         ["Target", m.target],
         ["Asset types", <Mono>{m.asset_types.join(", ")}</Mono>],
-        ["Horizon", m.prediction_horizon_hours == null ? "None (not a forecast)" : <Mono>{m.prediction_horizon_hours} h</Mono>],
+        ["Horizon", m.prediction_horizon_hours == null ? "None (not a forecast)" : <Mono>{horizonLabel(m.prediction_horizon_hours)}</Mono>],
         ["Evaluation", evaluationLabel(m)],
         ["Source dataset", m.source_dataset ?? "—"],
         ["Risk thresholds", m.risk_thresholds ? <Mono>{Object.entries(m.risk_thresholds).map(([k, v]) => `${k} ≥ ${v}`).join(" · ")}</Mono> : "—"],
@@ -90,4 +90,9 @@ export function ModelCard({ model: m }: { model: DetectorModel }) {
       )}
     </Section>
   );
+}
+
+/** Unit conversion for display only (720 h -> "720 h (30 days)"); the value itself is the API's. */
+export function horizonLabel(h: number): string {
+  return h >= 24 && h % 24 === 0 ? `${h} h (${h / 24} days)` : `${h} h`;
 }

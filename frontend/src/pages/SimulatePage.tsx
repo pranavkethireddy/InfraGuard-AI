@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, DATA_MODE, FIXTURE_MUTATION_MESSAGE } from "@/api/client";
 import { fixtures } from "@/api/fixtures";
 import {
-  assetsQuery, modelsQuery, readingsQuery, runningSimulationsQuery, simulationQuery, useResetSimulation, useStartSimulation,
+  assetsQuery, modelsQuery, readingsQuery, runningSimulationsQuery, simulationPollInterval, simulationQuery, useResetSimulation, useStartSimulation,
 } from "@/api/queries";
 import type { Scenario, Simulation, SimulationReset } from "@/api/types";
 import { ReadingsChart } from "@/components/ReadingsChart";
@@ -14,7 +14,7 @@ import {
 export const SIM_DETECTOR = "cooling-rule-v1";
 
 export function parseSeed(raw: string): number | null {
-  if (!/^-?\d+$/.test(raw.trim())) return null;
+  if (!/^\d+$/.test(raw.trim())) return null;
   const n = Number(raw);
   return Number.isSafeInteger(n) ? n : null;
 }
@@ -79,7 +79,7 @@ export function SimulatePage() {
   const readings = useQuery({
     ...readingsQuery(assetId, 200),
     enabled: !fixture && !!assetId && !!sim.data,
-    refetchInterval: running ? Math.max(0.05, sim.data!.tick_seconds) * 1000 : false,
+    refetchInterval: simulationPollInterval(sim.data?.status),
   });
   const start = useStartSimulation();
   const reset = useResetSimulation();
@@ -92,10 +92,11 @@ export function SimulatePage() {
     !assetId ? "No compatible asset" :
     recovering ? "Checking for a running simulation…" :
     recovery.error ? "Could not check for a running simulation" :
+    activeId && sim.isLoading ? "Loading recovered simulation…" :
     running ? "A simulation is running" :
     reset.isPending ? "Resetting…" :
     start.isPending ? "Starting…" :
-    seed === null ? "Seed must be an integer" : null;
+    seed === null ? "Seed must be a whole number ≥ 0" : null;
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -137,11 +138,11 @@ export function SimulatePage() {
                   ))}
                 </div>
               </fieldset>
-              <label className="block text-[13px]"><span className="text-muted-foreground">Seed (integer)</span>
+              <label className="block text-[13px]"><span className="text-muted-foreground">Seed (whole number ≥ 0)</span>
                 <input className={`${inputCls} mt-1 font-mono`} inputMode="numeric" value={seedRaw} onChange={(e) => setSeedRaw(e.target.value)}
                   aria-invalid={seed === null} aria-describedby="seed-help" />
                 <span id="seed-help" className={`mt-1 block text-xs ${seed === null ? "text-destructive" : "text-muted-foreground"}`}>
-                  {seed === null ? "Seed must be a whole number." : "Same seed reproduces the same run."}
+                  {seed === null ? "Seed must be a whole number of 0 or more." : "Same seed reproduces the same run."}
                 </span>
               </label>
               <div className="flex items-center gap-3">
