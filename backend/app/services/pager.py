@@ -134,7 +134,7 @@ def set_auto(store: Store, settings: Settings, enabled: bool) -> bool:
 
 
 def escalate(store: Store, settings: Settings, incident_id: str, exclude: tuple[str, ...] = (),
-             prefer: str | None = None) -> None:
+             prefer: str | None = None, option: str | None = None) -> None:
     """An incident got more urgent: page someone if nobody has it yet. A repair already planned stops waiting for
     the maintenance window and moves up its technician's queue (queues follow priority); the job the technician
     is doing now is never interrupted."""
@@ -153,11 +153,11 @@ def escalate(store: Store, settings: Settings, incident_id: str, exclude: tuple[
                     tech.queue.append(o.work_order_id)
                 st.version += 1
             return
-    auto_dispatch(store, settings, incident_id, exclude, prefer)
+    auto_dispatch(store, settings, incident_id, exclude, prefer, option)
 
 
 def auto_dispatch(store: Store, settings: Settings, incident_id: str, exclude: tuple[str, ...] = (),
-                  prefer: str | None = None) -> None:
+                  prefer: str | None = None, option: str | None = None) -> None:
     """Send a newly opened incident to the closest qualified technician (recommended option), or to `prefer`
     first when given (falls back to the closest if they cannot take it)."""
     with store.lock:
@@ -167,11 +167,15 @@ def auto_dispatch(store: Store, settings: Settings, incident_id: str, exclude: t
             return
     if prefer is not None:
         try:
-            ops.dispatch(store, settings, DispatchRequest(incident_id=incident_id, technician_id=prefer), exclude)
+            ops.dispatch(store, settings, DispatchRequest(incident_id=incident_id, technician_id=prefer, option=option),
+                         exclude)
             return
         except ApiError as e:  # not qualified or on another repair: the closest one goes instead
             log.info("auto dispatch: %s cannot take %s (%s)", prefer, incident_id, e.code)
     try:
-        ops.dispatch(store, settings, DispatchRequest(incident_id=incident_id), exclude)
+        ops.dispatch(store, settings, DispatchRequest(incident_id=incident_id, option=option), exclude)
     except ApiError as e:
+        if option is not None:  # that option is not on this incident's plan: use the recommended one
+            auto_dispatch(store, settings, incident_id, exclude, prefer)
+            return
         log.info("auto dispatch skipped for %s: %s", incident_id, e.code)
