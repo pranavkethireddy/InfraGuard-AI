@@ -56,6 +56,7 @@ export interface SiteInfo { site_id: SiteId; name: string; machines: number; rac
 export interface SitesResponse { generated_at: string; live: LiveStatus; sites: SiteInfo[] }
 export interface RackDetail extends RackStatus { machines: MachineStatus[]; cooling_units: MachineStatus[]; incidents: IncidentSummary[]; server_ids?: string[] }
 export interface LiveStartRequest { seed?: number; tick_seconds?: number }
+export interface ChaosStatus { enabled: boolean; protected_technicians: string[]; active_faults: string[] }
 export interface FaultRequest { count?: number; site?: SiteId | null; asset_ids?: string[] | null; kind?: FaultKind | null }
 export interface FaultResponse { injected: FaultInfo[]; live: LiveStatus }
 export interface ClearResponse { readings_deleted: number; predictions_deleted: number; incidents_deleted: number; faults_cleared: number; simulations_reset: number; live: LiveStatus }
