@@ -272,5 +272,6 @@ def _facility(asset_type: str) -> ModelInfo:
         rule_config={"name": spec["name"], "rules": [list(r) for r in spec["rules"]], "consecutive_readings": 2,
                      "cooldown_readings": 3},
         status="available", evaluation_status="not_applicable", metrics=None, source_dataset=None, model_card_url=None,
-        limitations=[f"Transparent rule on simulated {spec['name'].lower()} telemetry, not a trained model.",
+        limitations=[f"Transparent rule on simulated {spec['name'].lower()} telemetry; rules decide risk.",
+                     "Second opinion from an IsolationForest anomaly model trained on healthy simulated readings of this family.",
                      "Thresholds are demo assumptions, not vendor limits."])
