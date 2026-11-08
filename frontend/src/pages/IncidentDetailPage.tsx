@@ -10,7 +10,7 @@ import { IncidentWhatIf } from '@/components/OperationsWorkspace';
 import { NotFoundState } from "./AssetDetailPage";
 import {
   Badge, Empty, ErrorMessage, ErrorState, Fields, Loading, Mono, OriginBadge, PageHeader, RiskBadge, ScoreValue, Section,
-  StatusBadge, btnOutline, btnPrimary, dt, inputCls, money, val,
+  StatusBadge, SourceDetails, btnOutline, btnPrimary, dt, inputCls, money, val,
 } from "@/components/ui-kit";
 
 /** Allowed transitions per contract: open -> acknowledged|resolved, acknowledged -> resolved. */
@@ -42,8 +42,7 @@ export function ImpactLedger({ impact: im }: { impact: Impact }) {
           </tr>
         </tbody>
       </table>
-      <p className="mt-2 px-3 text-xs text-muted-foreground"><Badge tone="attention">Demo repair assumptions</Badge> Figures as returned by the API ({c}). Repair and downtime durations are illustrative; mining lost revenue uses the historical hashprice source/date below when provided.</p>
-      {im.assumptions_source && <p className="mt-1 px-3 text-xs text-attention-foreground">Source: {im.assumptions_source}</p>}
+      <details className="mt-2 px-3 text-xs text-muted-foreground"><summary className="cursor-pointer">Source details</summary><p className="mt-2">Returned {c} scenario estimates; not measured costs or actual billing.</p><p className="mt-1 break-words">assumptions_source: {im.assumptions_source ?? 'Not reported'}</p></details>
     </div>
   );
 }
@@ -159,7 +158,7 @@ export function IncidentDetailPage({ id }: { id: string }) {
                   ["Observed", <Mono>{dt(p.observed_at)}</Mono>],
                   ["Generated", <Mono>{dt(p.generated_at)}</Mono>],
                 ]} />
-                {p.limitations.length > 0 && <ul className="list-disc border-t border-border pl-5 pt-2 text-xs text-muted-foreground">{p.limitations.map((l) => <li key={l}>{l}</li>)}</ul>}
+                <SourceDetails><p>data_origin: {p.data_origin}</p>{p.limitations.length > 0 && <ul className="list-disc pl-5">{p.limitations.map((l) => <li key={l}>{l}</li>)}</ul>}</SourceDetails>
               </div>
             ) : <Empty>No prediction attached.</Empty>}
           </Section>

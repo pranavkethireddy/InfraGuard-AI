@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ModelCard } from "@/components/ModelCard";
 import { OriginBadge, ScoreValue } from "@/components/ui-kit";
@@ -11,11 +11,15 @@ import type { DetectorModel } from "@/api/types";
 const [rule, ml] = fixtures.modelsList.items as [DetectorModel, DetectorModel];
 
 describe("UI contract", () => {
-  it("shows unavailable ML model as Not evaluated with synthetic badge and no metrics", () => {
+  it("keeps synthetic source collapsed while retaining Not evaluated and no metrics", () => {
     render(<ModelCard model={ml} />);
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
     expect(screen.getAllByText("Not evaluated").length).toBeGreaterThan(0);
-    expect(screen.getByText("Synthetic benchmark data")).toBeInTheDocument();
+    const disclosure = screen.getByText(/Synthetic benchmark data;/);
+    expect(disclosure).not.toBeVisible();
+    fireEvent.click(screen.getByText("Source details", { selector: "summary" }));
+    expect(disclosure).toBeVisible();
+    expect(screen.getByText(`Source dataset: ${ml.source_dataset}`)).toBeVisible();
     expect(screen.queryByLabelText("Evaluation metrics")).toBeNull();
     expect(screen.getByText("No evaluation metrics returned by the API.")).toBeInTheDocument();
   });
@@ -42,9 +46,12 @@ describe("UI contract", () => {
     expect(within(m).getByText(/majority_class/)).toBeInTheDocument();
   });
 
-  it("labels simulated data", () => {
+  it("keeps data_origin inspectable without a visible simulated badge", () => {
     render(<OriginBadge origin="simulated" />);
-    expect(screen.getByText("Simulated data")).toBeInTheDocument();
+    expect(screen.queryByText("Simulated data")).toBeNull();
+    expect(screen.getByText("data_origin: simulated")).not.toBeVisible();
+    fireEvent.click(screen.getByText("Source details", { selector: "summary" }));
+    expect(screen.getByText("data_origin: simulated")).toBeVisible();
   });
 
   it("labels heuristic score as not a probability and shows the raw value", () => {
@@ -58,7 +65,12 @@ describe("UI contract", () => {
     render(<ImpactLedger impact={fixtures.incidentDetail.impact!} />);
     expect(screen.getByText("$51,500")).toBeInTheDocument();
     expect(screen.getByText("$48,000")).toBeInTheDocument();
-    expect(screen.getAllByText(/not measured/).length).toBeGreaterThan(0);
+    const source = screen.getByText(`assumptions_source: ${fixtures.incidentDetail.impact?.assumptions_source}`);
+    expect(source).not.toBeVisible();
+    expect(screen.getByText(/scenario estimates; not measured/)).not.toBeVisible();
+    fireEvent.click(screen.getByText("Source details", { selector: "summary" }));
+    expect(source).toBeVisible();
+    expect(screen.getByText(/scenario estimates; not measured/)).toBeVisible();
   });
 
   it("only allows contract incident transitions", () => {

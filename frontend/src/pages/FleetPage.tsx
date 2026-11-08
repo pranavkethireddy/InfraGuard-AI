@@ -4,7 +4,7 @@ import { api, FIXTURE_MUTATION_MESSAGE } from '@/api/client';
 import { fleetMapQuery, fleetRackQuery, fleetSitesQuery, fleetStatusQuery } from '@/api/fleet-queries';
 import type { SiteId } from '@/api/fleet-types';
 import { FleetButton, FleetFloor, FleetMachines, FleetMetrics, FleetRackPane } from '@/components/FleetWorkspace';
-import { Empty, ErrorMessage, ErrorState, Loading, PageHeader, Section } from '@/components/ui-kit';
+import { Empty, ErrorMessage, ErrorState, Loading, PageHeader, Section, SourceDetails } from '@/components/ui-kit';
 import { GpuJobs } from '@/components/GpuJobs';
 
 export function FleetPage({ site, onSiteChange }: { site: SiteId; onSiteChange: (site: SiteId) => void }) {
@@ -42,8 +42,8 @@ function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange
   const blocked = api.mode === 'fixture' || mutation.isPending || !live;
   const run = (action: 'start' | 'stop' | 'fault' | 'clear') => { if (!blocked) mutation.mutate(action); };
   return <>
-    <PageHeader title="Live fleet" meta={`${current?.name ?? (site === 'mining' ? 'Crypto mining site' : 'Data center')} · simulated readings`} actions={<span className="font-mono text-xs">Loop: {live?.status ?? 'No data'} · {live?.ticks ?? '—'} ticks</span>} />
-    <div role="tablist" aria-label="Fleet site" className="mb-4 flex flex-wrap gap-2 border-b border-border pb-3">{(['datacenter', 'mining'] as const).map((id) => <FleetButton key={id} role="tab" aria-selected={site === id} primary={site === id} onClick={() => onSiteChange(id)}>{id === 'datacenter' ? 'Data center' : 'Crypto mining site'}</FleetButton>)}</div>
+    <PageHeader title="Live fleet" meta={`${current?.name ?? (site === 'mining' ? 'Crypto mining site' : 'Data center')}`} actions={<span className="font-mono text-xs">Loop: {live?.status ?? 'No data'} · {live?.ticks ?? '—'} ticks</span>} />
+    <SourceDetails><p>data_origin: simulated · synthetic fleet scenario; not production observations.</p></SourceDetails><div role="tablist" aria-label="Fleet site" className="mb-4 flex flex-wrap gap-2 border-b border-border pb-3">{(['datacenter', 'mining'] as const).map((id) => <FleetButton key={id} role="tab" aria-selected={site === id} primary={site === id} onClick={() => onSiteChange(id)}>{id === 'datacenter' ? 'Data center' : 'Crypto mining site'}</FleetButton>)}</div>
     <div className="mb-4 flex flex-wrap items-center gap-2">
       <FleetButton primary disabled={blocked || live?.status === 'running'} onClick={() => run('start')}>Start live loop</FleetButton>
       <FleetButton disabled={blocked || live?.status !== 'running'} onClick={() => run('stop')}>Stop live loop</FleetButton>

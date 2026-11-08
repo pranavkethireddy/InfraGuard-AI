@@ -18,7 +18,7 @@ export function resolveDataMode(raw: string | undefined, fallback: DataMode): Da
   return raw === "live" || raw === "fixture" ? raw : fallback;
 }
 export const DATA_MODE: DataMode = resolveDataMode(import.meta.env.VITE_DATA_MODE, DEFAULT_DATA_MODE);
-export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+export const API_BASE_URL: string = (import.meta.env.VITE_API_BASE_URL || "/api/v1").replace(/\/+$/, '');
 
 export class ApiError extends Error {
   constructor(
@@ -96,7 +96,7 @@ export function createLiveClient(baseUrl = API_BASE_URL, fetchImpl: typeof fetch
   async function req<T>(path: string, init?: RequestInit): Promise<T> {
     let res: Response;
     try {
-      res = await fetchImpl(`${baseUrl}${path}`, {
+      res = await fetchImpl(`${baseUrl.replace(/\/+$/, '')}${path}`, {
         ...init,
         headers: { Accept: "application/json", ...(init?.body ? { "Content-Type": "application/json" } : {}) },
       });

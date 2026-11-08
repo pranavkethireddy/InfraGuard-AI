@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fleetMapQuery, fleetRackQuery, fleetStatusQuery } from '@/api/fleet-queries';
 import type { SiteId } from '@/api/fleet-types';
 import { FleetButton, FleetFloor, FleetMachines, FleetMetrics, FleetRackPane } from '@/components/FleetWorkspace';
-import { Badge, Empty, ErrorState, Loading, PageHeader, Section } from '@/components/ui-kit';
+import { Badge, Empty, ErrorState, Loading, PageHeader, Section, SourceDetails } from '@/components/ui-kit';
 import { AppLink } from '@/lib/router-adapter';
 import { GpuJobs } from '@/components/GpuJobs';
 import { api } from '@/api/client';
@@ -30,10 +30,10 @@ function FacilityOverview({ site, onSiteChange }: { site: SiteId; onSiteChange: 
   const incidents = machines.filter((m) => m.active_incident);
   const live = status.data?.live ?? map.data?.live;
   return <>
-    <PageHeader title="Overview" meta={`${site === 'mining' ? 'Crypto mining site' : 'Data center'} · simulated facility readings`}
+    <PageHeader title="Overview" meta={`${site === 'mining' ? 'Crypto mining site' : 'Data center'}`}
       actions={<><Badge>Live loop: {live?.status ?? 'Not reported'}</Badge><AppLink to={`/fleet?site=${site}`} className="rounded-sm border border-input px-4 py-2 text-sm font-semibold text-primary">Start loop / inject faults →</AppLink></>} />
     <div role="tablist" aria-label="Overview site" className="mb-5 flex flex-wrap gap-2">{(['datacenter', 'mining'] as const).map((id) => <FleetButton key={id} role="tab" aria-selected={site === id} primary={site === id} onClick={() => onSiteChange(id)}>{id === 'datacenter' ? 'Data center' : 'Crypto mining site'}</FleetButton>)}</div>
-    <div className="space-y-6">
+    <SourceDetails><p>data_origin: simulated · synthetic facility scenario; not production observations.</p><p>Fictional crew; walking and repair durations use DEMO time.</p>{crew.data?.assumptions_source && <p>assumptions_source: {crew.data.assumptions_source}</p>}</SourceDetails><div className="mt-4 space-y-6">
       <Section title="Facility floor map">
         <div className="mb-4 flex flex-wrap items-center gap-4"><Badge>Auto dispatch: {crew.data?.auto_dispatch == null ? 'Not reported' : crew.data.auto_dispatch ? 'ON' : 'OFF'}</Badge><StreamStatus stream={crew.stream} /></div>
         {crew.error && <ErrorState error={crew.error} />}
