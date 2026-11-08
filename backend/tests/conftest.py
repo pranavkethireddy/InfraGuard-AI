@@ -16,6 +16,7 @@ def settings(tmp_path) -> Settings:
         drive_metrics_path=str(tmp_path / "missing-drive.json"),
         gemini_api_key=None,  # tests never call Gemini live
         gemini_api_key_2=None,
+        learned_cases_path=str(tmp_path / "learned_cases.json"),
     )
 
 

@@ -7,8 +7,8 @@
   "score_kind": "heuristic",
   "data_origin": "simulated",
   "title": "ASIC miner fault: Rack M1-01, Slot 5",
-  "opened_at": "2026-11-08T00:10:05.630393Z",
-  "last_seen_at": "2026-11-08T00:10:08.645635Z",
+  "opened_at": "2026-11-08T01:25:09.283065Z",
+  "last_seen_at": "2026-11-08T01:25:12.293517Z",
   "acknowledged_at": null,
   "resolved_at": null,
   "resolved_by": null,
@@ -19,8 +19,8 @@
     "prediction_id": "pred-002145",
     "asset_id": "miner-05",
     "detector_id": "miner-rule-v1",
-    "observed_at": "2026-11-08T00:10:08.645635Z",
-    "generated_at": "2026-11-08T00:10:08.708986Z",
+    "observed_at": "2026-11-08T01:25:12.293517Z",
+    "generated_at": "2026-11-08T01:25:12.389046Z",
     "data_origin": "simulated",
     "model_name": "miner-rule",
     "model_version": "1.0.0",
@@ -29,7 +29,7 @@
     "score_kind": "heuristic",
     "risk_level": "high",
     "prediction_horizon_hours": null,
-    "explanation": "Miner fault for 6 consecutive readings: hashrate is 74% of rated; chip temperature 94.7 C is above 85.0 C; fan speed 438 rpm is below 1500 rpm.",
+    "explanation": "Miner fault for 6 consecutive readings: hashrate is 74% of rated; chip temperature 95.3 C is above 85.0 C; fan speed 438 rpm is below 1500 rpm.",
     "explanation_source": "rule",
     "evidence": [
       {
@@ -43,7 +43,7 @@
       {
         "type": "sensor_rule",
         "field": "chip_temp_c",
-        "value": 94.7,
+        "value": 95.3,
         "threshold": 85.0,
         "unit": "C",
         "consecutive_readings": 6
@@ -77,7 +77,7 @@
     {
       "type": "sensor_rule",
       "field": "chip_temp_c",
-      "value": 94.7,
+      "value": 95.3,
       "threshold": 85.0,
       "unit": "C",
       "consecutive_readings": 6
@@ -157,9 +157,14 @@
     {
       "tool": "get_model_card",
       "summary": "Read model card for miner-rule-v1 (not_applicable)"
+    },
+    {
+      "tool": "search_learned_cases",
+      "summary": "Checked cases learned at every site: none yet"
     }
   ],
   "investigation_status": "completed",
   "problem": "ASIC miner fault: Rack M1-01, Slot 5 (Container 1, Row M1, Rack M1-01, Slot 5).",
-  "likely_cause": "ASIC miner reported one fan at 0 rpm and chip temperature 92 C; the unit throttled to about 150 TH/s. Replaced the fan, about $35 and 20 min. Hashrate back to rated within 10 minutes."
+  "likely_cause": "ASIC miner reported one fan at 0 rpm and chip temperature 92 C; the unit throttled to about 150 TH/s. Replaced the fan, about $35 and 20 min. Hashrate back to rated within 10 minutes.",
+  "work_order_id": null
 }

@@ -2,13 +2,13 @@
   "site_id": "datacenter",
   "site_name": "InfraGuard Demo Data Center",
   "grid_unit": "floor tile (about 0.6 m)",
-  "generated_at": "2026-11-08T00:10:09.290435Z",
+  "generated_at": "2026-11-08T01:25:12.650455Z",
   "live": {
     "status": "running",
     "run_id": "live-000001",
     "seed": 42,
     "tick_seconds": 1.0,
-    "started_at": "2026-11-08T00:09:57.407433Z",
+    "started_at": "2026-11-08T01:25:01.245285Z",
     "stopped_at": null,
     "ticks": 12,
     "auto_investigate": true,
@@ -17,35 +17,35 @@
         "asset_id": "cooling-02",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "injected_at": "2026-11-08T01:25:04.765296Z",
         "progress": 1.0
       },
       {
         "asset_id": "drive-05",
         "kind": "drive_degradation",
         "phase": "holding",
-        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "injected_at": "2026-11-08T01:25:04.765296Z",
         "progress": 1.0
       },
       {
         "asset_id": "mill-02",
         "kind": "machine_overstrain",
         "phase": "holding",
-        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "injected_at": "2026-11-08T01:25:04.765296Z",
         "progress": 1.0
       },
       {
         "asset_id": "miner-05",
         "kind": "fan_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "injected_at": "2026-11-08T01:25:04.765296Z",
         "progress": 1.0
       },
       {
         "asset_id": "fanwall-m3",
         "kind": "cooling_failure",
         "phase": "holding",
-        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "injected_at": "2026-11-08T01:25:04.765296Z",
         "progress": 1.0
       }
     ]
@@ -62,6 +62,8 @@
     "downtime_cost_per_day_at_risk": 372000.0,
     "currency": "USD",
     "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured",
+    "machines_powered_off": 0,
+    "machines_at_risk_of_shutdown": 10,
     "cost_if_all_fail": 75900.0,
     "cost_to_fix_all_now": 2800.0,
     "savings_if_fixed_now": 73100.0
@@ -75,6 +77,20 @@
       "source": "live readings (simulated)"
     },
     {
+      "key": "powered_off",
+      "label": "Machines powered off",
+      "value": 0.0,
+      "unit": "machines",
+      "source": "live readings (simulated)"
+    },
+    {
+      "key": "technicians_on_repairs",
+      "label": "Technicians on repairs",
+      "value": 0.0,
+      "unit": "of 4",
+      "source": "crew model (configs/operations.json, demo assumption)"
+    },
+    {
       "key": "drives_at_risk",
       "label": "Drives predicted to fail (30 days)",
       "value": 1.0,
@@ -84,7 +100,7 @@
     {
       "key": "max_supply_temp_c",
       "label": "Hottest cooling unit",
-      "value": 37.01,
+      "value": 37.21,
       "unit": "C",
       "source": "live readings (simulated)"
     }
@@ -116,7 +132,9 @@
             "drive-01",
             "drive-02"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "A1-02",
@@ -136,7 +154,9 @@
             "drive-03",
             "drive-04"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "A1-03",
@@ -160,7 +180,9 @@
           ],
           "open_incident_ids": [
             "inc-000769"
-          ]
+          ],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "A1-04",
@@ -180,7 +202,9 @@
             "drive-07",
             "drive-08"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "A1-05",
@@ -200,7 +224,9 @@
             "drive-09",
             "drive-10"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "A2-01",
@@ -213,6 +239,7 @@
           "depth": 1.0,
           "status": "warning",
           "reasons": [
+            "Projected thermal shutdown in about 6 min (demo time) unless fixed",
             "Cooling unit CRAC Unit 2 serving this rack is critical"
           ],
           "cooled_by": [
@@ -222,7 +249,9 @@
             "drive-11",
             "drive-12"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "at_risk",
+          "shutdown_eta_minutes": 5.6
         },
         {
           "rack_id": "A2-02",
@@ -235,6 +264,7 @@
           "depth": 1.0,
           "status": "warning",
           "reasons": [
+            "Projected thermal shutdown in about 6 min (demo time) unless fixed",
             "Cooling unit CRAC Unit 2 serving this rack is critical"
           ],
           "cooled_by": [
@@ -244,7 +274,9 @@
             "drive-13",
             "drive-14"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "at_risk",
+          "shutdown_eta_minutes": 5.6
         },
         {
           "rack_id": "A2-03",
@@ -257,6 +289,7 @@
           "depth": 1.0,
           "status": "warning",
           "reasons": [
+            "Projected thermal shutdown in about 6 min (demo time) unless fixed",
             "Cooling unit CRAC Unit 2 serving this rack is critical"
           ],
           "cooled_by": [
@@ -266,7 +299,9 @@
             "drive-15",
             "drive-16"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "at_risk",
+          "shutdown_eta_minutes": 5.6
         },
         {
           "rack_id": "A2-04",
@@ -279,6 +314,7 @@
           "depth": 1.0,
           "status": "warning",
           "reasons": [
+            "Projected thermal shutdown in about 6 min (demo time) unless fixed",
             "Cooling unit CRAC Unit 2 serving this rack is critical"
           ],
           "cooled_by": [
@@ -288,7 +324,9 @@
             "drive-17",
             "drive-18"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "at_risk",
+          "shutdown_eta_minutes": 5.6
         },
         {
           "rack_id": "A2-05",
@@ -301,6 +339,7 @@
           "depth": 1.0,
           "status": "warning",
           "reasons": [
+            "Projected thermal shutdown in about 6 min (demo time) unless fixed",
             "Cooling unit CRAC Unit 2 serving this rack is critical"
           ],
           "cooled_by": [
@@ -310,7 +349,9 @@
             "drive-19",
             "drive-20"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "at_risk",
+          "shutdown_eta_minutes": 5.6
         }
       ],
       "machines": [
@@ -336,14 +377,18 @@
             "temperature_c": 23.99,
             "fan_speed_rpm": 1128.3
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "fan_speed_rpm"
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "cooling-02",
@@ -364,10 +409,10 @@
           "risk_level": "high",
           "risk_score": 0.8,
           "latest_values": {
-            "temperature_c": 37.01,
-            "fan_speed_rpm": 760.1
+            "temperature_c": 37.21,
+            "fan_speed_rpm": 754.3
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "fan_speed_rpm"
@@ -377,7 +422,7 @@
             "title": "Sustained high temperature on CRAC Unit 2",
             "status": "open",
             "risk_level": "high",
-            "opened_at": "2026-11-08T00:10:06.635476Z",
+            "opened_at": "2026-11-08T01:25:10.288137Z",
             "estimated_total_impact": 51500.0,
             "cost_per_day": 288000.0,
             "investigation_status": "completed"
@@ -386,10 +431,14 @@
             "asset_id": "cooling-02",
             "kind": "cooling_failure",
             "phase": "holding",
-            "injected_at": "2026-11-08T00:10:00.921281Z",
+            "injected_at": "2026-11-08T01:25:04.765296Z",
             "progress": 1.0
           },
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-01",
@@ -419,7 +468,7 @@
             "power_on_hours": 25743,
             "temperature_c": 33.2
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -427,7 +476,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-02",
@@ -457,7 +510,7 @@
             "power_on_hours": 29335,
             "temperature_c": 29.8
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -465,7 +518,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-03",
@@ -495,7 +552,7 @@
             "power_on_hours": 30048,
             "temperature_c": 31.8
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -503,7 +560,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-04",
@@ -533,7 +594,7 @@
             "power_on_hours": 36841,
             "temperature_c": 32.7
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -541,7 +602,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-05",
@@ -571,7 +636,7 @@
             "power_on_hours": 34913,
             "temperature_c": 37.1
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -582,7 +647,7 @@
             "title": "Predicted drive failure within 30 days: Rack A1-03, Drive Bay 1",
             "status": "open",
             "risk_level": "high",
-            "opened_at": "2026-11-08T00:10:01.610076Z",
+            "opened_at": "2026-11-08T01:25:05.267573Z",
             "estimated_total_impact": 3400.0,
             "cost_per_day": 36000.0,
             "investigation_status": "completed"
@@ -591,10 +656,14 @@
             "asset_id": "drive-05",
             "kind": "drive_degradation",
             "phase": "holding",
-            "injected_at": "2026-11-08T00:10:00.921281Z",
+            "injected_at": "2026-11-08T01:25:04.765296Z",
             "progress": 1.0
           },
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-06",
@@ -624,7 +693,7 @@
             "power_on_hours": 14975,
             "temperature_c": 32.4
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -632,7 +701,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-07",
@@ -662,7 +735,7 @@
             "power_on_hours": 15031,
             "temperature_c": 31.4
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -670,7 +743,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-08",
@@ -700,7 +777,7 @@
             "power_on_hours": 32432,
             "temperature_c": 33.7
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -708,7 +785,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-09",
@@ -738,7 +819,7 @@
             "power_on_hours": 11754,
             "temperature_c": 32.1
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -746,7 +827,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-10",
@@ -776,7 +861,7 @@
             "power_on_hours": 37791,
             "temperature_c": 32.9
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -784,7 +869,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-11",
@@ -814,7 +903,7 @@
             "power_on_hours": 38525,
             "temperature_c": 33.6
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -822,7 +911,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         },
         {
           "asset_id": "drive-12",
@@ -852,7 +945,7 @@
             "power_on_hours": 12626,
             "temperature_c": 33.4
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -860,7 +953,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         },
         {
           "asset_id": "drive-13",
@@ -890,7 +987,7 @@
             "power_on_hours": 29969,
             "temperature_c": 32.8
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -898,7 +995,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         },
         {
           "asset_id": "drive-14",
@@ -928,7 +1029,7 @@
             "power_on_hours": 11631,
             "temperature_c": 35.3
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -936,7 +1037,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         },
         {
           "asset_id": "drive-15",
@@ -966,7 +1071,7 @@
             "power_on_hours": 19549,
             "temperature_c": 34.2
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -974,7 +1079,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         },
         {
           "asset_id": "drive-16",
@@ -1004,7 +1113,7 @@
             "power_on_hours": 39989,
             "temperature_c": 34.5
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1012,7 +1121,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         },
         {
           "asset_id": "drive-17",
@@ -1042,7 +1155,7 @@
             "power_on_hours": 36507,
             "temperature_c": 33.1
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1050,7 +1163,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         },
         {
           "asset_id": "drive-18",
@@ -1080,7 +1197,7 @@
             "power_on_hours": 32924,
             "temperature_c": 31.8
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1088,7 +1205,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         },
         {
           "asset_id": "drive-19",
@@ -1118,7 +1239,7 @@
             "power_on_hours": 38446,
             "temperature_c": 31.0
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1126,7 +1247,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         },
         {
           "asset_id": "drive-20",
@@ -1156,7 +1281,7 @@
             "power_on_hours": 37447,
             "temperature_c": 34.2
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1164,7 +1289,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "at_risk",
+          "power_reason": null,
+          "shutdown_eta_minutes": 5.6,
+          "work_order": null
         }
       ]
     },
@@ -1194,7 +1323,9 @@
             "drive-21",
             "drive-22"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "B1-02",
@@ -1214,7 +1345,9 @@
             "drive-23",
             "drive-24"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "B1-03",
@@ -1234,7 +1367,9 @@
             "drive-25",
             "drive-26"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "B1-04",
@@ -1254,7 +1389,9 @@
             "drive-27",
             "drive-28"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "B2-01",
@@ -1274,7 +1411,9 @@
             "drive-29",
             "drive-30"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "B2-02",
@@ -1294,7 +1433,9 @@
             "drive-31",
             "drive-32"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "B2-03",
@@ -1314,7 +1455,9 @@
             "drive-33",
             "drive-34"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         },
         {
           "rack_id": "B2-04",
@@ -1334,7 +1477,9 @@
             "drive-35",
             "drive-36"
           ],
-          "open_incident_ids": []
+          "open_incident_ids": [],
+          "power_state": "on",
+          "shutdown_eta_minutes": null
         }
       ],
       "machines": [
@@ -1360,14 +1505,18 @@
             "temperature_c": 21.91,
             "fan_speed_rpm": 1092.9
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "fan_speed_rpm"
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "cooling-04",
@@ -1391,14 +1540,18 @@
             "temperature_c": 23.34,
             "fan_speed_rpm": 1181.9
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "fan_speed_rpm"
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-21",
@@ -1428,7 +1581,7 @@
             "power_on_hours": 10045,
             "temperature_c": 31.9
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1436,7 +1589,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-22",
@@ -1466,7 +1623,7 @@
             "power_on_hours": 32014,
             "temperature_c": 36.1
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1474,7 +1631,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-23",
@@ -1504,7 +1665,7 @@
             "power_on_hours": 41645,
             "temperature_c": 30.8
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1512,7 +1673,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-24",
@@ -1542,7 +1707,7 @@
             "power_on_hours": 8159,
             "temperature_c": 30.0
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1550,7 +1715,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-25",
@@ -1580,7 +1749,7 @@
             "power_on_hours": 29517,
             "temperature_c": 31.2
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1588,7 +1757,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-26",
@@ -1618,7 +1791,7 @@
             "power_on_hours": 14879,
             "temperature_c": 31.9
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1626,7 +1799,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-27",
@@ -1656,7 +1833,7 @@
             "power_on_hours": 31911,
             "temperature_c": 31.1
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1664,7 +1841,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-28",
@@ -1694,7 +1875,7 @@
             "power_on_hours": 38935,
             "temperature_c": 34.2
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1702,7 +1883,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-29",
@@ -1732,7 +1917,7 @@
             "power_on_hours": 21171,
             "temperature_c": 31.8
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1740,7 +1925,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-30",
@@ -1770,7 +1959,7 @@
             "power_on_hours": 10792,
             "temperature_c": 35.8
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1778,7 +1967,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-31",
@@ -1808,7 +2001,7 @@
             "power_on_hours": 29061,
             "temperature_c": 35.9
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1816,7 +2009,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-32",
@@ -1846,7 +2043,7 @@
             "power_on_hours": 16740,
             "temperature_c": 31.5
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1854,7 +2051,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-33",
@@ -1884,7 +2085,7 @@
             "power_on_hours": 36295,
             "temperature_c": 29.8
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1892,7 +2093,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-34",
@@ -1922,7 +2127,7 @@
             "power_on_hours": 25002,
             "temperature_c": 29.9
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1930,7 +2135,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-35",
@@ -1960,7 +2169,7 @@
             "power_on_hours": 41648,
             "temperature_c": 36.5
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -1968,7 +2177,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "drive-36",
@@ -1998,7 +2211,7 @@
             "power_on_hours": 9754,
             "temperature_c": 29.7
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "temperature_c",
             "reallocated_sectors",
@@ -2006,7 +2219,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         }
       ]
     },
@@ -2045,7 +2262,7 @@
             "torque_nm": 44.8,
             "tool_wear_min": 42
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "torque_nm",
             "rotational_speed_rpm",
@@ -2053,7 +2270,11 @@
           ],
           "active_incident": null,
           "simulated_fault": null,
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         },
         {
           "asset_id": "mill-02",
@@ -2081,7 +2302,7 @@
             "torque_nm": 72.7,
             "tool_wear_min": 230
           },
-          "last_reading_at": "2026-11-08T00:10:08.645635Z",
+          "last_reading_at": "2026-11-08T01:25:12.293517Z",
           "chart_fields": [
             "torque_nm",
             "rotational_speed_rpm",
@@ -2092,7 +2313,7 @@
             "title": "Elevated failure risk on AI4I Benchmark Machine 2",
             "status": "open",
             "risk_level": "high",
-            "opened_at": "2026-11-08T00:10:05.630393Z",
+            "opened_at": "2026-11-08T01:25:09.283065Z",
             "estimated_total_impact": 21000.0,
             "cost_per_day": 48000.0,
             "investigation_status": "completed"
@@ -2101,10 +2322,14 @@
             "asset_id": "mill-02",
             "kind": "machine_overstrain",
             "phase": "holding",
-            "injected_at": "2026-11-08T00:10:00.921281Z",
+            "injected_at": "2026-11-08T01:25:04.765296Z",
             "progress": 1.0
           },
-          "history": []
+          "history": [],
+          "power_state": "on",
+          "power_reason": null,
+          "shutdown_eta_minutes": null,
+          "work_order": null
         }
       ]
     }
