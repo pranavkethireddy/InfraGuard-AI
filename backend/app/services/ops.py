@@ -390,16 +390,14 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest, exclude: tu
 
 def _start_now(st: OpsState, settings: Settings, tech: Tech, o: Order, store: Store | None = None) -> Order | None:
     """Put the technician on o at once. A routine job is paused and queued; a less urgent repair is paused and
-    queued; an equally or more urgent repair stays and o waits behind it."""
+    queued (one awaiting confirmation too: it is kept, and comes back for the tap); an equally or more urgent
+    repair stays and o waits behind it."""
     cur = st.orders.get(tech.current) if tech.current else None
     displaced = None
     if cur is not None and cur.kind == "repair" and not _worse(st, o, cur, store):
         o.status = "scheduled"
         tech.queue.insert(0, o.work_order_id)
         return None
-    if cur is not None and cur.status == "awaiting_confirmation" and store is not None:
-        _finish(store, settings, st, tech, cur, demo_now(st, settings))  # the work is done; the more urgent job can't wait for the tap
-        cur = None
     if cur is not None:
         cur.status = "paused"
         tech.queue.append(cur.work_order_id)
@@ -460,43 +458,6 @@ def _urgency(store: Store, o: Order) -> tuple:
     return (o.kind != "repair", _level(store, o), -((inc.priority_index or 0.0) if inc else 0.0), o.created_at)
 
 
-def _rebalance(store: Store, settings: Settings, st: OpsState) -> None:
-    """A repair waiting behind a busy technician moves to a free qualified technician at the same site
-    (one with no repair in hand or queued), the closest first. Chaos work never goes to a protected technician."""
-    from . import chaos
-
-    keep = set(chaos.protected(settings))
-    chaos_assets = store.live.chaos_assets if store.live is not None else set()
-    for tech in list(st.techs.values()):
-        cur = st.orders.get(tech.current) if tech.current else None
-        if cur is None or cur.kind != "repair":
-            continue
-        for oid in list(tech.queue):
-            o = st.orders[oid]
-            if o.kind != "repair" or o.status != "scheduled" or o.scheduled_start is not None or o.asset_id is None:
-                continue
-            asset = all_assets().get(o.asset_id)
-            if asset is None:
-                continue
-            free = []
-            for t in st.techs.values():
-                tid = t.cfg["technician_id"]
-                if t is tech or t.cfg["site"] != o.site_id or asset.asset_type not in t.cfg["skills"] \
-                        or tid in o.declined_by or (o.asset_id in chaos_assets and tid in keep):
-                    continue
-                tc = st.orders.get(t.current) if t.current else None
-                if (tc is not None and tc.kind == "repair") or queued_repair_hours(st, t) > 0:
-                    continue
-                free.append((repair_walk_hours(o.site_id, t.pos, asset_spot(o.asset_id), settings), tid, t))
-            if not free:
-                continue
-            _, _, to = min(free, key=lambda f: (f[0], f[1]))
-            tech.queue.remove(oid)
-            o.technician_id = to.cfg["technician_id"]
-            o.why = f"Moved from {tech.cfg['name']}, who is busy; you are free and closest."
-            _start_now(st, settings, to, o, store)
-
-
 def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Order]:
     """One tick of crew work. Called by the live loop under store.lock. Returns repairs finished this tick."""
     st = state(store, settings)
@@ -513,7 +474,6 @@ def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Ord
             o.mitigation_hours += h
         if o.status != "done" and o.asset_id and (o.asset_id in powered_off or _cools_off(o.asset_id, powered_off)):
             o.shutdown_seen = True
-    _rebalance(store, settings, st)
     for tech in st.techs.values():
         # Repairs before routine work, the most urgent incident first (priority can change every tick).
         tech.queue.sort(key=lambda i: _urgency(store, st.orders[i]))
