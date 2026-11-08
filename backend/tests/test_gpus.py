@@ -95,10 +95,10 @@ def test_crashed_server_stalls_its_job_until_restarted_without_it(client, settin
 def test_lost_power_supply_is_medium_and_can_wait(client, settings):
     settings.live_tick_seconds = 0.05
     try:
-        client.post("/api/v1/fleet/faults", json={"asset_ids": ["srv-B2-02-1"]})
-        live = client.get("/api/v1/fleet/live").json()
-        if live["active_faults"][0]["kind"] != "psu_failure":  # fault kind is seeded; force the one under test
-            client.app.state.store.live.faults["srv-B2-02-1"].kind = "psu_failure"
+        # The fault kind is drawn from the run seed; seed 1's first draw for a GPU server is psu_failure.
+        client.post("/api/v1/fleet/live/start", json={"seed": 1})
+        f = client.post("/api/v1/fleet/faults", json={"asset_ids": ["srv-B2-02-1"]}).json()
+        assert f["injected"][0]["kind"] == "psu_failure"
         inc = until(lambda: next((i for i in client.get("/api/v1/incidents").json()["items"]
                                   if i["asset_id"] == "srv-B2-02-1"), None))
         assert inc["risk_level"] == "medium"

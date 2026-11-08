@@ -8,8 +8,9 @@ import pytest
 from backend.app.schemas.assets import AssetDetail, AssetSummary
 from backend.app.schemas.common import Page
 from backend.app.schemas.errors import ErrorResponse
-from backend.app.schemas.fleet import (ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus,
-                                       LiveStartRequest, LiveStatus, RackDetail, SitesResponse)
+from backend.app.schemas.common import ContractModel
+from backend.app.schemas.fleet import (ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, JobStatus,
+                                       LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteMetric, SitesResponse)
 from backend.app.schemas.health import HealthResponse
 from backend.app.schemas.ops import (DispatchRequest, DispatchResponse, LearnedCases, LearningMatrix, PlanResponse,
                                      TechniciansResponse, WhatIf)
@@ -19,6 +20,13 @@ from backend.app.schemas.models import ModelInfo
 from backend.app.schemas.predictions import PredictionRequest, PredictionResponse
 from backend.app.schemas.readings import AssetReadingsResponse, ReadingsRequest, ReadingsResponse
 from backend.app.schemas.simulations import SimulationRequest, SimulationResetResponse, SimulationResponse
+
+class JobsExcerpt(ContractModel):
+    """fleet.jobs.excerpt.json: the jobs and site_metrics fields of a FleetMap."""
+
+    jobs: list[JobStatus]
+    site_metrics: list[SiteMetric]
+
 
 FIXTURES = Path(__file__).resolve().parents[2] / "contracts" / "fixtures"
 
@@ -45,6 +53,9 @@ SCHEMAS = {
     "fleet.map.response.json": FleetMap,
     "fleet.status.response.json": FleetStatus,
     "fleet.rack.response.json": RackDetail,
+    "fleet.server.response.json": ServerDetail,
+    "fleet.server.crashed.response.json": ServerDetail,
+    "fleet.jobs.excerpt.json": JobsExcerpt,
     "fleet.live.response.json": LiveStatus,
     "fleet.live.start.request.json": LiveStartRequest,
     "fleet.faults.request.json": FaultRequest,
@@ -54,6 +65,7 @@ SCHEMAS = {
     "fleet.status.mining.response.json": FleetStatus,
     "incident.miner.response.json": IncidentDetail,
     "incident.whatif.response.json": WhatIf,
+    "incident.server.whatif.response.json": WhatIf,
     "ops.technicians.response.json": TechniciansResponse,
     "ops.plan.response.json": PlanResponse,
     "ops.dispatch.request.json": DispatchRequest,
