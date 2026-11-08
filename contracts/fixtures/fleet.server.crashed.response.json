@@ -18,23 +18,23 @@
     "risk_level": "high",
     "risk_score": 0.85,
     "latest_values": {
-      "inlet_temp_c": 24.25,
+      "inlet_temp_c": 24.14,
       "online": 0,
       "gpus_online": 0,
       "gpus_throttled": 0,
-      "max_gpu_temp_c": 28.7,
+      "max_gpu_temp_c": 28.6,
       "min_gpu_clock_pct": 0.0,
       "compute_pct": 0.0,
       "ecc_errors": 0,
       "psu_ok": 2,
       "power_w": 250,
-      "gpu1_temp_c": 28.7,
-      "gpu2_temp_c": 28.3,
-      "gpu3_temp_c": 28.5,
-      "gpu4_temp_c": 28.7,
-      "gpu5_temp_c": 28.5,
-      "gpu6_temp_c": 28.7,
-      "gpu7_temp_c": 28.0,
+      "gpu1_temp_c": 27.8,
+      "gpu2_temp_c": 28.6,
+      "gpu3_temp_c": 28.6,
+      "gpu4_temp_c": 28.2,
+      "gpu5_temp_c": 28.4,
+      "gpu6_temp_c": 28.6,
+      "gpu7_temp_c": 28.4,
       "gpu8_temp_c": 28.6,
       "gpu1_clock_pct": 0.0,
       "gpu2_clock_pct": 0.0,
@@ -45,18 +45,18 @@
       "gpu7_clock_pct": 0.0,
       "gpu8_clock_pct": 0.0
     },
-    "last_reading_at": "2026-11-08T02:56:21.700676Z",
+    "last_reading_at": "2026-11-08T03:12:18.592053Z",
     "chart_fields": [
       "max_gpu_temp_c",
       "compute_pct",
       "inlet_temp_c"
     ],
     "active_incident": {
-      "incident_id": "inc-002373",
+      "incident_id": "inc-001849",
       "title": "GPU server fault: Rack A1-02, GPU Server 3",
       "status": "open",
       "risk_level": "high",
-      "opened_at": "2026-11-08T02:56:21.291821Z",
+      "opened_at": "2026-11-08T03:12:17.779203Z",
       "estimated_total_impact": 3600.0,
       "cost_per_day": 9600.0,
       "investigation_status": null
@@ -65,45 +65,14 @@
       "asset_id": "srv-A1-02-3",
       "kind": "server_crash",
       "phase": "holding",
-      "injected_at": "2026-11-08T02:56:20.723810Z",
+      "injected_at": "2026-11-08T03:12:17.380820Z",
       "progress": 1.0
     },
     "history": [
       {
-        "observed_at": "2026-11-08T02:56:21.291821Z",
+        "observed_at": "2026-11-08T03:12:18.184523Z",
         "values": {
-          "inlet_temp_c": 24.23,
-          "online": 0,
-          "gpus_online": 0,
-          "gpus_throttled": 0,
-          "max_gpu_temp_c": 28.5,
-          "min_gpu_clock_pct": 0.0,
-          "compute_pct": 0.0,
-          "ecc_errors": 0,
-          "psu_ok": 2,
-          "power_w": 250,
-          "gpu1_temp_c": 28.1,
-          "gpu2_temp_c": 28.4,
-          "gpu3_temp_c": 28.1,
-          "gpu4_temp_c": 27.9,
-          "gpu5_temp_c": 27.8,
-          "gpu6_temp_c": 27.8,
-          "gpu7_temp_c": 27.8,
-          "gpu8_temp_c": 28.5,
-          "gpu1_clock_pct": 0.0,
-          "gpu2_clock_pct": 0.0,
-          "gpu3_clock_pct": 0.0,
-          "gpu4_clock_pct": 0.0,
-          "gpu5_clock_pct": 0.0,
-          "gpu6_clock_pct": 0.0,
-          "gpu7_clock_pct": 0.0,
-          "gpu8_clock_pct": 0.0
-        }
-      },
-      {
-        "observed_at": "2026-11-08T02:56:21.496835Z",
-        "values": {
-          "inlet_temp_c": 23.73,
+          "inlet_temp_c": 24.02,
           "online": 0,
           "gpus_online": 0,
           "gpus_throttled": 0,
@@ -113,14 +82,14 @@
           "ecc_errors": 0,
           "psu_ok": 2,
           "power_w": 250,
-          "gpu1_temp_c": 28.0,
-          "gpu2_temp_c": 28.0,
-          "gpu3_temp_c": 27.6,
-          "gpu4_temp_c": 27.9,
-          "gpu5_temp_c": 28.2,
-          "gpu6_temp_c": 27.4,
-          "gpu7_temp_c": 28.0,
-          "gpu8_temp_c": 27.4,
+          "gpu1_temp_c": 27.5,
+          "gpu2_temp_c": 28.2,
+          "gpu3_temp_c": 27.9,
+          "gpu4_temp_c": 28.2,
+          "gpu5_temp_c": 27.9,
+          "gpu6_temp_c": 27.7,
+          "gpu7_temp_c": 27.6,
+          "gpu8_temp_c": 27.6,
           "gpu1_clock_pct": 0.0,
           "gpu2_clock_pct": 0.0,
           "gpu3_clock_pct": 0.0,
@@ -132,25 +101,56 @@
         }
       },
       {
-        "observed_at": "2026-11-08T02:56:21.700676Z",
+        "observed_at": "2026-11-08T03:12:18.389554Z",
         "values": {
-          "inlet_temp_c": 24.25,
+          "inlet_temp_c": 23.51,
           "online": 0,
           "gpus_online": 0,
           "gpus_throttled": 0,
-          "max_gpu_temp_c": 28.7,
+          "max_gpu_temp_c": 28.0,
           "min_gpu_clock_pct": 0.0,
           "compute_pct": 0.0,
           "ecc_errors": 0,
           "psu_ok": 2,
           "power_w": 250,
-          "gpu1_temp_c": 28.7,
-          "gpu2_temp_c": 28.3,
-          "gpu3_temp_c": 28.5,
-          "gpu4_temp_c": 28.7,
-          "gpu5_temp_c": 28.5,
-          "gpu6_temp_c": 28.7,
+          "gpu1_temp_c": 27.8,
+          "gpu2_temp_c": 27.4,
+          "gpu3_temp_c": 27.8,
+          "gpu4_temp_c": 27.8,
+          "gpu5_temp_c": 27.4,
+          "gpu6_temp_c": 27.7,
           "gpu7_temp_c": 28.0,
+          "gpu8_temp_c": 27.2,
+          "gpu1_clock_pct": 0.0,
+          "gpu2_clock_pct": 0.0,
+          "gpu3_clock_pct": 0.0,
+          "gpu4_clock_pct": 0.0,
+          "gpu5_clock_pct": 0.0,
+          "gpu6_clock_pct": 0.0,
+          "gpu7_clock_pct": 0.0,
+          "gpu8_clock_pct": 0.0
+        }
+      },
+      {
+        "observed_at": "2026-11-08T03:12:18.592053Z",
+        "values": {
+          "inlet_temp_c": 24.14,
+          "online": 0,
+          "gpus_online": 0,
+          "gpus_throttled": 0,
+          "max_gpu_temp_c": 28.6,
+          "min_gpu_clock_pct": 0.0,
+          "compute_pct": 0.0,
+          "ecc_errors": 0,
+          "psu_ok": 2,
+          "power_w": 250,
+          "gpu1_temp_c": 27.8,
+          "gpu2_temp_c": 28.6,
+          "gpu3_temp_c": 28.6,
+          "gpu4_temp_c": 28.2,
+          "gpu5_temp_c": 28.4,
+          "gpu6_temp_c": 28.6,
+          "gpu7_temp_c": 28.4,
           "gpu8_temp_c": 28.6,
           "gpu1_clock_pct": 0.0,
           "gpu2_clock_pct": 0.0,
@@ -169,7 +169,7 @@
     "work_order": null
   },
   "rack_id": "A1-02",
-  "inlet_temp_c": 24.25,
+  "inlet_temp_c": 24.14,
   "online": false,
   "psus_ok": 2,
   "psus_total": 2,
@@ -178,49 +178,49 @@
   "gpus": [
     {
       "index": 1,
-      "temp_c": 28.7,
+      "temp_c": 27.8,
       "clock_pct": 0.0,
       "status": "offline",
       "throttle_c": 83.0
     },
     {
       "index": 2,
-      "temp_c": 28.3,
+      "temp_c": 28.6,
       "clock_pct": 0.0,
       "status": "offline",
       "throttle_c": 83.0
     },
     {
       "index": 3,
-      "temp_c": 28.5,
+      "temp_c": 28.6,
       "clock_pct": 0.0,
       "status": "offline",
       "throttle_c": 83.0
     },
     {
       "index": 4,
-      "temp_c": 28.7,
+      "temp_c": 28.2,
       "clock_pct": 0.0,
       "status": "offline",
       "throttle_c": 83.0
     },
     {
       "index": 5,
-      "temp_c": 28.5,
+      "temp_c": 28.4,
       "clock_pct": 0.0,
       "status": "offline",
       "throttle_c": 83.0
     },
     {
       "index": 6,
-      "temp_c": 28.7,
+      "temp_c": 28.6,
       "clock_pct": 0.0,
       "status": "offline",
       "throttle_c": 83.0
     },
     {
       "index": 7,
-      "temp_c": 28.0,
+      "temp_c": 28.4,
       "clock_pct": 0.0,
       "status": "offline",
       "throttle_c": 83.0
@@ -297,7 +297,7 @@
         "temperature_c": 23.99,
         "fan_speed_rpm": 1128.3
       },
-      "last_reading_at": "2026-11-08T02:56:21.700676Z",
+      "last_reading_at": "2026-11-08T03:12:18.592053Z",
       "chart_fields": [
         "temperature_c",
         "fan_speed_rpm"
@@ -306,21 +306,21 @@
       "simulated_fault": null,
       "history": [
         {
-          "observed_at": "2026-11-08T02:56:21.291821Z",
+          "observed_at": "2026-11-08T03:12:18.184523Z",
           "values": {
             "temperature_c": 24.15,
             "fan_speed_rpm": 1153.5
           }
         },
         {
-          "observed_at": "2026-11-08T02:56:21.496835Z",
+          "observed_at": "2026-11-08T03:12:18.389554Z",
           "values": {
             "temperature_c": 23.8,
             "fan_speed_rpm": 1134.0
           }
         },
         {
-          "observed_at": "2026-11-08T02:56:21.700676Z",
+          "observed_at": "2026-11-08T03:12:18.592053Z",
           "values": {
             "temperature_c": 23.99,
             "fan_speed_rpm": 1128.3

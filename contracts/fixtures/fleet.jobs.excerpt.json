@@ -103,13 +103,13 @@
       ],
       "gpus": 128,
       "gpus_running": 128,
-      "pace_pct": 85.1,
-      "gpus_throttled": 33,
+      "pace_pct": 84.7,
+      "gpus_throttled": 34,
       "servers_down": [],
-      "lost_usd_per_hour": 47.68,
+      "lost_usd_per_hour": 48.96,
       "gpu_hour_usd": 2.5,
       "reasons": [
-        "33 GPUs are throttling from heat; the job runs at the slowest GPU's speed"
+        "34 GPUs are throttling from heat; the job runs at the slowest GPU's speed"
       ],
       "assumptions_source": "demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote"
     },
@@ -172,14 +172,14 @@
     {
       "key": "gpus_throttling",
       "label": "GPUs slowed by heat",
-      "value": 33.0,
+      "value": 34.0,
       "unit": "of 576",
       "source": "live GPU readings (simulated)"
     },
     {
       "key": "gpu_compute_lost_per_hour",
       "label": "GPU compute lost right now",
-      "value": 447.68,
+      "value": 448.96,
       "unit": "USD/h",
       "source": "live GPU readings (simulated) x GPU-hour price (demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote)"
     },
@@ -200,7 +200,7 @@
     {
       "key": "max_supply_temp_c",
       "label": "Hottest cooling unit",
-      "value": 34.91,
+      "value": 35.01,
       "unit": "C",
       "source": "live readings (simulated)"
     }
