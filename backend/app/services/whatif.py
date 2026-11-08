@@ -74,7 +74,7 @@ class Path_:
     mitigated_loss_pre: float
     risk_note: str | None
     rated: float | None = None
-    band: float = 0.0  # sensor wobble around the trend, added before comparing with the limit
+    band: float = 0.0  # sensor wobble around the trend plus a safety margin, added before comparing with the limit
 
 
 def _series(store: Store, asset_id: str, field: str) -> list[float]:
@@ -93,7 +93,8 @@ def _path(store: Store, settings: Settings, inc, asset, imp) -> Path_:
             slow = gpus.lost_per_hour_from_cooling(store, asset.asset_id)
         return Path_("temperature_c", "C", ys[-1] if ys else None, max(0.0, trend_per_hour(ys, settings, CAUTIOUS_Q)),
                      th["rack_shutdown_c"], min(ys) if ys else None, slow, per_h, th["mitigation"],
-                     th["mitigated_rise_factor"], th["mitigation_cost_per_hour"], slow, None, band=wobble(ys, settings))
+                     th["mitigated_rise_factor"], th["mitigation_cost_per_hour"], slow, None,
+                     band=wobble(ys, settings) + th.get("promise_margin_c", 0.0))
     if inc.detector_id == "miner-rule-v1":
         hp = mining.hashprice(settings.hashprice_data_path)
         price_h = (hp.usd_per_th_day / 24) if hp else 0.0
@@ -109,7 +110,7 @@ def _path(store: Store, settings: Settings, inc, asset, imp) -> Path_:
             under = rated * (1 - mc["underclock_hashrate_factor"]) * price_h
             return Path_("chip_temp_c", "C", chip[-1], max(0.0, rising), mc["chip_shutdown_c"], min(chip), lost_now,
                          per_h, mc["mitigation"], mc["mitigated_rise_factor"], 0.0, max(lost_now, under), None,
-                         band=wobble(chip, settings))
+                         band=wobble(chip, settings) + mc.get("promise_margin_c", 0.0))
         return Path_("hashrate_ths", "TH/s", ths[-1] if ths else None, 0.0, None, None, lost_now, per_h, None, 1.0,
                      0.0, lost_now, None, rated=rated)
     if inc.detector_id == "server-rule-v1":
