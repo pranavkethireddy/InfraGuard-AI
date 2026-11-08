@@ -1,48 +1,135 @@
 {
-  "_note": "Demo data-center layout for InfraGuard AI, not a real facility. The backend expands rows into racks; each rack holds monitored drives and GPU servers (8 GPUs each). Each row runs one synchronous GPU job across all its servers, so the slowest GPU sets the pace for the whole row (a demo assumption); coordinates are floor-grid cells (one cell is about one 0.6 m floor tile).",
+  "_note": "Demo data-center layout for InfraGuard AI, not a real facility. The backend expands rows into racks; each rack holds monitored drives and GPU servers (8 GPUs each). Each row runs one synchronous GPU job across all its servers, so the slowest GPU sets the pace for the whole row (a demo assumption); coordinates are floor-grid cells (one cell is about one 0.6 m floor tile). Facility equipment (power, cooling plant, network, safety and security) is placed as hall units; every rack also has a power strip (pdu-<rack>) and a top-of-rack switch (tor-<rack>).",
   "site": {"site_id": "datacenter", "name": "InfraGuard Demo Data Center", "grid_unit": "floor tile (about 0.6 m)"},
   "asset_types": {
     "cooling_unit": {"detector_id": "cooling-rule-v1", "chart_fields": ["temperature_c", "fan_speed_rpm"]},
     "storage_drive": {"detector_id": "drive-failure-v1", "chart_fields": ["temperature_c", "reallocated_sectors", "pending_sectors"]},
     "industrial_machine": {"detector_id": "industrial-failure-v1", "chart_fields": ["torque_nm", "rotational_speed_rpm", "tool_wear_min"]},
-    "gpu_server": {"detector_id": "server-rule-v1", "chart_fields": ["max_gpu_temp_c", "compute_pct", "inlet_temp_c"],
-                   "spec": {"gpus": 8, "gpu_hour_usd": 2.5, "throttle_c": 83.0,
-                            "spec_source": "demo assumption: rental price per GPU-hour for a data-center accelerator, not a quote"}}
+    "gpu_server": {
+      "detector_id": "server-rule-v1",
+      "chart_fields": ["max_gpu_temp_c", "compute_pct", "inlet_temp_c"],
+      "spec": {
+        "gpus": 8,
+        "gpu_hour_usd": 2.5,
+        "throttle_c": 83.0,
+        "spec_source": "demo assumption: rental price per GPU-hour for a data-center accelerator, not a quote"
+      }
+    },
+    "ups": {"detector_id": "ups-rule-v1", "chart_fields": ["runtime_min", "load_pct", "battery_temp_c"]},
+    "generator": {"detector_id": "generator-rule-v1", "chart_fields": ["fuel_pct", "start_battery_v", "coolant_temp_c"]},
+    "ats": {"detector_id": "ats-rule-v1", "chart_fields": ["utility_voltage_v", "transfer_ok"]},
+    "pdu": {"detector_id": "pdu-rule-v1", "chart_fields": ["max_phase_pct", "imbalance_pct", "power_kw"]},
+    "chiller": {"detector_id": "chiller-rule-v1", "chart_fields": ["supply_water_c", "return_water_c", "flow_lps"]},
+    "cdu": {"detector_id": "cdu-rule-v1", "chart_fields": ["flow_lps", "pressure_kpa", "coolant_supply_c"]},
+    "env_sensor": {"detector_id": "env-sensor-rule-v1", "chart_fields": ["temperature_c", "humidity_pct", "dew_point_c"]},
+    "network_switch": {"detector_id": "network-switch-rule-v1", "chart_fields": ["packet_loss_pct", "optic_rx_dbm", "temperature_c"]},
+    "smoke_detector": {"detector_id": "smoke-detector-rule-v1", "chart_fields": ["obscuration_pct_per_m", "alarm_level"]},
+    "fire_suppression": {"detector_id": "fire-suppression-rule-v1", "chart_fields": ["agent_pressure_pct", "armed"]},
+    "access_control": {"detector_id": "access-control-rule-v1", "chart_fields": ["door_held_open_s", "badge_failures_per_min"]}
   },
   "halls": [
     {
-      "hall_id": "hall-a", "name": "Hall A", "kind": "data_hall", "width": 18, "depth": 12,
+      "hall_id": "hall-a",
+      "name": "Hall A",
+      "kind": "data_hall",
+      "width": 18,
+      "depth": 12,
       "rows": [
         {"row": "A1", "x0": 4, "y": 3, "racks": 5, "devices_per_rack": 2, "cooled_by": ["cooling-01"], "job": "Training job A1"},
         {"row": "A2", "x0": 4, "y": 8, "racks": 5, "devices_per_rack": 2, "cooled_by": ["cooling-02"], "job": "Training job A2"}
       ],
       "units": [
         {"asset_id": "cooling-01", "name": "CRAC Unit 1", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 3},
-        {"asset_id": "cooling-02", "name": "CRAC Unit 2", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 8}
+        {"asset_id": "cooling-02", "name": "CRAC Unit 2", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 8},
+        {"asset_id": "cdu-a", "name": "Hall A Coolant Distribution Unit", "asset_type": "cdu", "criticality": "high", "x": 16, "y": 1},
+        {"asset_id": "env-a", "name": "Hall A Environment Sensor", "asset_type": "env_sensor", "criticality": "medium", "x": 16, "y": 5.5},
+        {"asset_id": "smoke-a", "name": "Hall A Smoke Detection", "asset_type": "smoke_detector", "criticality": "high", "x": 16, "y": 10},
+        {"asset_id": "suppress-a", "name": "Hall A Fire Suppression", "asset_type": "fire_suppression", "criticality": "high", "x": 17, "y": 10},
+        {"asset_id": "door-a", "name": "Hall A Door Access", "asset_type": "access_control", "criticality": "medium", "x": 1, "y": 11}
       ]
     },
     {
-      "hall_id": "hall-b", "name": "Hall B", "kind": "data_hall", "width": 16, "depth": 12,
+      "hall_id": "hall-b",
+      "name": "Hall B",
+      "kind": "data_hall",
+      "width": 16,
+      "depth": 12,
       "rows": [
         {"row": "B1", "x0": 4, "y": 3, "racks": 4, "devices_per_rack": 2, "cooled_by": ["cooling-03"], "job": "Training job B1"},
         {"row": "B2", "x0": 4, "y": 8, "racks": 4, "devices_per_rack": 2, "cooled_by": ["cooling-04"], "job": "Training job B2"}
       ],
       "units": [
         {"asset_id": "cooling-03", "name": "CRAC Unit 3", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 3},
-        {"asset_id": "cooling-04", "name": "CRAC Unit 4", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 8}
+        {"asset_id": "cooling-04", "name": "CRAC Unit 4", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 8},
+        {"asset_id": "cdu-b", "name": "Hall B Coolant Distribution Unit", "asset_type": "cdu", "criticality": "high", "x": 14, "y": 1},
+        {"asset_id": "env-b", "name": "Hall B Environment Sensor", "asset_type": "env_sensor", "criticality": "medium", "x": 14, "y": 5.5},
+        {"asset_id": "smoke-b", "name": "Hall B Smoke Detection", "asset_type": "smoke_detector", "criticality": "high", "x": 14, "y": 10},
+        {"asset_id": "suppress-b", "name": "Hall B Fire Suppression", "asset_type": "fire_suppression", "criticality": "high", "x": 15, "y": 10},
+        {"asset_id": "door-b", "name": "Hall B Door Access", "asset_type": "access_control", "criticality": "medium", "x": 1, "y": 11}
       ]
     },
     {
-      "hall_id": "plant", "name": "Plant Room", "kind": "plant_room", "width": 10, "depth": 6,
+      "hall_id": "plant",
+      "name": "Plant Room",
+      "kind": "plant_room",
+      "width": 10,
+      "depth": 6,
       "rows": [],
       "units": [
         {"asset_id": "mill-01", "name": "AI4I Benchmark Machine 1", "asset_type": "industrial_machine", "criticality": "medium", "x": 2, "y": 3},
         {"asset_id": "mill-02", "name": "AI4I Benchmark Machine 2", "asset_type": "industrial_machine", "criticality": "medium", "x": 6, "y": 3}
       ]
+    },
+    {
+      "hall_id": "electrical",
+      "name": "Electrical Room",
+      "kind": "electrical_room",
+      "width": 12,
+      "depth": 6,
+      "rows": [],
+      "units": [
+        {"asset_id": "ups-01", "name": "UPS A", "asset_type": "ups", "criticality": "high", "x": 2, "y": 2},
+        {"asset_id": "ups-02", "name": "UPS B", "asset_type": "ups", "criticality": "high", "x": 5, "y": 2},
+        {"asset_id": "ats-01", "name": "Automatic Transfer Switch", "asset_type": "ats", "criticality": "high", "x": 8, "y": 2},
+        {"asset_id": "gen-01", "name": "Generator 1", "asset_type": "generator", "criticality": "high", "x": 3, "y": 4.5},
+        {"asset_id": "gen-02", "name": "Generator 2", "asset_type": "generator", "criticality": "high", "x": 8, "y": 4.5}
+      ]
+    },
+    {
+      "hall_id": "chillers",
+      "name": "Chiller Yard",
+      "kind": "chiller_yard",
+      "width": 8,
+      "depth": 6,
+      "rows": [],
+      "units": [
+        {"asset_id": "chiller-01", "name": "Chiller 1", "asset_type": "chiller", "criticality": "high", "x": 2, "y": 3},
+        {"asset_id": "chiller-02", "name": "Chiller 2", "asset_type": "chiller", "criticality": "high", "x": 6, "y": 3}
+      ]
+    },
+    {
+      "hall_id": "network",
+      "name": "Network Room",
+      "kind": "network_room",
+      "width": 8,
+      "depth": 6,
+      "rows": [],
+      "units": [
+        {"asset_id": "spine-01", "name": "Spine Switch 1", "asset_type": "network_switch", "criticality": "high", "x": 2, "y": 2},
+        {"asset_id": "spine-02", "name": "Spine Switch 2", "asset_type": "network_switch", "criticality": "high", "x": 6, "y": 2},
+        {"asset_id": "fw-01", "name": "Firewall", "asset_type": "network_switch", "criticality": "high", "x": 4, "y": 4.5}
+      ]
     }
   ],
-  "rack": {"width": 2, "depth": 1, "device_type": "storage_drive", "device_prefix": "drive", "device_label": "Drive Bay",
-           "device_criticality": "medium",
-           "servers": {"device_type": "gpu_server", "device_prefix": "srv", "device_label": "GPU Server", "per_rack": 4,
-                       "device_criticality": "high"}}
+  "rack": {
+    "width": 2,
+    "depth": 1,
+    "device_type": "storage_drive",
+    "device_prefix": "drive",
+    "device_label": "Drive Bay",
+    "device_criticality": "medium",
+    "servers": {"device_type": "gpu_server", "device_prefix": "srv", "device_label": "GPU Server", "per_rack": 4, "device_criticality": "high"},
+    "pdu": {"device_type": "pdu", "device_prefix": "pdu", "device_label": "Power Strip", "device_criticality": "high"},
+    "tor": {"device_type": "network_switch", "device_prefix": "tor", "device_label": "Top-of-Rack Switch", "device_criticality": "high"}
+  }
 }

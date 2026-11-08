@@ -1,0 +1,335 @@
+{
+  "rack_id": "A1-01",
+  "hall_id": "hall-a",
+  "row": "A1",
+  "label": "Rack A1-01",
+  "x": 4.0,
+  "y": 3.0,
+  "width": 2.0,
+  "depth": 1.0,
+  "status": "no_data",
+  "reasons": [],
+  "cooled_by": [
+    "cooling-01"
+  ],
+  "machine_ids": [
+    "drive-01",
+    "drive-02",
+    "srv-A1-01-1",
+    "srv-A1-01-2",
+    "srv-A1-01-3",
+    "srv-A1-01-4"
+  ],
+  "open_incident_ids": [],
+  "pdu_id": "pdu-A1-01",
+  "tor_id": "tor-A1-01",
+  "power_state": "on",
+  "shutdown_eta_minutes": null,
+  "machines": [
+    {
+      "asset_id": "drive-01",
+      "name": "Rack A1-01, Drive Bay 1",
+      "asset_type": "storage_drive",
+      "criticality": "medium",
+      "detector_id": "drive-failure-v1",
+      "location": "Hall A, Row A1, Rack A1-01, Drive Bay 1",
+      "placement": {
+        "hall_id": "hall-a",
+        "row": "A1",
+        "rack_id": "A1-01",
+        "slot": 1,
+        "x": 4.0,
+        "y": 3.0
+      },
+      "status": "no_data",
+      "risk_level": null,
+      "risk_score": null,
+      "latest_values": null,
+      "last_reading_at": null,
+      "chart_fields": [
+        "temperature_c",
+        "reallocated_sectors",
+        "pending_sectors"
+      ],
+      "active_incident": null,
+      "simulated_fault": null,
+      "history": [],
+      "power_state": "on",
+      "power_reason": null,
+      "shutdown_eta_minutes": null,
+      "work_order": null
+    },
+    {
+      "asset_id": "drive-02",
+      "name": "Rack A1-01, Drive Bay 2",
+      "asset_type": "storage_drive",
+      "criticality": "medium",
+      "detector_id": "drive-failure-v1",
+      "location": "Hall A, Row A1, Rack A1-01, Drive Bay 2",
+      "placement": {
+        "hall_id": "hall-a",
+        "row": "A1",
+        "rack_id": "A1-01",
+        "slot": 2,
+        "x": 4.0,
+        "y": 3.0
+      },
+      "status": "no_data",
+      "risk_level": null,
+      "risk_score": null,
+      "latest_values": null,
+      "last_reading_at": null,
+      "chart_fields": [
+        "temperature_c",
+        "reallocated_sectors",
+        "pending_sectors"
+      ],
+      "active_incident": null,
+      "simulated_fault": null,
+      "history": [],
+      "power_state": "on",
+      "power_reason": null,
+      "shutdown_eta_minutes": null,
+      "work_order": null
+    },
+    {
+      "asset_id": "srv-A1-01-1",
+      "name": "Rack A1-01, GPU Server 1",
+      "asset_type": "gpu_server",
+      "criticality": "high",
+      "detector_id": "server-rule-v1",
+      "location": "Hall A, Row A1, Rack A1-01, GPU Server 1",
+      "placement": {
+        "hall_id": "hall-a",
+        "row": "A1",
+        "rack_id": "A1-01",
+        "slot": 1,
+        "x": 4.0,
+        "y": 3.0
+      },
+      "status": "no_data",
+      "risk_level": null,
+      "risk_score": null,
+      "latest_values": null,
+      "last_reading_at": null,
+      "chart_fields": [
+        "max_gpu_temp_c",
+        "compute_pct",
+        "inlet_temp_c"
+      ],
+      "active_incident": null,
+      "simulated_fault": null,
+      "history": [],
+      "power_state": "on",
+      "power_reason": null,
+      "shutdown_eta_minutes": null,
+      "work_order": null
+    },
+    {
+      "asset_id": "srv-A1-01-2",
+      "name": "Rack A1-01, GPU Server 2",
+      "asset_type": "gpu_server",
+      "criticality": "high",
+      "detector_id": "server-rule-v1",
+      "location": "Hall A, Row A1, Rack A1-01, GPU Server 2",
+      "placement": {
+        "hall_id": "hall-a",
+        "row": "A1",
+        "rack_id": "A1-01",
+        "slot": 2,
+        "x": 4.0,
+        "y": 3.0
+      },
+      "status": "no_data",
+      "risk_level": null,
+      "risk_score": null,
+      "latest_values": null,
+      "last_reading_at": null,
+      "chart_fields": [
+        "max_gpu_temp_c",
+        "compute_pct",
+        "inlet_temp_c"
+      ],
+      "active_incident": null,
+      "simulated_fault": null,
+      "history": [],
+      "power_state": "on",
+      "power_reason": null,
+      "shutdown_eta_minutes": null,
+      "work_order": null
+    },
+    {
+      "asset_id": "srv-A1-01-3",
+      "name": "Rack A1-01, GPU Server 3",
+      "asset_type": "gpu_server",
+      "criticality": "high",
+      "detector_id": "server-rule-v1",
+      "location": "Hall A, Row A1, Rack A1-01, GPU Server 3",
+      "placement": {
+        "hall_id": "hall-a",
+        "row": "A1",
+        "rack_id": "A1-01",
+        "slot": 3,
+        "x": 4.0,
+        "y": 3.0
+      },
+      "status": "no_data",
+      "risk_level": null,
+      "risk_score": null,
+      "latest_values": null,
+      "last_reading_at": null,
+      "chart_fields": [
+        "max_gpu_temp_c",
+        "compute_pct",
+        "inlet_temp_c"
+      ],
+      "active_incident": null,
+      "simulated_fault": null,
+      "history": [],
+      "power_state": "on",
+      "power_reason": null,
+      "shutdown_eta_minutes": null,
+      "work_order": null
+    },
+    {
+      "asset_id": "srv-A1-01-4",
+      "name": "Rack A1-01, GPU Server 4",
+      "asset_type": "gpu_server",
+      "criticality": "high",
+      "detector_id": "server-rule-v1",
+      "location": "Hall A, Row A1, Rack A1-01, GPU Server 4",
+      "placement": {
+        "hall_id": "hall-a",
+        "row": "A1",
+        "rack_id": "A1-01",
+        "slot": 4,
+        "x": 4.0,
+        "y": 3.0
+      },
+      "status": "no_data",
+      "risk_level": null,
+      "risk_score": null,
+      "latest_values": null,
+      "last_reading_at": null,
+      "chart_fields": [
+        "max_gpu_temp_c",
+        "compute_pct",
+        "inlet_temp_c"
+      ],
+      "active_incident": null,
+      "simulated_fault": null,
+      "history": [],
+      "power_state": "on",
+      "power_reason": null,
+      "shutdown_eta_minutes": null,
+      "work_order": null
+    }
+  ],
+  "server_ids": [
+    "srv-A1-01-1",
+    "srv-A1-01-2",
+    "srv-A1-01-3",
+    "srv-A1-01-4"
+  ],
+  "cooling_units": [
+    {
+      "asset_id": "cooling-01",
+      "name": "CRAC Unit 1",
+      "asset_type": "cooling_unit",
+      "criticality": "high",
+      "detector_id": "cooling-rule-v1",
+      "location": "Hall A",
+      "placement": {
+        "hall_id": "hall-a",
+        "row": null,
+        "rack_id": null,
+        "slot": null,
+        "x": 1.0,
+        "y": 3.0
+      },
+      "status": "no_data",
+      "risk_level": null,
+      "risk_score": null,
+      "latest_values": null,
+      "last_reading_at": null,
+      "chart_fields": [
+        "temperature_c",
+        "fan_speed_rpm"
+      ],
+      "active_incident": null,
+      "simulated_fault": null,
+      "history": [],
+      "power_state": "on",
+      "power_reason": null,
+      "shutdown_eta_minutes": null,
+      "work_order": null
+    }
+  ],
+  "pdu": {
+    "asset_id": "pdu-A1-01",
+    "name": "Rack A1-01, Power Strip",
+    "asset_type": "pdu",
+    "criticality": "high",
+    "detector_id": "pdu-rule-v1",
+    "location": "Hall A, Row A1, Rack A1-01, Power Strip",
+    "placement": {
+      "hall_id": "hall-a",
+      "row": "A1",
+      "rack_id": "A1-01",
+      "slot": null,
+      "x": 4.0,
+      "y": 3.0
+    },
+    "status": "no_data",
+    "risk_level": null,
+    "risk_score": null,
+    "latest_values": null,
+    "last_reading_at": null,
+    "chart_fields": [
+      "max_phase_pct",
+      "imbalance_pct",
+      "power_kw"
+    ],
+    "active_incident": null,
+    "simulated_fault": null,
+    "history": [],
+    "power_state": "on",
+    "power_reason": null,
+    "shutdown_eta_minutes": null,
+    "work_order": null
+  },
+  "tor": {
+    "asset_id": "tor-A1-01",
+    "name": "Rack A1-01, Top-of-Rack Switch",
+    "asset_type": "network_switch",
+    "criticality": "high",
+    "detector_id": "network-switch-rule-v1",
+    "location": "Hall A, Row A1, Rack A1-01, Top-of-Rack Switch",
+    "placement": {
+      "hall_id": "hall-a",
+      "row": "A1",
+      "rack_id": "A1-01",
+      "slot": null,
+      "x": 4.0,
+      "y": 3.0
+    },
+    "status": "no_data",
+    "risk_level": null,
+    "risk_score": null,
+    "latest_values": null,
+    "last_reading_at": null,
+    "chart_fields": [
+      "packet_loss_pct",
+      "optic_rx_dbm",
+      "temperature_c"
+    ],
+    "active_incident": null,
+    "simulated_fault": null,
+    "history": [],
+    "power_state": "on",
+    "power_reason": null,
+    "shutdown_eta_minutes": null,
+    "work_order": null
+  },
+  "incidents": []
+}

@@ -12,7 +12,12 @@ from .incidents import FailureMode, IncidentSummary
 HealthStatus = Literal["healthy", "warning", "critical", "no_data"]
 LiveState = Literal["running", "stopped"]
 FaultKind = Literal["cooling_failure", "drive_degradation", "machine_overstrain", "fan_failure", "hashboard_failure",
-                    "gpu_fault", "psu_failure", "server_crash", "memory_fault", "nic_failure", "server_fan_failure"]
+                    "gpu_fault", "psu_failure", "server_crash", "memory_fault", "nic_failure", "server_fan_failure",
+                    "ups_battery_fade", "ups_on_battery", "gen_start_battery", "gen_low_fuel", "ats_transfer_fail",
+                    "ats_utility_sag", "pdu_overload", "pdu_imbalance", "chiller_trip", "chiller_low_flow", "cdu_leak",
+                    "cdu_pump_failure", "env_water_leak", "env_high_humidity", "switch_optic_degraded", "switch_link_down",
+                    "smoke_alarm", "suppression_pressure_loss", "suppression_disarmed", "door_forced",
+                    "badge_reader_failure"]
 SiteId = Literal["datacenter", "mining"]
 FaultPhase = Literal["ramping", "holding", "recovering", "ended"]
 
@@ -102,6 +107,8 @@ class RackStatus(ContractModel):
     cooled_by: list[str]
     machine_ids: list[str]
     open_incident_ids: list[str]
+    pdu_id: str | None = None
+    tor_id: str | None = None
     power_state: PowerState = "on"
     shutdown_eta_minutes: float | None = None
 
@@ -109,7 +116,7 @@ class RackStatus(ContractModel):
 class HallMap(ContractModel):
     hall_id: str
     name: str
-    kind: Literal["data_hall", "plant_room", "mining_container"]
+    kind: Literal["data_hall", "plant_room", "mining_container", "electrical_room", "chiller_yard", "network_room"]
     width: float
     depth: float
     status: HealthStatus
@@ -253,6 +260,8 @@ class RackDetail(RackStatus):
     machines: list[MachineStatus]
     server_ids: list[str] = []
     cooling_units: list[MachineStatus]
+    pdu: MachineStatus | None = None
+    tor: MachineStatus | None = None
     incidents: list[IncidentSummary]
 
 

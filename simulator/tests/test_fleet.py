@@ -3,7 +3,7 @@ import unittest
 
 from simulator import fleet
 
-TYPES = ("cooling_unit", "storage_drive", "industrial_machine", "asic_miner", "gpu_server")
+TYPES = ("cooling_unit", "storage_drive", "industrial_machine", "asic_miner", "gpu_server", *fleet.FACILITY)
 
 
 class FleetTests(unittest.TestCase):

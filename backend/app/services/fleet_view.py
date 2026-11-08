@@ -156,6 +156,11 @@ class Snapshot:
                   if m.asset_type == "gpu_server" and m.power_state != "off")
         if hot:
             reasons.append(f"{hot} GPUs throttling from heat")
+        for eid, what in ((rack.pdu_id, "Power strip"), (rack.tor_id, "Top-of-rack switch")):
+            eq = self.machines.get(eid) if eid else None
+            if eq is not None and eq.status in ("warning", "critical"):
+                reasons.append(eq.active_incident.title if eq.active_incident else f"{what}: {eq.risk_level} risk reading")
+                statuses.append(eq.status)
         for c in rack.cooled_by:
             cu = self.machines.get(c)
             if cu is not None and cu.status in ("warning", "critical"):
@@ -164,7 +169,7 @@ class Snapshot:
         return RackStatus(
             rack_id=rack.rack_id, hall_id=rack.hall_id, row=rack.row, label=rack.label, x=rack.x, y=rack.y,
             width=rack.width, depth=rack.depth, status=worst(statuses), reasons=reasons, cooled_by=list(rack.cooled_by),
-            machine_ids=list(rack.asset_ids),
+            machine_ids=list(rack.asset_ids), pdu_id=rack.pdu_id, tor_id=rack.tor_id,
             open_incident_ids=[m.active_incident.incident_id for m in ms if m.active_incident],
             power_state="off" if any(m.power_state == "off" for m in ms) else ("at_risk" if etas else "on"),
             shutdown_eta_minutes=min(etas) if etas else None)
@@ -278,6 +283,7 @@ def fleet_map(store: Store, settings: Settings, history: int, site: str = "datac
         hr = [racks[r] for r in h.rack_ids]
         units = [snap.machines[u] for u in h.unit_ids]
         rack_machines = [snap.machines[a] for r in h.rack_ids for a in layout.racks[r].asset_ids]
+        rack_machines += [snap.machines[e] for r in h.rack_ids for e in (layout.racks[r].pdu_id, layout.racks[r].tor_id) if e]
         halls.append(HallMap(hall_id=h.hall_id, name=h.name, kind=h.kind, width=h.width, depth=h.depth,
                              status=worst([r.status for r in hr] + [u.status for u in units]),
                              racks=hr, machines=units + rack_machines))
@@ -317,11 +323,14 @@ def rack_detail(store: Store, settings: Settings, rack_id: str, history: int) ->
         raise not_found("RACK_NOT_FOUND", f"Rack '{rack_id}' does not exist.", rack_id=rack_id)
     snap = Snapshot(store, layout, history, settings)
     with store.lock:
-        incs = [summary(i) for i in store.incidents.values() if i.asset_id in rack.asset_ids]
+        ids = set(rack.asset_ids) | {e for e in (rack.pdu_id, rack.tor_id) if e}
+        incs = [summary(i) for i in store.incidents.values() if i.asset_id in ids]
     incs.sort(key=lambda i: i.opened_at, reverse=True)
     return RackDetail(**snap.rack(rack).model_dump(), machines=[snap.machines[a] for a in rack.asset_ids],
                       server_ids=list(rack.server_ids),
-                      cooling_units=[snap.machines[c] for c in rack.cooled_by if c in snap.machines], incidents=incs)
+                      cooling_units=[snap.machines[c] for c in rack.cooled_by if c in snap.machines], incidents=incs,
+                      pdu=snap.machines.get(rack.pdu_id) if rack.pdu_id else None,
+                      tor=snap.machines.get(rack.tor_id) if rack.tor_id else None)
 
 
 def server_detail(store: Store, settings: Settings, server_id: str, history: int) -> ServerDetail:

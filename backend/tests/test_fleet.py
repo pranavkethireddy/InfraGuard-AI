@@ -35,8 +35,8 @@ def until(fn, timeout=15.0):
 
 def test_map_layout_before_start(client):
     m = FleetMap.model_validate(client.get("/api/v1/fleet/map").json())
-    assert [h.hall_id for h in m.halls] == ["hall-a", "hall-b", "plant"]
-    assert m.summary.machines == 114 and m.summary.racks == 18 and m.summary.no_data == 114
+    assert [h.hall_id for h in m.halls] == ["hall-a", "hall-b", "plant", "electrical", "chillers", "network"]
+    assert m.summary.machines == 170 and m.summary.racks == 18 and m.summary.no_data == 170
     assert m.live.status == "stopped" and m.halls[0].status == "no_data"
     a = m.halls[0]
     rack = next(r for r in a.racks if r.rack_id == "A1-01")
@@ -57,7 +57,7 @@ def test_live_readings_are_healthy_then_stop_freezes(fleet):
     assert fleet.post("/api/v1/fleet/live/start").json()["run_id"] == s.run_id  # idempotent
     st = until(lambda: (x := FleetStatus.model_validate(fleet.get("/api/v1/fleet/status?history=5").json()))
                .live.ticks >= 6 and x)
-    assert st.summary.healthy == 114 and st.summary.open_incidents == 0
+    assert st.summary.healthy == 170 and st.summary.open_incidents == 0
     m = st.machines[0]
     assert m.latest_values and len(m.history) == 5 and m.chart_fields
     stopped = LiveStatus.model_validate(fleet.post("/api/v1/fleet/live/stop").json())
@@ -114,7 +114,7 @@ def test_random_faults_pick_each_type_and_clear_resets(fleet):
     assert c.incidents_deleted >= 3 and c.faults_cleared == 3 and c.readings_deleted > 0
     assert c.live.status == "running" and c.live.active_faults == []
     assert fleet.get("/api/v1/incidents").json()["total"] == 0
-    st = until(lambda: (x := fleet.get("/api/v1/fleet/status").json())["summary"]["healthy"] == 114 and x)
+    st = until(lambda: (x := fleet.get("/api/v1/fleet/status").json())["summary"]["healthy"] == 170 and x)
     assert st["summary"]["open_incidents"] == 0
 
 
@@ -146,7 +146,7 @@ def test_mining_site_layout_and_sites_switch(client):
     hp = next(x for x in m.site_metrics if x.key == "hashprice_usd_per_th_day")
     assert hp.value and "CloudMineCrypto" in hp.source
     sites = client.get("/api/v1/fleet/sites").json()["sites"]
-    assert [(s["site_id"], s["machines"]) for s in sites] == [("datacenter", 114), ("mining", 148)]
+    assert [(s["site_id"], s["machines"]) for s in sites] == [("datacenter", 170), ("mining", 148)]
     assert client.get("/api/v1/fleet/map?site=moon").status_code == 422
     rack = RackDetail.model_validate(client.get("/api/v1/fleet/racks/M1-01").json())
     assert rack.cooled_by == ["fanwall-m1"] and len(rack.machines) == 6
