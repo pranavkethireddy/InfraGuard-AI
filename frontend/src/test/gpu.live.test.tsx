@@ -53,12 +53,12 @@ it.each([404, 503])('shows real server %s errors with request ID and no fixture 
   h.fetch.mockResolvedValue(json({ error: { code: 'SERVER_NOT_FOUND', message: 'GPU endpoint unavailable', request_id: 'gpu-req' } }, status)); mount(<ServerPage id="missing" gpuIndex={undefined} onGpuChange={() => {}} />);
   expect(await screen.findByText(/gpu-req/)).toBeInTheDocument(); expect(screen.queryByRole('tab')).not.toBeInTheDocument();
 });
-it('targets explicit server fault without a kind selector and blocks duplicate pending requests', async () => {
+it('targets explicit GPU fault with a kind selector and blocks duplicate pending requests', async () => {
   let finish: ((r: Response) => void) | undefined;
   h.fetch.mockImplementation(async (_u: string, init?: RequestInit) => init?.method === 'POST' ? new Promise<Response>((r) => { finish = r; }) : json(g.server));
   mount(<ServerPage id={g.server.machine.asset_id} gpuIndex={1} onGpuChange={() => {}} />);
   const b = await screen.findByRole('button', { name: 'Inject server fault' }); fireEvent.click(b); expect(await screen.findByRole('button', { name: 'Injecting…' })).toBeDisabled();
-  const calls = h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST'); expect(calls).toHaveLength(1); expect(JSON.parse(calls[0]?.[1].body)).toEqual({ asset_ids: ['srv-B1-04-3'], site: 'datacenter', count: 1 });
+  const calls = h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST'); expect(calls).toHaveLength(1); expect(JSON.parse(calls[0]?.[1].body)).toEqual({ asset_ids: ['srv-B1-04-3'], kind: 'gpu_fault' });
   finish?.(json({ error: { code: 'FLEET_LIVE_RUNNING', message: 'Conflict', request_id: 'fault-409' } }, 409)); expect(await screen.findByText(/fault-409/)).toBeInTheDocument();
 });
 it('links returned rack server IDs explicitly and renders exact job reasons/prices without financial calculations', () => {

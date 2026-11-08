@@ -15,10 +15,10 @@ export const simulatorAssetsQuery = () => queryOptions({ queryKey: ['assets', 's
 export const readingsQuery = (id: string, limit = 500) =>
   queryOptions({ queryKey: ["assets", id, "readings", limit], queryFn: () => api.getReadings(id, { limit }), refetchInterval: POLL_MS });
 export const incidentsQuery = (status?: "open" | "acknowledged" | "resolved") =>
-  queryOptions({ queryKey: ["incidents", { status }], queryFn: () => api.listIncidents({ status, limit: 100 }), refetchInterval: POLL_MS });
+  queryOptions({ queryKey: ["incidents", { status }], queryFn: () => api.listIncidents({ status, limit: 100 }), refetchInterval: api.mode === 'live' ? 1_000 : POLL_MS });
 export const investigationPollInterval = (status: string | null | undefined): number | false => status === 'queued' || status === 'running' ? 1_000 : false;
 export const incidentPollInterval = (incident: Pick<IncidentDetail, 'status' | 'work_order_id' | 'investigation_status'> | undefined): number | false =>
-  incident?.work_order_id && incident.status !== 'resolved' ? 1_000 : investigationPollInterval(incident?.investigation_status);
+  incident && incident.status !== 'resolved' ? 1_000 : investigationPollInterval(incident?.investigation_status);
 export const incidentQuery = (id: string) => queryOptions({ queryKey: ["incident", id], queryFn: () => api.getIncident(id), refetchInterval: (q) => incidentPollInterval(q.state.data) });
 export const modelsQuery = () => queryOptions({ queryKey: ["models"], queryFn: () => api.listModels() });
 /** Recovery: all runs for an asset in backend order; the page picks the active one (see pickRecoverableSimulation). */

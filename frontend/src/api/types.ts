@@ -115,6 +115,7 @@ export interface IncidentSummary {
   prediction_count: number;
   simulation_id: string | null;
   priority_index: number | null;
+  priority_rank?: 1 | 2 | 3 | 4 | 5 | null;
   investigation_status?: import('./fleet-types').InvestigationStatus | null;
 }
 

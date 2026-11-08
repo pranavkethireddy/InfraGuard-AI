@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useIsMutating, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Send, LoaderCircle } from 'lucide-react';
+import { PriorityRank } from './PriorityRank';
 import { ApiError, DATA_MODE, FIXTURE_MUTATION_MESSAGE } from '@/api/client';
 import { learningCasesQuery, techniciansQuery, useDispatch, whatIfQuery } from '@/api/ops-queries';
 import type { DispatchResponse, RepairOption, WhatIfResponse } from '@/api/ops-types';
@@ -78,7 +79,7 @@ function WhatIfWorkspace({ id, resolved, workOrderId }: { id: string; resolved: 
       {(assigned || workOrderId) && <div role="region" aria-label="Assigned work order" className="border-t border-border py-4">
         <h3 className="mb-3 font-semibold">Assigned work order · current backend state</h3>
         {assigned ? <>
-          <Fields rows={[["Work order", assigned.work_order_id], ["Title", assigned.title], ["Technician", crew.data?.technicians.find((t) => t.technician_id === assigned.technician_id)?.name ?? assigned.technician_id], ["Status", assigned.status], ["Progress (fraction)", assigned.progress], ["ETA", `${available(assigned.eta_minutes)} DEMO minutes`], ["Completed at", available(assigned.completed_at)]]} />
+          <Fields rows={[["Priority rank", <PriorityRank incidentId={assigned.incident_id} />], ["Work order", assigned.work_order_id], ["Title", assigned.title], ["Technician", crew.data?.technicians.find((t) => t.technician_id === assigned.technician_id)?.name ?? assigned.technician_id], ["Status", assigned.status], ["Progress (fraction)", assigned.progress], ["ETA", `${available(assigned.eta_minutes)} DEMO minutes`], ["Completed at", available(assigned.completed_at)]]} />
           {assigned.cost && <div className="max-w-full min-w-0 overflow-x-auto"><table className="data-table mt-3"><caption className="text-left text-xs">Completed work-order cost · USD</caption><tbody>{Object.entries(assigned.cost).map(([key, value]) => <tr key={key}><td>{key}</td><td>{value}</td></tr>)}</tbody></table></div>}
         </> : <p>{crew.isLoading ? 'Loading assigned work order…' : 'Assigned work-order status unavailable.'}</p>}
       </div>}

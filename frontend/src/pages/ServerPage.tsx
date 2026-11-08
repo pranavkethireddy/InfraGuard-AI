@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, FIXTURE_MUTATION_MESSAGE } from '@/api/client';
+import { useQuery } from '@tanstack/react-query';
+import { ServerFaultControl } from '@/components/ServerFaultControl';
 import { serverQuery } from '@/api/gpu-queries';
 import { FleetMachines, PowerDetails, HealthBadge, fieldUnit } from '@/components/FleetWorkspace';
 import { GpuJobs } from '@/components/GpuJobs';
@@ -12,8 +12,6 @@ export function ServerPage({ id, gpuIndex, onGpuChange }: { id: string; gpuIndex
 }
 function ServerWorkspace({ id, gpuIndex, onGpuChange }: { id: string; gpuIndex: number | undefined; onGpuChange: (index: number) => void }) {
   const q = useQuery(serverQuery(id));
-  const qc = useQueryClient();
-  const fault = useMutation({ mutationFn: () => api.injectFaults({ asset_ids: [id], site: 'datacenter', count: 1 }), onSettled: () => { for (const key of ['fleet', 'assets', 'incidents', 'incident']) void qc.invalidateQueries({ queryKey: [key] }); }, retry: false });
   if (q.isLoading) return <Loading label="Loading server…" />;
   if (!q.data) return <ErrorState error={q.error} title="Could not load GPU server" />;
   const s = q.data; const m = s.machine;
@@ -28,9 +26,7 @@ function ServerWorkspace({ id, gpuIndex, onGpuChange }: { id: string; gpuIndex: 
         <PowerDetails item={m} />
         <Fields rows={[["Online", s.online == null ? 'Not reported' : s.online ? 'Online' : 'Offline'], ["Inlet temperature", `${reported(s.inlet_temp_c)} °C`], ["PSU redundancy", `${reported(s.psus_ok)} / ${s.psus_total} PSUs OK`], ["ECC errors", reported(s.ecc_errors)], ["Power", `${reported(s.power_w)} W`], ["Incident", m.active_incident ? <AppLink to={`/incidents/${m.active_incident.incident_id}`} className="text-primary underline">{m.active_incident.incident_id}</AppLink> : 'None returned']]} />
         {m.simulated_fault && <p className="mt-3 text-sm">Simulated fault: {m.simulated_fault.kind} · {m.simulated_fault.phase}</p>}
-        <ConsoleButton className="mt-4" disabled={api.mode === 'fixture' || fault.isPending} aria-busy={fault.isPending} onClick={() => { if (api.mode !== 'fixture' && !fault.isPending) fault.mutate(); }}>{fault.isPending ? 'Injecting…' : 'Inject server fault'}</ConsoleButton>
-        <p className="mt-2 text-xs text-muted-foreground">Backend selects the fault kind; targets this data-center server only.</p>
-        {api.mode === 'fixture' && <p className="text-xs text-muted-foreground">{FIXTURE_MUTATION_MESSAGE}</p>}{fault.error && <div role="alert"><ErrorMessage error={fault.error} /></div>}{fault.isSuccess && <p role="status">Server fault request completed.</p>}
+        <ServerFaultControl servers={[m]} selectedServerId={m.asset_id} error={q.error} />
       </Section>
       <Section title="GPUs" aside={<Badge>{s.gpus.length} returned GPUs</Badge>}>
         <div role="tablist" aria-label="GPU index" className="mb-5 flex flex-wrap gap-2">{s.gpus.map((g) => <ConsoleButton key={g.index} role="tab" aria-selected={selected?.index === g.index} variant={selected?.index === g.index ? 'primary' : 'outline'} onClick={() => onGpuChange(g.index)}>GPU {g.index} · {g.status}</ConsoleButton>)}</div>

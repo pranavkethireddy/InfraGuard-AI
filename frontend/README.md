@@ -57,7 +57,7 @@ For a local iPad, use the same trusted Wi-Fi as the laptop, or use an already de
 
 Pager controls have 44px+ touch targets, keyboard focus, and locally scrolling tables for portrait/landscape. Community impact #44 is not implemented because its contract is not approved.
 
-`/servers/:id?gpu=returnedIndex` drills from returned rack `server_ids` to the actual server/GPU index. `GET /fleet/servers/{encodedId}?history=30` polls every second with a distinct server query key. GPUs, online/power state, PSU redundancy, ECC, cooling, incident links and job reasons/prices are returned values only. GPU histories use only provided per-GPU fields; nulls are Not reported. Overview/Fleet jobs come from `FleetMap.jobs` (the jobs fixture is an excerpt, not a separate endpoint). GPU rule scores are heuristic, not probabilities. Targeted fault POSTs are explicit `{asset_ids:[id],site:"datacenter",count:1}`; the backend chooses the kind. Pending backend deployment can return 404/503 with a request ID; no live fallback. GPU-hour prices are demo assumptions, not bills.
+`/servers/:id?gpu=returnedIndex` drills from returned rack `server_ids` to the actual server/GPU index. `GET /fleet/servers/{encodedId}?history=30` polls every second with a distinct server query key. GPUs, online/power state, PSU redundancy, ECC, cooling, incident links and job reasons/prices are returned values only. GPU histories use only provided per-GPU fields; nulls are Not reported. Overview/Fleet jobs come from `FleetMap.jobs` (the jobs fixture is an excerpt, not a separate endpoint). GPU rule scores are heuristic, not probabilities. Fleet controls offer a returned GPU-server inventory picker; server drilldown targets its returned server ID. Explicit fault choices send `{asset_ids:[actualSelectedServerId],kind:"gpu_fault"}` (GPU fails) or `kind:"server_crash"` (Whole server down). Loading, empty, failed, fixture and pending states block mutations; 422 FAULT_KIND_NOT_SUPPORTED shows the request ID. Pending backend deployment can return 404/503 with a request ID; no live fallback. GPU-hour prices are demo assumptions, not bills.
 
 ## Contract rules
 
@@ -87,3 +87,7 @@ src/lib/router-adapter.tsx  router-neutral link used by pages
 src/pages/      one component per route
 src/App.tsx     react-router-dom routes
 ```
+
+### PR60 live priority
+
+Simulate and Models are absent only from sidebar navigation; `/simulate` and `/models` remain functional. Incident rank is returned `priority_rank` (1 fix first, 5 can wait), not a conversion from index/risk. Plan, task and pager rows fetch referenced incident IDs directly, sharing per-ID query caches with one-second unresolved refresh; absent ranks show Not reported and failed lookups show errors/request IDs. Technician queues follow `queued_work_order_ids` in backend order and match returned work orders; no local urgency sort or automatic frontend dispatch on escalation. Paged and awaiting_confirmation are valid work statuses. Approved fixtures are unchanged; PR60 examples exist only in tests.

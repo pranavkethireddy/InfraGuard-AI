@@ -18,8 +18,9 @@ export interface IncidentBrief {
   opened_at: string; estimated_total_impact: number | null; cost_per_day: number | null;
   investigation_status: InvestigationStatus | null;
 }
+export type FaultKind = 'cooling_failure' | 'drive_degradation' | 'machine_overstrain' | 'fan_failure' | 'hashboard_failure' | 'gpu_fault' | 'psu_failure' | 'server_crash';
 export interface FaultInfo {
-  asset_id: string; kind: 'cooling_failure' | 'drive_degradation' | 'machine_overstrain' | 'fan_failure' | 'hashboard_failure' | 'gpu_fault' | 'psu_failure' | 'server_crash';
+  asset_id: string; kind: FaultKind;
   phase: 'ramping' | 'holding' | 'recovering' | 'ended'; injected_at: string; progress: number;
 }
 export interface MachineStatus {
@@ -55,7 +56,7 @@ export interface SiteInfo { site_id: SiteId; name: string; machines: number; rac
 export interface SitesResponse { generated_at: string; live: LiveStatus; sites: SiteInfo[] }
 export interface RackDetail extends RackStatus { machines: MachineStatus[]; cooling_units: MachineStatus[]; incidents: IncidentSummary[]; server_ids?: string[] }
 export interface LiveStartRequest { seed?: number; tick_seconds?: number }
-export interface FaultRequest { count: number; site: SiteId; asset_ids?: string[] }
+export interface FaultRequest { count?: number; site?: SiteId | null; asset_ids?: string[] | null; kind?: FaultKind | null }
 export interface FaultResponse { injected: FaultInfo[]; live: LiveStatus }
 export interface ClearResponse { readings_deleted: number; predictions_deleted: number; incidents_deleted: number; faults_cleared: number; simulations_reset: number; live: LiveStatus }
 export interface GpuJob {

@@ -17,7 +17,7 @@ it('polls assigned unresolved repairs every second and stops only the repair lif
   expect(incidentPollInterval({ status: 'resolved', work_order_id: 'wo-0006', investigation_status: null })).toBe(false);
   expect(incidentPollInterval({ status: 'open', investigation_status: 'queued' })).toBe(1000);
   expect(incidentPollInterval({ status: 'open', investigation_status: 'running' })).toBe(1000);
-  expect(incidentPollInterval({ status: 'open', investigation_status: null })).toBe(false);
+  expect(incidentPollInterval({ status: 'open', investigation_status: null })).toBe(1000);
 });
 it('refreshes traveling/in_progress to done/resolved on the same incident page and stops repair polling', async () => {
   let stage = 'open'; let incidentCalls = 0; let posts = 0; let learningCalls = 0;
