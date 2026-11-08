@@ -397,16 +397,18 @@ def _tick(store: Store, run: LiveRun, settings: Settings) -> None:
 
 
 def _route_for(store: Store, run: LiveRun, incident_id: str, settings: Settings) -> tuple[tuple[str, ...], str | None]:
-    """(technicians to exclude, technician to try first). Chaos incidents never go to protected technicians (the
-    one demoed on the iPad); while chaos is on, every other incident goes to the protected technician first."""
-    keep = tuple(ops.config(settings).get("chaos", {}).get("protected_technicians", []))
+    """(technicians to exclude, technician to try first). Chaos incidents never go to protected technicians; while
+    chaos is on, faults injected by hand go to the demo technician (the iPad) first."""
+    cfg = ops.config(settings).get("chaos", {})
+    keep = tuple(cfg.get("protected_technicians", []))
+    demo = cfg.get("demo_technician") or (keep[0] if keep else None)
     with store.lock:
         inc = store.incidents.get(incident_id)
-        if inc is None or not keep:
+        if inc is None:
             return (), None
         if inc.asset_id in run.chaos_assets:
             return keep, None
-        return (), keep[0] if run.chaos else None
+        return (), demo if run.chaos else None
 
 
 def _maybe_queue(store: Store, incident_id: str, settings: Settings) -> None:

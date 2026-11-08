@@ -33,6 +33,16 @@ def protected(settings: Settings) -> list[str]:
     return list(config(settings).get("protected_technicians", []))
 
 
+def demo_technician(settings: Settings) -> str | None:
+    return config(settings).get("demo_technician")
+
+
+def holds_device(store: Store, settings: Settings, tech_id: str) -> bool:
+    """While chaos is on, the demo technician stays on the iPad: only the pager accepts and closes their work."""
+    run = store.live
+    return bool(run is not None and run.running and run.chaos and tech_id == demo_technician(settings))
+
+
 def status(store: Store, settings: Settings) -> ChaosStatus:
     with store.lock:
         run = store.live
@@ -50,6 +60,12 @@ def set_enabled(store: Store, settings: Settings, enabled: bool) -> ChaosStatus:
             live.start(store, LiveStartRequest(), settings)
         if store.live is not None:
             store.live.chaos = enabled
+        demo = demo_technician(settings)
+        if enabled and demo:
+            st = ops.state(store, settings)
+            if demo in st.techs:
+                st.techs[demo].device = True
+                st.version += 1
     return status(store, settings)
 
 

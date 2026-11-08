@@ -33,6 +33,10 @@ def claim(store: Store, settings: Settings, tech_id: str, on: bool) -> PagerView
     with store.lock:
         st = ops.state(store, settings)
         t = _tech(st, tech_id)
+        from . import chaos
+
+        if not on and chaos.holds_device(store, settings, tech_id):
+            return view(store, settings, tech_id)  # stays on the iPad while chaos mode runs
         t.device = on
         cur = st.orders.get(t.current) if t.current else None
         if not on and cur is not None and cur.status == "paged":

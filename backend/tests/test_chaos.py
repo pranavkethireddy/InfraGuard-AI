@@ -3,7 +3,7 @@ import time
 from backend.app.services import chaos, ops, pager
 
 
-def test_chaos_faults_and_priorities_never_touch_sam(client, settings):
+def test_chaos_faults_are_dispatched_to_the_rack(client, settings):
     store = client.app.state.store
     settings.live_tick_seconds = 0.2
     with store.lock:
@@ -18,12 +18,12 @@ def test_chaos_faults_and_priorities_never_touch_sam(client, settings):
     status = client.get("/api/v1/fleet/chaos").json()
     client.post("/api/v1/fleet/chaos", json={"enabled": False})
     client.post("/api/v1/fleet/live/stop")
-    assert status["protected_technicians"] == ["tech-03"]
+    assert status["protected_technicians"] == []
     assert len(run.chaos_assets) >= 3 and all(a.startswith("srv-") for a in run.chaos_assets)
     with store.lock:
         st = ops.state(store, settings)
         chaos_orders = [o for o in st.orders.values() if o.asset_id in run.chaos_assets]
-        assert chaos_orders and all(o.technician_id != "tech-03" for o in chaos_orders)
+        assert chaos_orders
         assert {o.spot.hall_id for o in chaos_orders} <= {"hall-a", "hall-b"}  # they walk to the rack
 
 
@@ -86,3 +86,13 @@ def test_during_chaos_a_hand_injected_fault_goes_to_sam(client, settings):
     client.post("/api/v1/fleet/chaos", json={"enabled": False})
     client.post("/api/v1/fleet/live/stop")
     assert order is not None and order.technician_id == "tech-03"
+
+
+def test_chaos_keeps_sam_on_the_ipad(client, settings):
+    store = client.app.state.store
+    client.post("/api/v1/fleet/chaos", json={"enabled": True})
+    v = client.post("/api/v1/ops/pager/tech-03/release").json()
+    assert v["technician"]["device_controlled"] is True  # only the iPad closes his work
+    client.post("/api/v1/fleet/chaos", json={"enabled": False})
+    assert client.post("/api/v1/ops/pager/tech-03/release").json()["technician"]["device_controlled"] is False
+    client.post("/api/v1/fleet/live/stop")
