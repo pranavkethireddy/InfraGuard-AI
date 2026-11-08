@@ -129,6 +129,28 @@ def set_auto(store: Store, settings: Settings, enabled: bool) -> bool:
         return st.auto_dispatch
 
 
+def escalate(store: Store, settings: Settings, incident_id: str) -> None:
+    """An incident got more urgent: page someone if nobody has it, or start a repair that was waiting for a
+    maintenance window now. A repair queued behind another one moves up on the next tick (queues follow priority)."""
+    with store.lock:
+        st = ops.state(store, settings)
+        inc = store.incidents.get(incident_id)
+        if not st.auto_dispatch or inc is None or inc.status == "resolved":
+            return
+        o = ops.active_order_for(st, incident_id)
+        if o is not None:
+            if o.status == "scheduled" and o.scheduled_start is not None:
+                tech = st.techs[o.technician_id]
+                if o.work_order_id in tech.queue:
+                    tech.queue.remove(o.work_order_id)
+                o.scheduled_start, o.option = None, "fix_now"
+                o.why = f"Escalated to priority {inc.priority_rank} ({inc.risk_level} risk): no longer waiting for the window."
+                ops._start_now(st, settings, tech, o)
+                st.version += 1
+            return
+    auto_dispatch(store, settings, incident_id)
+
+
 def auto_dispatch(store: Store, settings: Settings, incident_id: str) -> None:
     """Send a newly opened incident to the closest qualified technician (recommended option)."""
     with store.lock:

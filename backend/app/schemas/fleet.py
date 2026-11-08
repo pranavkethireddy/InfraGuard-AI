@@ -38,7 +38,7 @@ class WorkOrderBrief(ContractModel):
     work_order_id: str
     technician_id: str
     technician_name: str
-    status: Literal["scheduled", "traveling", "in_progress", "paused", "done"]
+    status: Literal["scheduled", "paged", "traveling", "in_progress", "awaiting_confirmation", "paused", "done"]
     option: Literal["fix_now", "wait_for_window", "buy_time"] | None
     progress: float = Field(ge=0, le=1)
     eta_minutes: float | None
@@ -255,6 +255,9 @@ class FaultRequest(ContractModel):
     # Only pick machines from this site when asset_ids is not given; None picks from both sites.
     site: SiteId | None = None
     asset_ids: list[str] | None = Field(default=None, min_length=1, max_length=10)
+    # Which fault to inject (e.g. gpu_fault = one GPU fails, server_crash = the whole server goes down).
+    # Must suit every chosen machine's type; None picks one per machine.
+    kind: FaultKind | None = None
 
 
 class FaultResponse(ContractModel):

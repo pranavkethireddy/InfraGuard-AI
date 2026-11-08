@@ -388,6 +388,11 @@ def _set_off(st: OpsState, settings: Settings, tech: Tech, o: Order) -> None:
 
 # ---- clock ---------------------------------------------------------------------------------------
 
+def _urgency(store: Store, o: Order) -> tuple:
+    inc = store.incidents.get(o.incident_id) if o.incident_id else None
+    return (o.kind != "repair", -((inc.priority_index or 0.0) if inc else 0.0), o.created_at)
+
+
 def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Order]:
     """One tick of crew work. Called by the live loop under store.lock. Returns repairs finished this tick."""
     st = state(store, settings)
@@ -401,6 +406,8 @@ def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Ord
         if o.status != "done" and o.asset_id and (o.asset_id in powered_off or _cools_off(o.asset_id, powered_off)):
             o.shutdown_seen = True
     for tech in st.techs.values():
+        # Repairs before routine work, the most urgent incident first (priority can change every tick).
+        tech.queue.sort(key=lambda i: _urgency(store, st.orders[i]))
         # A scheduled repair whose time has come takes over from routine work.
         due = next((st.orders[i] for i in tech.queue if st.orders[i].status == "scheduled"
                     and st.orders[i].scheduled_start is not None and st.orders[i].scheduled_start <= t_now), None)

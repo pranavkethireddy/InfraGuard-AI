@@ -40,6 +40,12 @@ def priority(risk_level: str, criticality: str, total_impact: float | None, sett
     return round(w["risk"] * _LEVEL[risk_level] + w["criticality"] * _LEVEL[criticality] + w["impact"] * impact_part, 4)
 
 
+def rank(priority_index: float | None) -> int:
+    """1 = fix first ... 5 = can wait."""
+    p = priority_index or 0.0
+    return 1 if p >= 0.8 else 2 if p >= 0.6 else 3 if p >= 0.4 else 4 if p >= 0.2 else 5
+
+
 def open_or_update(store: Store, pred: PredictionResponse, asset, settings: Settings) -> IncidentDetail:
     """Called under store.lock for a triggering prediction."""
     inc = store.active_incident(pred.asset_id, pred.detector_id)
@@ -47,6 +53,13 @@ def open_or_update(store: Store, pred: PredictionResponse, asset, settings: Sett
         inc.last_seen_at = pred.observed_at
         inc.prediction_count += 1
         inc.latest_prediction = pred
+        if pred.risk_level != inc.risk_level:  # re-rank: medium -> high moves it up the queue
+            inc.priority_index = priority(pred.risk_level, asset.criticality,
+                                          inc.impact.estimated_total_impact if inc.impact else None, settings)
+            new = rank(inc.priority_index)
+            if inc.priority_rank is not None and new < inc.priority_rank and inc.incident_id not in store.escalated:
+                store.escalated.append(inc.incident_id)
+            inc.priority_rank = new
         inc.risk_level = pred.risk_level
         inc.evidence = pred.evidence
         return inc
@@ -58,12 +71,13 @@ def open_or_update(store: Store, pred: PredictionResponse, asset, settings: Sett
         "miner-rule-v1": f"ASIC miner fault: {asset.name}",
         "server-rule-v1": f"GPU server fault: {asset.name}",
     }.get(pred.detector_id, f"Elevated failure risk on {asset.name}")
+    p_index = priority(pred.risk_level, asset.criticality, imp.estimated_total_impact if imp else None, settings)
     inc = IncidentDetail(
         incident_id=store.next_id("inc"), asset_id=pred.asset_id, detector_id=pred.detector_id, status="open",
         risk_level=pred.risk_level, score_kind=pred.score_kind, data_origin=pred.data_origin, title=title,
         opened_at=pred.observed_at, last_seen_at=pred.observed_at, acknowledged_at=None, resolved_at=None,
         resolved_by=None, prediction_count=1, simulation_id=pred.simulation_id,
-        priority_index=priority(pred.risk_level, asset.criticality, imp.estimated_total_impact if imp else None, settings),
+        priority_index=p_index, priority_rank=rank(p_index),
         latest_prediction=pred, evidence=pred.evidence, maintenance_sources=[], explanation=pred.explanation,
         explanation_source="template" if pred.explanation_source != "rule" else "rule",
         recommended_actions=list(ACTIONS.get(pred.detector_id, [])), impact=imp, priority_weights=PRIORITY_WEIGHTS,
@@ -81,7 +95,7 @@ def list_incidents(store: Store, status: str | None, asset_id: str | None, limit
     with store.lock:
         items = [i for i in store.incidents.values()
                  if (status is None or i.status == status) and (asset_id is None or i.asset_id == asset_id)]
-    items.sort(key=lambda i: (-(i.priority_index or 0), i.opened_at))
+    items.sort(key=lambda i: (i.status == "resolved", -(i.priority_index or 0), i.opened_at))
     return [summary(i) for i in items[offset : offset + limit]], len(items)
 
 

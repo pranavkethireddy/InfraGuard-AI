@@ -48,6 +48,8 @@ class Store:
     # services.ops.OpsState (crew and work orders) and services.learning cases, created on first use.
     ops: Any = None
     learning: Any = None
+    # Incidents whose priority rank got more urgent since the last live tick (re-paged by the live loop).
+    escalated: list[str] = field(default_factory=list)
     _ids: itertools.count = field(default_factory=lambda: itertools.count(1))
 
     def next_id(self, prefix: str) -> str:

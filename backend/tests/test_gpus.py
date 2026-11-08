@@ -107,3 +107,13 @@ def test_lost_power_supply_is_medium_and_can_wait(client, settings):
         assert all(o.costs.downtime_or_lost_revenue == 0 for o in w.options)
     finally:
         client.post("/api/v1/fleet/live/stop")
+
+
+def test_inject_a_chosen_fault_kind(client):
+    r = client.post("/api/v1/fleet/faults", json={"kind": "server_crash", "count": 2})
+    assert r.status_code == 201, r.text
+    assert {f["kind"] for f in r.json()["injected"]} == {"server_crash"}
+    assert all(f["asset_id"].startswith("srv-") for f in r.json()["injected"])
+    r = client.post("/api/v1/fleet/faults", json={"asset_ids": ["cooling-01"], "kind": "gpu_fault"})
+    assert r.status_code == 422 and r.json()["error"]["code"] == "FAULT_KIND_NOT_SUPPORTED"
+    client.post("/api/v1/fleet/live/stop")
