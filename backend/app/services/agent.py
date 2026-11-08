@@ -37,7 +37,7 @@ SYSTEM = """You are InfraGuard, an operations agent for data centers and crypto 
 results for one incident (incident, model card, impact, maintenance records, recent readings). Write the case
 for the operator: the problem, the likely cause, how to fix it, and what it costs to fix now versus if it fails.
 Rules: use only numbers in the tool results; never invent costs, times, or records; cite maintenance records by
-record_id and say which unit a record is from (records may come from similar equipment); say clearly when
+record_id (or learned case_id, from repairs at any InfraGuard site) and say which unit and site it is from; say clearly when
 evidence is missing; a human must approve any physical work.
 Answer with ONLY this JSON object:
 {"problem": "<1 sentence: what is wrong, on which machine, where>",
@@ -99,6 +99,14 @@ class Toolbox:
         return {"status": r.status, "records": [{"record_id": s.record_id, "unit": s.asset_id or "site-wide", "recorded_at": str(s.recorded_at),
                                                  "text": s.excerpt} for s in r.items]}
 
+    def t_search_learned_cases(self) -> dict:
+        from . import learning
+
+        found = learning.search(self.store, self.settings, self.inc)
+        for s in found:
+            self.sources[s.record_id] = s
+        return {"cases": [{"case_id": s.record_id, "from": s.source_name, "text": s.excerpt} for s in found]}
+
     def t_get_recent_readings(self, asset_id: str, n: int = 5) -> dict:
         with self.store.lock:
             rows = self.store.readings.get(asset_id, [])[-max(1, min(n, 20)):]
@@ -116,6 +124,9 @@ def _summ(name: str, args: dict, out: dict) -> str:
                 f"{_usd(out['cost_if_it_fails'])} if it fails vs {_usd(out['cost_to_fix_now'])} to fix now")
     if name == "get_model_card":
         return f"Read model card for {args.get('detector_id')} ({out['evaluation_status']})"
+    if name == "search_learned_cases":
+        ids = [c["case_id"] for c in out["cases"]]
+        return f"Checked cases learned at every site: {', '.join(ids) or 'none yet'}"
     if name == "get_recent_readings":
         return f"Read {len(out['readings'])} recent readings"
     return f"Read incident {out.get('incident_id')} ({out.get('risk_level')} risk)"
@@ -240,6 +251,7 @@ def _gather(box: Toolbox) -> dict:
         "estimate_impact": box.call("estimate_impact", {"asset_id": inc.asset_id}),
         "search_maintenance": box.call("search_maintenance", {"query": query}),
         "get_model_card": box.call("get_model_card", {"detector_id": inc.detector_id}),
+        "search_learned_cases": box.call("search_learned_cases", {}),
     }
 
 
@@ -267,9 +279,12 @@ def _fallback(box: Toolbox, context: dict) -> dict:
                  f" fixing it now: about {_usd(imp['cost_to_fix_now'])}, saving {_usd(imp['savings_if_fixed_now'])}"
                  f" (assumptions; repair about {imp['estimated_repair_hours']} h).")
     text += f" Most similar past record: {recs[0]['record_id']}: {recs[0]['text']}" if recs else " No similar maintenance records were found."
+    learned = context.get("search_learned_cases", {}).get("cases", [])
+    if learned:
+        text += f" Learned from an earlier repair ({learned[0]['from']}): {learned[0]['case_id']}: {learned[0]['text']}"
     return {"problem": f"{inc.title} ({where}).", "likely_cause": recs[0]["text"] if recs else None,
             "explanation": text, "recommended_actions": inc.recommended_actions,
-            "cited_record_ids": [r["record_id"] for r in recs[:2]]}
+            "cited_record_ids": [r["record_id"] for r in recs[:2]] + [c["case_id"] for c in learned[:1]]}
 
 
 def investigate(store: Store, inc: IncidentDetail, settings: Settings) -> IncidentDetail:
