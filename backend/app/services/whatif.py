@@ -28,18 +28,34 @@ from .layout import site_of
 from .store import Store
 
 STEP = 0.05  # demo hours per projection step
+CAUTIOUS_Q = 0.6  # slope quantile for heat paths, so a noisy trend is not underestimated
 TREND_READINGS = 38  # about one period of the simulator's slow wave, so it averages out
 
 
-def trend_per_hour(values: list[float], settings: Settings) -> float:
+def trend_per_hour(values: list[float], settings: Settings, q: float = 0.5) -> float:
     """Theil-Sen slope (median of pairwise slopes) of the last readings, per demo hour. Robust to the
-    sensor wobble and to the jump when a fault starts."""
+    sensor wobble and to the jump when a fault starts. q > 0.5 takes a higher quantile of the pairwise
+    slopes: a cautious rate for promising that a machine stays below its shutdown limit."""
     ys = values[-TREND_READINGS:]
     n = len(ys)
     if n < 3:
         return 0.0
     slopes = sorted((ys[j] - ys[i]) / (j - i) for i in range(n) for j in range(i + 1, n))
-    return slopes[len(slopes) // 2] / ops.tick_hours(settings)
+    return slopes[min(len(slopes) - 1, int(len(slopes) * q))] / ops.tick_hours(settings)
+
+
+def wobble(values: list[float], settings: Settings) -> float:
+    """How far readings swing around their trend line (largest residual over the trend window). The
+    projection treats the limit as reached when the trend plus this swing touches it, so a normal
+    wobble cannot shut a machine down that the projection called safe."""
+    ys = values[-TREND_READINGS:]
+    n = len(ys)
+    if n < 3:
+        return 0.0
+    slope = trend_per_hour(ys, settings) * ops.tick_hours(settings)
+    resid = sorted(y - slope * i for i, y in enumerate(ys))
+    mid = resid[n // 2]
+    return max(abs(r - mid) for r in resid)
 
 
 @dataclass
@@ -58,6 +74,7 @@ class Path_:
     mitigated_loss_pre: float
     risk_note: str | None
     rated: float | None = None
+    band: float = 0.0  # sensor wobble around the trend, added before comparing with the limit
 
 
 def _series(store: Store, asset_id: str, field: str) -> list[float]:
@@ -72,9 +89,9 @@ def _path(store: Store, settings: Settings, inc, asset, imp) -> Path_:
     if inc.detector_id == "cooling-rule-v1":
         ys = _series(store, asset.asset_id, "temperature_c")
         th = cfg["thermal"]
-        return Path_("temperature_c", "C", ys[-1] if ys else None, max(0.0, trend_per_hour(ys, settings)),
+        return Path_("temperature_c", "C", ys[-1] if ys else None, max(0.0, trend_per_hour(ys, settings, CAUTIOUS_Q)),
                      th["rack_shutdown_c"], min(ys) if ys else None, 0.0, per_h, th["mitigation"],
-                     th["mitigated_rise_factor"], th["mitigation_cost_per_hour"], 0.0, None)
+                     th["mitigated_rise_factor"], th["mitigation_cost_per_hour"], 0.0, None, band=wobble(ys, settings))
     if inc.detector_id == "miner-rule-v1":
         hp = mining.hashprice(settings.hashprice_data_path)
         price_h = (hp.usd_per_th_day / 24) if hp else 0.0
@@ -84,12 +101,13 @@ def _path(store: Store, settings: Settings, inc, asset, imp) -> Path_:
             if store.readings.get(asset.asset_id) else 0.0
         lost_now = max(0.0, rated - (ths[-1] if ths else rated)) * price_h
         mc = cfg["miner"]
-        rising = trend_per_hour(chip, settings)
+        rising = trend_per_hour(chip, settings, CAUTIOUS_Q)
         heat = {e.field for e in inc.evidence} & {"chip_temp_c", "fan_speed_rpm"}
         if chip and heat:  # fan or overheating fault: heading for thermal shutdown
             under = rated * (1 - mc["underclock_hashrate_factor"]) * price_h
             return Path_("chip_temp_c", "C", chip[-1], max(0.0, rising), mc["chip_shutdown_c"], min(chip), lost_now,
-                         per_h, mc["mitigation"], mc["mitigated_rise_factor"], 0.0, max(lost_now, under), None)
+                         per_h, mc["mitigation"], mc["mitigated_rise_factor"], 0.0, max(lost_now, under), None,
+                         band=wobble(chip, settings))
         return Path_("hashrate_ths", "TH/s", ths[-1] if ths else None, 0.0, None, None, lost_now, per_h, None, 1.0,
                      0.0, lost_now, None, rated=rated)
     cost_fail = impact_service.compute(imp).cost_if_it_fails if imp else None
@@ -121,7 +139,7 @@ def _project(p: Path_, start: float | None, repair_h: float, mitigate: bool, sit
                 v = v + rise * STEP if not fixed else max(p.baseline or v, v - 6.0 * STEP)
             elif p.rated is not None and fixed:
                 v = p.rated
-        if p.threshold is not None and not off and not fixed and v is not None and v >= p.threshold:
+        if p.threshold is not None and not off and not fixed and v is not None and v + p.band >= p.threshold:
             off, shutdown_at = True, round(t, 2)
         if off and fixed and t >= done + restart_h:
             off = False

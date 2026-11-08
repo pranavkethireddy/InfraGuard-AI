@@ -1,6 +1,6 @@
 {
   "site_id": "datacenter",
-  "demo_time": "2026-11-07T20:06:00-06:00",
+  "demo_time": "2026-11-07T20:34:00-06:00",
   "items": [
     {
       "incident_id": "inc-000955",
@@ -9,11 +9,11 @@
       "title": "Sustained high temperature on CRAC Unit 2",
       "risk_level": "high",
       "status": "ready",
-      "recommended_option": "buy_time",
+      "recommended_option": "fix_now",
       "technician_id": "tech-03",
       "technician_name": "Sam Rivera",
       "move_from": null,
-      "action": "Buy time and fix now: Sam Rivera to CRAC Unit 2.",
+      "action": "Fix now: Sam Rivera to CRAC Unit 2.",
       "savings": 50600.0,
       "repair_hours": 3.0,
       "savings_per_tech_hour": 16866.67,

@@ -290,7 +290,9 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest) -> Dispatch
                            {"technician_id": tech.cfg["technician_id"], "work_order_id": cur.work_order_id})
         imp = impact_service.for_asset(settings.impact_assumptions_path, asset.asset_id, asset.asset_type)
         hours = imp.estimated_repair_hours if imp and imp.estimated_repair_hours else 1.0
-        action = inc.recommended_actions[0] if inc.recommended_actions else "Repair"
+        # The first real step, not the reminder that physical work needs approval.
+        steps = [a for a in inc.recommended_actions if "approv" not in a.lower()] or inc.recommended_actions or ["Repair"]
+        action = steps[0]
         o = _new(st, settings, kind="repair", title=f"{asset.name}: {action}", site_id=lay.site_id, hall_id=hall,
                  technician_id=tech.cfg["technician_id"], hours_total=hours, asset_id=asset.asset_id,
                  incident_id=inc.incident_id, option=option, mitigation_active=option == "buy_time")
