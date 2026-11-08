@@ -96,3 +96,31 @@ def test_chaos_keeps_sam_on_the_ipad(client, settings):
     client.post("/api/v1/fleet/chaos", json={"enabled": False})
     assert client.post("/api/v1/ops/pager/tech-03/release").json()["technician"]["device_controlled"] is False
     client.post("/api/v1/fleet/live/stop")
+
+
+def test_dispatch_spreads_work_across_technicians(client, settings):
+    from backend.app.schemas.ops import DispatchRequest
+    from backend.app.services import fleet_view  # noqa: F401  (imports the layout)
+
+    store = client.app.state.store
+    servers = ["srv-A1-01-1", "srv-A1-02-1", "srv-A2-01-1", "srv-B1-01-1", "srv-B2-01-1", "srv-A1-03-1"]
+    settings.live_tick_seconds = 0.2
+    client.post("/api/v1/fleet/faults", json={"asset_ids": servers, "kind": "server_crash"})
+    deadline = time.monotonic() + 20
+    while time.monotonic() < deadline:
+        with store.lock:
+            open_ = [i.incident_id for i in store.incidents.values() if i.asset_id in servers and i.status != "resolved"]
+        if len(open_) == len(servers):
+            break
+        time.sleep(0.3)
+    client.post("/api/v1/fleet/live/stop")
+    for iid in open_:
+        for option in ("wait_for_window", None):
+            try:
+                ops.dispatch(store, settings, DispatchRequest(incident_id=iid, option=option))
+                break
+            except Exception:
+                continue
+    with store.lock:
+        who = [o.technician_id for o in ops.state(store, settings).orders.values() if o.asset_id in servers]
+    assert len(set(who)) >= 3, who  # not all on one person
