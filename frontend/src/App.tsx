@@ -12,6 +12,8 @@ import { FleetPage } from '@/pages/FleetPage';
 import { OperationsPage } from '@/pages/OperationsPage';
 import { ServerPage } from '@/pages/ServerPage';
 import { PagerPage } from '@/pages/PagerPage';
+import { ComponentPage } from '@/pages/ComponentPage';
+import { RackPage } from '@/pages/RackPage';
 
 function RRLink({ to, className = "", activeClassName, exact, onClick, children }: AppLinkProps) {
   return (
@@ -53,6 +55,8 @@ function PagerRoute() {
   const [search, setSearch] = useSearchParams();
   return <PagerPage technicianId={search.get('technician') || 'tech-03'} onTechnicianChange={(id) => setSearch((prev) => { const p = new URLSearchParams(prev); p.set('technician', id); return p; })} />;
 }
+function ComponentRoute() { const { id, cid } = useParams(); return <ComponentPage id={id ?? ''} cid={cid ?? ''} />; }
+function RackRoute() { return <RackPage id={useParams().id ?? ''} />; }
 
 export function App() {
   return (
@@ -64,6 +68,9 @@ export function App() {
           <Route path="/operations" element={<OperationsRoute />} />
           <Route path="/pager" element={<PagerRoute />} />
           <Route path="/servers/:id" element={<ServerRoute />} />
+          <Route path="/fleet/servers/:id" element={<ServerRoute />} />
+          <Route path="/fleet/servers/:id/components/:cid" element={<ComponentRoute />} />
+          <Route path="/fleet/racks/:id" element={<RackRoute />} />
           <Route path="/assets" element={<AssetsPage />} />
           <Route path="/assets/:id" element={<AssetDetailRoute />} />
           <Route path="/simulate" element={<SimulatePage />} />

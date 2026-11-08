@@ -1,0 +1,158 @@
+{
+  "incident_id": "inc-000793",
+  "asset_id": "srv-A1-01-1",
+  "detector_id": "server-rule-v1",
+  "status": "open",
+  "risk_level": "medium",
+  "score_kind": "heuristic",
+  "data_origin": "simulated",
+  "title": "GPU server fault: Rack A1-01, GPU Server 1",
+  "opened_at": "2026-11-08T08:16:39.862090Z",
+  "last_seen_at": "2026-11-08T08:16:39.862090Z",
+  "acknowledged_at": null,
+  "resolved_at": null,
+  "resolved_by": null,
+  "prediction_count": 1,
+  "simulation_id": "live-000001",
+  "priority_index": 0.564,
+  "priority_rank": 3,
+  "latest_prediction": {
+    "prediction_id": "pred-000792",
+    "asset_id": "srv-A1-01-1",
+    "detector_id": "server-rule-v1",
+    "observed_at": "2026-11-08T08:16:39.862090Z",
+    "generated_at": "2026-11-08T08:16:39.864875Z",
+    "data_origin": "simulated",
+    "model_name": "gpu-server-rule",
+    "model_version": "1.0.0",
+    "target": "sustained GPU server fault: server not responding, GPU off the bus, GPU memory errors or lost power redundancy",
+    "risk_score": 0.55,
+    "score_kind": "heuristic",
+    "risk_level": "medium",
+    "prediction_horizon_hours": null,
+    "explanation": "GPU server fault for 3 consecutive readings: a chassis fan has slowed or stopped.",
+    "explanation_source": "rule",
+    "evidence": [
+      {
+        "type": "sensor_rule",
+        "field": "min_fan_rpm",
+        "value": 0.0,
+        "threshold": 3000.0,
+        "unit": "rpm",
+        "consecutive_readings": 3
+      }
+    ],
+    "maintenance_sources": [],
+    "limitations": [
+      "Transparent rule on simulated server telemetry, not a trained model.",
+      "Thresholds are demo assumptions, not vendor limits."
+    ],
+    "incident_id": "inc-000793",
+    "simulation_id": "live-000001"
+  },
+  "evidence": [
+    {
+      "type": "sensor_rule",
+      "field": "min_fan_rpm",
+      "value": 0.0,
+      "threshold": 3000.0,
+      "unit": "rpm",
+      "consecutive_readings": 3
+    }
+  ],
+  "maintenance_sources": [
+    {
+      "record_id": "lc-0009",
+      "asset_id": "srv-A1-02-3",
+      "recorded_at": "2026-11-08T03:56:08.719376Z",
+      "source_name": "InfraGuard learned case (datacenter)",
+      "excerpt": "online on srv-A1-02-3 at datacenter. Cause: The cause is unknown based on the current telemetry and maintenance records. Fix: Check the server's GPUs, power supplies and logs, then reseat or swap the failed part (human review required).. 2.0 h, $1,350.00, fixed before failure.",
+      "score": 0.0
+    }
+  ],
+  "explanation": "GPU server fault for 3 consecutive readings: a chassis fan has slowed or stopped. Downtime costs $400 per hour ($9,600 per day). If it fails: about $3,600 (downtime plus unplanned repair); fixing it now: about $900, saving $2,700 (assumptions; repair about 2.0 h). No similar maintenance records were found. Learned from an earlier repair (InfraGuard learned case (datacenter)): lc-0009: online on srv-A1-02-3 at datacenter. Cause: The cause is unknown based on the current telemetry and maintenance records. Fix: Check the server's GPUs, power supplies and logs, then reseat or swap the failed part (human review required).. 2.0 h, $1,350.00, fixed before failure.",
+  "explanation_source": "rag",
+  "recommended_actions": [
+    "Hot-swap the failed fan module.",
+    "Confirm all six fans are back near 9,000 rpm.",
+    "A human must approve physical work."
+  ],
+  "impact": {
+    "currency": "USD",
+    "estimated_downtime_hours": 6.0,
+    "cost_per_hour": 400.0,
+    "estimated_repair_cost": 1200.0,
+    "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured; downtime stalls Training job A1: 160 GPUs x $2.50/GPU-hour (demo assumption (configs/datacenter_layout.json gpu_server spec), not a quote)",
+    "cost_per_day": 9600.0,
+    "estimated_repair_hours": 2.0,
+    "planned_repair_cost": 900.0,
+    "estimated_downtime_cost": 2400.0,
+    "estimated_total_impact": 3600.0,
+    "cost_if_it_fails": 3600.0,
+    "cost_to_fix_now": 900.0,
+    "savings_if_fixed_now": 2700.0,
+    "return_on_repair": 3.0
+  },
+  "priority_weights": {
+    "risk": 0.5,
+    "criticality": 0.3,
+    "impact": 0.2
+  },
+  "notes": [],
+  "agent_steps": [
+    {
+      "tool": "get_incident",
+      "summary": "Read incident inc-000793 (medium risk)"
+    },
+    {
+      "tool": "get_recent_readings",
+      "summary": "Read 4 recent readings"
+    },
+    {
+      "tool": "estimate_impact",
+      "summary": "Impact: $400/h, $9,600/day down; $3,600 if it fails vs $900 to fix now"
+    },
+    {
+      "tool": "search_maintenance",
+      "summary": "Searched maintenance records for 'GPU server fault: Rack A1-01, GPU Server 1 min fan rpm': no evidence"
+    },
+    {
+      "tool": "diagnose_readings",
+      "summary": "Matched the symptom pattern: Chassis fan failed: Slowest fan at 0.0 rpm (others about 9,000) with CPUs up to 72.2 C and GPUs up to 70.4 C."
+    },
+    {
+      "tool": "get_model_card",
+      "summary": "Read model card for server-rule-v1 (not_applicable)"
+    },
+    {
+      "tool": "search_learned_cases",
+      "summary": "Checked cases learned at every site: lc-0009, lc-0007"
+    }
+  ],
+  "investigation_status": "completed",
+  "problem": "GPU server fault: Rack A1-01, GPU Server 1 (Hall A, Row A1, Rack A1-01, GPU Server 1).",
+  "likely_cause": "Chassis fan failed: Slowest fan at 0.0 rpm (others about 9,000) with CPUs up to 72.2 C and GPUs up to 70.4 C.",
+  "work_order_id": null,
+  "failure_mode": {
+    "mode_id": "server-fan",
+    "title": "Chassis fan failed",
+    "cause": "A chassis fan slowed or stopped, so the parts behind it run hotter.",
+    "reasoning": "Slowest fan at 0.0 rpm (others about 9,000) with CPUs up to 72.2 C and GPUs up to 70.4 C.",
+    "signals": [
+      "min_fan_rpm",
+      "max_cpu_temp_c",
+      "max_gpu_temp_c"
+    ],
+    "steps": [
+      "Hot-swap the failed fan module.",
+      "Confirm all six fans are back near 9,000 rpm."
+    ],
+    "repair_hours": 0.5,
+    "parts_cost_usd": 80.0,
+    "evidence": {
+      "min_fan_rpm": 0.0,
+      "max_cpu_temp_c": 72.2,
+      "max_gpu_temp_c": 70.4
+    }
+  }
+}

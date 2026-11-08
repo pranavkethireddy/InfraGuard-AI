@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { ServerFaultControl } from '@/components/ServerFaultControl';
+import { ServerParts } from '@/components/ServerParts';
+import { rackPath } from '@/api/parts-types';
 import { serverQuery } from '@/api/gpu-queries';
 import { FleetMachines, PowerDetails, HealthBadge, fieldUnit } from '@/components/FleetWorkspace';
 import { GpuJobs } from '@/components/GpuJobs';
@@ -13,15 +15,16 @@ export function ServerPage({ id, gpuIndex, onGpuChange }: { id: string; gpuIndex
 function ServerWorkspace({ id, gpuIndex, onGpuChange }: { id: string; gpuIndex: number | undefined; onGpuChange: (index: number) => void }) {
   const q = useQuery(serverQuery(id));
   if (q.isLoading) return <Loading label="Loading server…" />;
-  if (!q.data) return <ErrorState error={q.error} title="Could not load GPU server" />;
+  if (!q.data) return <><PageHeader title={`Server ${id}`} meta={<AppLink to="/fleet?site=datacenter" className="text-primary underline">Live fleet</AppLink>} /><ErrorState error={q.error} title="Could not load GPU server" /><div className="mt-6"><ServerParts id={id} /></div></>;
   const s = q.data; const m = s.machine;
   const selected = gpuIndex === undefined ? s.gpus[0] : s.gpus.find((g) => g.index === gpuIndex);
   const fields = selected ? [`gpu${selected.index}_temp_c`, `gpu${selected.index}_clock_pct`] : [];
   const histories = fields.filter((f) => m.history.some((r) => r.values[f] != null));
   return <>
-    <PageHeader title={m.name} meta={<>{id} · <AppLink to="/fleet?site=datacenter" className="text-primary underline">Rack {s.rack_id} · Live fleet</AppLink></>} actions={<><HealthBadge status={m.status} /><span className="text-xs text-muted-foreground">Heuristic score — not a probability</span><SourceDetails><p>data_origin: simulated</p><p>Synthetic GPU rule scenario; not production observations.</p></SourceDetails></>} />
+    <PageHeader title={m.name} meta={<>{id} · <AppLink to={rackPath(s.rack_id)} className="text-primary underline">Rack {s.rack_id}</AppLink> · <AppLink to="/fleet?site=datacenter" className="text-primary underline">Live fleet</AppLink></>} actions={<><HealthBadge status={m.status} /><span className="text-xs text-muted-foreground">Heuristic score — not a probability</span><SourceDetails><p>data_origin: simulated</p><p>Synthetic GPU rule scenario; not production observations.</p></SourceDetails></>} />
     {q.error && <ErrorState error={q.error} />}
     <div className="space-y-6">
+      <div><h2 className="mb-4 text-sm font-semibold">Server parts</h2><ServerParts id={id} /></div>
       <Section title="Server state">
         <PowerDetails item={m} />
         <Fields rows={[["Online", s.online == null ? 'Not reported' : s.online ? 'Online' : 'Offline'], ["Inlet temperature", `${reported(s.inlet_temp_c)} °C`], ["PSU redundancy", `${reported(s.psus_ok)} / ${s.psus_total} PSUs OK`], ["ECC errors", reported(s.ecc_errors)], ["Power", `${reported(s.power_w)} W`], ["Incident", m.active_incident ? <AppLink to={`/incidents/${m.active_incident.incident_id}`} className="text-primary underline">{m.active_incident.incident_id}</AppLink> : 'None returned']]} />

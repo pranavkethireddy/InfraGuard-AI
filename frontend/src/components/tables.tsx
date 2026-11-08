@@ -1,5 +1,6 @@
 import type { Asset, IncidentSummary } from "@/api/types";
 import { AppLink } from "@/lib/router-adapter";
+import { serverPath } from '@/api/parts-types';
 import { Badge, Mono, OriginBadge, RiskBadge, SCORE_KIND_LABEL, StatusBadge, dt, val } from "./ui-kit";
 import { RankValue } from './PriorityRank';
 
@@ -17,7 +18,7 @@ export function EquipmentTable({ assets }: { assets: Asset[] }) {
               <td>
                 <AppLink to={`/assets/${a.asset_id}`} className="whitespace-nowrap font-medium text-foreground underline-offset-2 hover:text-primary hover:underline">{a.name}</AppLink>
                 <div className="whitespace-nowrap font-mono text-[11.5px] text-muted-foreground">{a.asset_id}</div>
-                {a.asset_type === 'gpu_server' && <AppLink to={`/servers/${encodeURIComponent(a.asset_id)}`} className="block text-xs text-primary underline">Server / GPUs</AppLink>}
+                {a.asset_type === 'gpu_server' && <AppLink to={serverPath(a.asset_id)} className="block text-xs text-primary underline">Server / GPUs</AppLink>}
               </td>
               <td><Mono>{a.asset_type}</Mono></td>
               <td>{a.location}</td>

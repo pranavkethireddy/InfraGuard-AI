@@ -8,6 +8,7 @@ import { AppLink } from "@/lib/router-adapter";
 import { ReadingsChart } from "@/components/ReadingsChart";
 import { IncidentWhatIf } from '@/components/OperationsWorkspace';
 import { RankValue } from '@/components/PriorityRank';
+import { FailureModePanel } from '@/components/FailureModePanel';
 import { NotFoundState } from "./AssetDetailPage";
 import {
   Badge, Empty, ErrorMessage, ErrorState, Fields, Loading, Mono, OriginBadge, PageHeader, RiskBadge, ScoreValue, Section,
@@ -82,6 +83,7 @@ export function IncidentDetailPage({ id }: { id: string }) {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)]">
         {/* Investigation: evidence */}
         <div className="min-w-0 space-y-6">
+          <Section title="Repair playbook"><FailureModePanel mode={i.failure_mode} /></Section>
           <Section title="Rule evidence" flush>
             {i.evidence.length ? (
               <div className="overflow-x-auto">
