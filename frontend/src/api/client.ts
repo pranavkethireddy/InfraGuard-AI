@@ -9,7 +9,7 @@ import { opsFixtures } from './ops-fixtures';
 import { gpuFixtures } from './gpu-fixtures';
 import type { AutoDispatchResponse, DispatchRequest, DispatchResponse, FloorPlan, LearningCases, LearningMatrix, PagerActionRequest, PagerView, PlanResponse, TechniciansResponse, WhatIfResponse } from './ops-types';
 import { pagerFixtures } from './pager-fixtures';
-import type { ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteId, SitesResponse } from './fleet-types';
+import type { ChaosStatus, ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteId, SitesResponse } from './fleet-types';
 
 // VITE_* values are bundled into the browser. Never put secrets in them.
 export type DataMode = "fixture" | "live";
@@ -64,6 +64,8 @@ export interface ApiClient {
   stopFleet(): Promise<LiveStatus>;
   injectFaults(body: FaultRequest): Promise<FaultResponse>;
   clearFleet(): Promise<ClearResponse>;
+  fleetChaos(): Promise<ChaosStatus>;
+  setFleetChaos(body: { enabled: boolean }): Promise<ChaosStatus>;
   incidentWhatIf(id: string): Promise<WhatIfResponse>;
   opsTechnicians(site: SiteId): Promise<TechniciansResponse>;
   opsFloor(site: SiteId): Promise<FloorPlan>;
@@ -142,6 +144,8 @@ export function createLiveClient(baseUrl = API_BASE_URL, fetchImpl: typeof fetch
     stopFleet: () => req('/fleet/live/stop', json('POST')),
     injectFaults: (body) => req('/fleet/faults', json('POST', body)),
     clearFleet: () => req('/fleet/clear', json('POST')),
+    fleetChaos: () => req('/fleet/chaos'),
+    setFleetChaos: (body) => req('/fleet/chaos', json('POST', body)),
     incidentWhatIf: (id) => req(`/incidents/${enc(id)}/whatif`),
     opsTechnicians: (site) => req(`/ops/technicians${qs({ site })}`),
     opsFloor: (site) => req(`/ops/floor${qs({ site })}`),
@@ -189,6 +193,8 @@ export function createFixtureClient(): ApiClient {
     fleetRack: (id) => id === fleetFixtures.rack.rack_id ? later(fleetFixtures.rack) : Promise.reject(notFound(`Rack ${id} (no approved fixture)`)),
     fleetServer: (id) => id === gpuFixtures.server.machine.asset_id ? later(gpuFixtures.server) : id === gpuFixtures.crashed.machine.asset_id ? later(gpuFixtures.crashed) : Promise.reject(notFound(`Server ${id} (no approved fixture)`)),
     startFleet: disabled, stopFleet: disabled, injectFaults: disabled, clearFleet: disabled,
+    fleetChaos: () => Promise.reject(notFound('Chaos status (no approved fixture)')),
+    setFleetChaos: disabled,
     incidentWhatIf: (id) => id === opsFixtures.whatif.incident_id ? later(opsFixtures.whatif) : id === gpuFixtures.whatif.incident_id ? later(gpuFixtures.whatif) : Promise.reject(notFound(`What-if for ${id} (no approved fixture)`)),
     opsTechnicians: (site) => later({ ...opsFixtures.technicians, technicians: opsFixtures.technicians.technicians.filter((t) => t.site_id === site), work_orders: opsFixtures.technicians.work_orders.filter((w) => w.site_id === site) }),
     opsFloor: (site) => site === pagerFixtures.floor.site_id ? later(pagerFixtures.floor) : Promise.reject(notFound(`Floor for ${site} (no approved fixture)`)),

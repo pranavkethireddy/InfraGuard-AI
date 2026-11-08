@@ -7,6 +7,7 @@ import { FleetButton, FleetFloor, FleetMachines, FleetMetrics, FleetRackPane } f
 import { Empty, ErrorMessage, ErrorState, Loading, PageHeader, Section, SourceDetails } from '@/components/ui-kit';
 import { GpuJobs } from '@/components/GpuJobs';
 import { ServerFaultControl } from '@/components/ServerFaultControl';
+import { ChaosControl } from '@/components/ChaosControl';
 
 export function FleetPage({ site, onSiteChange }: { site: SiteId; onSiteChange: (site: SiteId) => void }) {
   return <FleetSiteWorkspace key={site} site={site} onSiteChange={onSiteChange} />;
@@ -54,6 +55,7 @@ function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange
       <span className="text-xs text-muted-foreground">Live loop covers BOTH sites · Faults target {site === 'mining' ? 'Crypto mining site' : 'Data center'}.</span>
     </div>
     <ServerFaultControl servers={status.data?.machines ?? []} loading={status.isLoading} error={status.error} disabled={mutation.isPending} />
+    <ChaosControl />
     {api.mode === 'fixture' && <p className="mb-3 text-xs text-muted-foreground">{FIXTURE_MUTATION_MESSAGE}</p>}
     {mutation.isPending && <p role="status" className="mb-3 text-sm">Backend action pending…</p>}
     {mutation.error && <div role="alert" className="mb-3"><ErrorMessage error={mutation.error} /></div>}

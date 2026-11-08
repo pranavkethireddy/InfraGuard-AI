@@ -1,7 +1,12 @@
 import { queryOptions } from '@tanstack/react-query';
-import { api } from './client';
+import { api, ApiError } from './client';
 import type { SiteId } from './fleet-types';
 export const FLEET_POLL_MS = 1_000;
+export const fleetChaosQuery = () => queryOptions({ queryKey: ['fleet', 'chaos'], queryFn: async () => {
+  const state = await api.fleetChaos();
+  if (typeof state?.enabled !== 'boolean' || !Array.isArray(state.protected_technicians) || !Array.isArray(state.active_faults)) throw new ApiError('Invalid chaos status response.', null, 'invalid_response');
+  return state;
+}, enabled: api.mode === 'live', refetchInterval: api.mode === 'live' ? FLEET_POLL_MS : false, retry: false });
 export const fleetSitesQuery = () => queryOptions({ queryKey: ['fleet', 'sites'], queryFn: () => api.fleetSites(), refetchInterval: FLEET_POLL_MS });
 export const fleetMapQuery = (site: SiteId) => queryOptions({ queryKey: ['fleet', site, 'map', 30], queryFn: () => api.fleetMap(site), refetchInterval: FLEET_POLL_MS });
 export const fleetStatusQuery = (site: SiteId) => queryOptions({ queryKey: ['fleet', site, 'status', 30], queryFn: () => api.fleetStatus(site), refetchInterval: FLEET_POLL_MS });

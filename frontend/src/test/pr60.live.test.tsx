@@ -99,6 +99,25 @@ it('updates incident detail rank while mounted on medium to high escalation with
   expect(await within(section).findByText('1', {}, { timeout: 2500 })).toBeInTheDocument();
   expect(h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(0);
 });
+it('accepts escalated queue reordering without replacing the current job', async () => {
+  const base = pagerFixtures.paged; if (!base.job) throw new Error('No current job');
+  const job = { ...base.job, work_order: { ...base.job.work_order, work_order_id: 'current-stays' } };
+  const a = { ...job.work_order, work_order_id: 'queued-a' };
+  const b = { ...job.work_order, work_order_id: 'queued-b' };
+  let data: PagerView = { ...base, version: 60, job, technician: { ...base.technician, queued_work_order_ids: ['queued-a', 'queued-b'] }, queue: [a, b] };
+  h.fetch.mockImplementation(async (u: string) => json(u.includes('/incidents/') ? fixtures.incidentDetail : data));
+  const { qc } = mount(<PagerPage onTechnicianChange={vi.fn()} />);
+  const current = await screen.findByRole('region', { name: 'Current job' });
+  expect(within(current).getByText('current-stays')).toBeInTheDocument();
+  const rows = () => within(screen.getByRole('region', { name: 'Queued jobs' })).getAllByRole('row').slice(1).map((r) => r.textContent);
+  expect(rows()).toEqual([expect.stringContaining('queued-a'), expect.stringContaining('queued-b')]);
+  data = { ...data, version: 61, technician: { ...data.technician, queued_work_order_ids: ['queued-b', 'queued-a'] } };
+  await act(async () => { await qc.invalidateQueries({ queryKey: pagerKey('tech-03') }); });
+  // Refetch completion precedes the observer notification and React's visible commit.
+  await waitFor(() => expect(rows()).toEqual([expect.stringContaining('queued-b'), expect.stringContaining('queued-a')]));
+  expect(within(screen.getByRole('region', { name: 'Current job' })).getByText('current-stays')).toBeInTheDocument();
+  expect(h.fetch.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(0);
+});
 it('joins plan/current task/queued IDs to authoritative ranks and preserves backend queue order', async () => {
   const base = o.technicians.work_orders[0]; if (!base) throw new Error('No work order');
   const a: OpsWorkOrder = { ...base, work_order_id: 'wo-first', title: 'Backend first', incident_id: 'inc-first', status: 'paged' };
