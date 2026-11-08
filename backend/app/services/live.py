@@ -71,6 +71,9 @@ class LiveRun:
     injections: int = 0
     # asset_id -> why it is powered off
     power_off: dict[str, str] = field(default_factory=dict)
+    # Chaos mode (services/chaos.py): random faults on these machines are dispatched away from protected technicians.
+    chaos: bool = False
+    chaos_assets: set[str] = field(default_factory=set)
 
     @property
     def running(self) -> bool:
@@ -294,6 +297,10 @@ def _loop(store: Store, run: LiveRun, settings: Settings) -> None:
         started = time.monotonic()
         try:
             _tick(store, run, settings)
+            if run.chaos:
+                from . import chaos
+
+                chaos.step(store, run, settings)
         except Exception:  # keep the demo alive; one bad tick must not stop the fleet
             log.exception("live tick failed")
         with store.lock:
@@ -382,11 +389,20 @@ def _tick(store: Store, run: LiveRun, settings: Settings) -> None:
     with store.lock:
         ops.advance(store, settings, off)
     for incident_id in opened:  # page the closest technician (no-op when automatic dispatch is off)
-        pager.auto_dispatch(store, settings, incident_id)
+        pager.auto_dispatch(store, settings, incident_id, _exclude_for(store, run, incident_id, settings))
     with store.lock:
         escalated, store.escalated = [i for i in store.escalated if i not in opened], []
     for incident_id in escalated:  # got more urgent: page someone now or pull the repair forward
-        pager.escalate(store, settings, incident_id)
+        pager.escalate(store, settings, incident_id, _exclude_for(store, run, incident_id, settings))
+
+
+def _exclude_for(store: Store, run: LiveRun, incident_id: str, settings: Settings) -> tuple[str, ...]:
+    """Chaos incidents never go to protected technicians (the one demoed on the iPad)."""
+    with store.lock:
+        inc = store.incidents.get(incident_id)
+        if inc is None or inc.asset_id not in run.chaos_assets:
+            return ()
+    return tuple(ops.config(settings).get("chaos", {}).get("protected_technicians", []))
 
 
 def _maybe_queue(store: Store, incident_id: str, settings: Settings) -> None:

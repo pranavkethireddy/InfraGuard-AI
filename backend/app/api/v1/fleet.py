@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Query
 
 from ...schemas.errors import ErrorResponse
-from ...schemas.fleet import (ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, HealthStatus,
+from ...schemas.fleet import (ChaosRequest, ChaosStatus, ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, HealthStatus,
                               LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteId, SitesResponse)
-from ...services import fleet_view, live
+from ...services import chaos, fleet_view, live
 from ..deps import SettingsDep, StoreDep
 
 router = APIRouter(prefix="/fleet", tags=["fleet"])
@@ -53,6 +53,18 @@ def start_live(store: StoreDep, settings: SettingsDep,
                req: Annotated[LiveStartRequest | None, Body()] = None) -> LiveStatus:
     """Start live readings for every machine. Calling it while running returns the current run."""
     return live.start(store, req or LiveStartRequest(), settings)
+
+
+@router.get("/chaos", response_model=ChaosStatus)
+def get_chaos(store: StoreDep, settings: SettingsDep) -> ChaosStatus:
+    return chaos.status(store, settings)
+
+
+@router.post("/chaos", response_model=ChaosStatus)
+def set_chaos(req: ChaosRequest, store: StoreDep, settings: SettingsDep) -> ChaosStatus:
+    """Demo chaos mode: random GPU server faults and priority changes (starts the live fleet if needed).
+    Protected technicians (configs/operations.json chaos) never get chaos work or queue changes."""
+    return chaos.set_enabled(store, settings, req.enabled)
 
 
 @router.post("/live/stop", response_model=LiveStatus)

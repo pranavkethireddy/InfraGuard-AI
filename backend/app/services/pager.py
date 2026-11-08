@@ -129,9 +129,10 @@ def set_auto(store: Store, settings: Settings, enabled: bool) -> bool:
         return st.auto_dispatch
 
 
-def escalate(store: Store, settings: Settings, incident_id: str) -> None:
-    """An incident got more urgent: page someone if nobody has it, or start a repair that was waiting for a
-    maintenance window now. A repair queued behind another one moves up on the next tick (queues follow priority)."""
+def escalate(store: Store, settings: Settings, incident_id: str, exclude: tuple[str, ...] = ()) -> None:
+    """An incident got more urgent: page someone if nobody has it yet. A repair already planned stops waiting for
+    the maintenance window and moves up its technician's queue (queues follow priority); the job the technician
+    is doing now is never interrupted."""
     with store.lock:
         st = ops.state(store, settings)
         inc = store.incidents.get(incident_id)
@@ -141,17 +142,16 @@ def escalate(store: Store, settings: Settings, incident_id: str) -> None:
         if o is not None:
             if o.status == "scheduled" and o.scheduled_start is not None:
                 tech = st.techs[o.technician_id]
-                if o.work_order_id in tech.queue:
-                    tech.queue.remove(o.work_order_id)
                 o.scheduled_start, o.option = None, "fix_now"
-                o.why = f"Escalated to priority {inc.priority_rank} ({inc.risk_level} risk): no longer waiting for the window."
-                ops._start_now(st, settings, tech, o)
+                o.why = f"Escalated to priority {inc.priority_rank} ({inc.risk_level} risk): next in your queue."
+                if o.work_order_id not in tech.queue:
+                    tech.queue.append(o.work_order_id)
                 st.version += 1
             return
-    auto_dispatch(store, settings, incident_id)
+    auto_dispatch(store, settings, incident_id, exclude)
 
 
-def auto_dispatch(store: Store, settings: Settings, incident_id: str) -> None:
+def auto_dispatch(store: Store, settings: Settings, incident_id: str, exclude: tuple[str, ...] = ()) -> None:
     """Send a newly opened incident to the closest qualified technician (recommended option)."""
     with store.lock:
         st = ops.state(store, settings)
@@ -159,6 +159,6 @@ def auto_dispatch(store: Store, settings: Settings, incident_id: str) -> None:
         if not st.auto_dispatch or inc is None or inc.status == "resolved" or ops.active_order_for(st, incident_id):
             return
     try:
-        ops.dispatch(store, settings, DispatchRequest(incident_id=incident_id))
+        ops.dispatch(store, settings, DispatchRequest(incident_id=incident_id), exclude)
     except ApiError as e:
         log.info("auto dispatch skipped for %s: %s", incident_id, e.code)
