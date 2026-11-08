@@ -2,8 +2,9 @@
 
 Two sites: the data center (configs/datacenter_layout.json) and the crypto mining farm
 (configs/mining_layout.json). Rows are expanded into racks, and each rack into its devices
-(drives or ASIC miners), so the configs stay short. Device ids run <prefix>-01, <prefix>-02, ...
-in hall, row and rack order.
+(drives or ASIC miners, plus GPU servers where the rack config has "servers"), so the configs stay
+short. Device ids run <prefix>-01, <prefix>-02, ... in hall, row and rack order; GPU servers are
+srv-<rack>-<slot>. A row with a "job" runs one synchronous GPU job across all its servers.
 """
 
 from __future__ import annotations
@@ -31,6 +32,18 @@ class Rack:
     depth: float
     cooled_by: tuple[str, ...]
     asset_ids: tuple[str, ...]
+    server_ids: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class Job:
+    """One synchronous GPU job spread over every server in a row: its slowest GPU sets the pace."""
+
+    job_id: str
+    name: str
+    row: str
+    hall_id: str
+    server_ids: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -55,6 +68,10 @@ class Layout:
     placements: dict[str, Placement]
     chart_fields: dict[str, list[str]] = field(default_factory=dict)
     specs: dict[str, dict] = field(default_factory=dict)
+    jobs: dict[str, Job] = field(default_factory=dict)
+
+    def job_of(self, server_id: str) -> Job | None:
+        return next((j for j in self.jobs.values() if server_id in j.server_ids), None)
 
 
 def _resolve(path: str) -> Path:
@@ -67,7 +84,8 @@ def load(path: str) -> Layout:
     raw = json.loads(_resolve(path).read_text())
     types = raw["asset_types"]
     rack_cfg = raw["rack"]
-    halls, racks, assets, placements = [], {}, {}, {}
+    halls, racks, assets, placements, jobs = [], {}, {}, {}, {}
+    srv = rack_cfg.get("servers")
     device_type, prefix = rack_cfg["device_type"], rack_cfg["device_prefix"]
     device_no = 0
 
@@ -86,6 +104,7 @@ def load(path: str) -> Layout:
                 Placement(hall_id=h["hall_id"], row=None, rack_id=None, slot=None, x=u["x"], y=u["y"]))
             unit_ids.append(u["asset_id"])
         for row in h["rows"]:
+            row_servers = []
             for i in range(row["racks"]):
                 rack_id = f"{row['row']}-{i + 1:02d}"
                 x, y = row["x0"] + i * rack_cfg["width"], row["y"]
@@ -98,16 +117,29 @@ def load(path: str) -> Layout:
                         f"{h['name']}, Row {row['row']}, Rack {rack_id}, {label}",
                         Placement(hall_id=h["hall_id"], row=row["row"], rack_id=rack_id, slot=slot, x=x, y=y))
                     device_ids.append(asset_id)
+                server_ids = []
+                for slot in range(1, (srv["per_rack"] if srv else 0) + 1):
+                    asset_id = f"{srv['device_prefix']}-{rack_id}-{slot}"
+                    label = f"{srv['device_label']} {slot}"
+                    add(asset_id, f"Rack {rack_id}, {label}", srv["device_type"], srv["device_criticality"],
+                        f"{h['name']}, Row {row['row']}, Rack {rack_id}, {label}",
+                        Placement(hall_id=h["hall_id"], row=row["row"], rack_id=rack_id, slot=slot, x=x, y=y))
+                    server_ids.append(asset_id)
+                row_servers += server_ids
                 racks[rack_id] = Rack(rack_id=rack_id, hall_id=h["hall_id"], row=row["row"], label=f"Rack {rack_id}",
                                       x=x, y=y, width=rack_cfg["width"], depth=rack_cfg["depth"],
-                                      cooled_by=tuple(row["cooled_by"]), asset_ids=tuple(device_ids))
+                                      cooled_by=tuple(row["cooled_by"]), asset_ids=tuple(device_ids + server_ids),
+                                      server_ids=tuple(server_ids))
                 rack_ids.append(rack_id)
+            if row.get("job") and row_servers:
+                jobs[f"job-{row['row']}"] = Job(job_id=f"job-{row['row']}", name=row["job"], row=row["row"],
+                                                hall_id=h["hall_id"], server_ids=tuple(row_servers))
         halls.append(Hall(hall_id=h["hall_id"], name=h["name"], kind=h["kind"], width=h["width"], depth=h["depth"],
                           rack_ids=tuple(rack_ids), unit_ids=tuple(unit_ids)))
     return Layout(site_id=raw["site"]["site_id"], site_name=raw["site"]["name"], grid_unit=raw["site"]["grid_unit"], halls=halls, racks=racks,
                   assets=assets, placements=placements,
                   chart_fields={t: list(v["chart_fields"]) for t, v in types.items()},
-                  specs={t: dict(v.get("spec", {})) for t, v in types.items()})
+                  specs={t: dict(v.get("spec", {})) for t, v in types.items()}, jobs=jobs)
 
 
 def site_paths() -> dict[str, str]:

@@ -20,6 +20,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import lru_cache
 
 from ..core.config import Settings
 from ..core.errors import ApiError
@@ -32,7 +33,7 @@ from .incidents import now
 from .store import Store
 
 log = logging.getLogger(__name__)
-TYPE_ORDER = ("cooling_unit", "storage_drive", "asic_miner", "industrial_machine")
+TYPE_ORDER = ("cooling_unit", "gpu_server", "storage_drive", "asic_miner", "industrial_machine")
 
 
 def _fleet():
@@ -102,13 +103,27 @@ def _escalate(store: Store, run: LiveRun, f: Fault, settings: Settings) -> None:
     f.escalation = min(fleet.MAX_ESCALATION - 1, f.escalation + rise * ops.tick_hours(settings) / fleet.ESCALATING[f.kind])
 
 
-def _coolers_of(asset_id: str) -> list[str]:
+@lru_cache(maxsize=1024)
+def _coolers_of(asset_id: str) -> tuple[str, ...]:
     from .layout import site_of
 
     lay = site_of(asset_id)
     if lay is None:
-        return []
-    return [c for r in lay.racks.values() if asset_id in r.asset_ids for c in r.cooled_by]
+        return ()
+    return tuple(c for r in lay.racks.values() if asset_id in r.asset_ids for c in r.cooled_by)
+
+
+def _inlet(store: Store, asset_id: str) -> float | None:
+    """Supply air of the warmest cooling unit serving this machine's rack (its latest reading this tick:
+    cooling units come before racks in the layout order)."""
+    temps = []
+    with store.lock:
+        for c in _coolers_of(asset_id):
+            rows = store.readings.get(c)
+            v = rows[-1].reading.values.get("temperature_c") if rows else None
+            if isinstance(v, (int, float)):
+                temps.append(float(v))
+    return max(temps) if temps else None
 
 
 def mark_repaired(store: Store, asset_id: str) -> None:
@@ -333,8 +348,9 @@ def _tick(store: Store, run: LiveRun, settings: Settings) -> None:
                 if phase == "ended":
                     del run.faults[asset.asset_id]
             mitigate = asset.asset_type == "asic_miner" and ops.mitigated(store, asset.asset_id)
+        inlet = _inlet(store, asset.asset_id) if asset.asset_type == "gpu_server" else None
         values = fleet.sample(asset.asset_type, run.profiles[asset.asset_id], run.ticks, run.rngs[asset.asset_id], progress,
-                              fault.kind if fault is not None else None)
+                              fault.kind if fault is not None else None, inlet)
         if mitigate:  # underclocked: less hashrate and power while waiting for the repair
             k = ops.config(settings)["miner"]["underclock_hashrate_factor"]
             values = values | {"hashrate_ths": round(values["hashrate_ths"] * k, 1), "power_w": round(values["power_w"] * k)}

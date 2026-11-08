@@ -7,7 +7,7 @@ def test_health_reports_contract_and_honest_dependencies(client):
     body = HealthResponse.model_validate(r.json())
     assert body.contract_version == "1"
     assert body.dependencies.models == {"cooling-rule-v1": "available", "industrial-failure-v1": "unavailable", "drive-failure-v1": "unavailable",
-                                            "miner-rule-v1": "available"}
+                                            "miner-rule-v1": "available", "server-rule-v1": "available"}
     assert body.dependencies.database == "not_configured"
     assert r.headers["X-Request-ID"].startswith("req-")
 

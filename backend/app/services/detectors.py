@@ -104,6 +104,46 @@ def miner(info: ModelInfo, readings: dict[str, ReadingValue], state: RuleState) 
     return Result(0.5, "medium", False, f"Miner reading out of limits ({n} of {need} consecutive readings needed): {what}.", ev)
 
 
+def server(info: ModelInfo, readings: dict[str, ReadingValue], state: RuleState) -> Result:
+    """GPU server faults held for N consecutive readings. A stopped server or a lost GPU is high risk
+    (it stalls the whole job); lost power-supply redundancy is medium (nothing lost until the second one
+    fails). Heat throttling is not a server fault: it is costed on the cooling unit's incident."""
+    cfg = info.rule_config
+    need = cfg["consecutive_readings"]
+    v = {k: _num(k, readings[k]) for k in readings}
+    gpus = cfg["gpus"]
+    checks = [  # (broken, high risk, evidence, what it means)
+        (v["online"] < 1, True, Evidence(type="sensor_rule", field="online", value=v["online"], threshold=1, unit=None),
+         "server is not responding (management controller still reports)"),
+        (v["gpus_online"] < gpus, True,
+         Evidence(type="sensor_rule", field="gpus_online", value=v["gpus_online"], threshold=gpus, unit="GPUs"),
+         f"{gpus - int(v['gpus_online'])} of {gpus} GPUs dropped off the bus"),
+        (v.get("ecc_errors", 0) > cfg["max_ecc_errors"], True,
+         Evidence(type="sensor_rule", field="ecc_errors", value=v.get("ecc_errors", 0), threshold=cfg["max_ecc_errors"], unit="count"),
+         f"GPU memory errors ({v.get('ecc_errors', 0):.0f}) above {cfg['max_ecc_errors']}"),
+        (v["psu_ok"] < cfg["psus"], False,
+         Evidence(type="sensor_rule", field="psu_ok", value=v["psu_ok"], threshold=cfg["psus"], unit="PSUs"),
+         "one power supply failed; the server has no power redundancy"),
+    ]
+    broken = [c for c in checks if c[0] and not (c[2].field != "online" and v["online"] < 1)]
+    if broken:
+        state.consecutive_above += 1
+    else:
+        state.consecutive_above = 0
+        state.cooldown_remaining = max(0, state.cooldown_remaining - 1)
+    n = state.consecutive_above
+    ev = [e.model_copy(update={"consecutive_readings": n}) for _, _, e, _ in (broken or checks[:1])]
+    if not broken:
+        return Result(0.1, "low", False, f"Server healthy: {int(v['gpus_online'])} of {gpus} GPUs online, "
+                                         f"{int(v['psu_ok'])} of {cfg['psus']} power supplies.", ev)
+    what = "; ".join(t for _, _, _, t in broken)
+    high = any(h for _, h, _, _ in broken)
+    if n >= need:
+        return Result(0.85 if high else 0.55, "high" if high else "medium", state.cooldown_remaining == 0,
+                      f"GPU server fault for {n} consecutive readings: {what}.", ev)
+    return Result(0.5, "medium", False, f"GPU server reading out of limits ({n} of {need} consecutive readings needed): {what}.", ev)
+
+
 @lru_cache(maxsize=4)
 def _load(path: str):
     import joblib

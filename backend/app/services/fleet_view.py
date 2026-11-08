@@ -15,10 +15,11 @@ from __future__ import annotations
 from ..core.config import Settings
 from ..core.errors import not_found
 from ..schemas.fleet import (FleetMap, FleetStatus, FleetSummary, HallMap, HistoryPoint, IncidentBrief,
-                             MachineStatus, RackDetail, RackStatus, SiteInfo, SiteMetric, SitesResponse, WorkOrderBrief)
+                             MachineStatus, RackDetail, RackStatus, ServerDetail, SiteInfo, SiteMetric, SitesResponse,
+                             WorkOrderBrief)
 from ..schemas.incidents import IncidentDetail
 from . import impact as impact_service
-from . import live, mining, ops, whatif
+from . import gpus, live, mining, ops, whatif
 from .incidents import now, summary
 from .layout import Layout, Rack, all_layouts, get_layout
 from .store import Store
@@ -63,6 +64,7 @@ class Snapshot:
                                   and st.orders[t.current].kind == "repair")
             self.techs_total = sum(1 for t in st.techs.values() if t.cfg["site"] == layout.site_id)
             self.in_window = ops.in_window(layout.site_id, 0.0, st, settings)
+            self.jobs = gpus.jobs(store, layout)
             trend_rows = {a: [r.reading for r in store.readings.get(a, [])[-whatif.TREND_READINGS:]]
                           for a, x in layout.assets.items() if x.asset_type in ("cooling_unit", "asic_miner")}
         self.eta = self._etas(trend_rows)
@@ -150,6 +152,10 @@ class Snapshot:
             if m.status in ("warning", "critical") and m.power_state != "off":
                 # Incident titles already name the machine.
                 reasons.append(m.active_incident.title if m.active_incident else f"{m.name}: {m.risk_level} risk reading")
+        hot = sum(int((m.latest_values or {}).get("gpus_throttled", 0)) for m in ms
+                  if m.asset_type == "gpu_server" and m.power_state != "off")
+        if hot:
+            reasons.append(f"{hot} GPUs throttling from heat")
         for c in rack.cooled_by:
             cu = self.machines.get(c)
             if cu is not None and cu.status in ("warning", "critical"):
@@ -203,6 +209,18 @@ class Snapshot:
                           unit=f"of {self.techs_total}", source=ops_src)]
         if self.layout.site_id == "mining":
             return out + self._mining(ms, live_src)
+        if self.jobs:
+            gsrc = f"live GPU readings (simulated) x GPU-hour price ({gpus.PRICE_SOURCE})"
+            out += [
+                SiteMetric(key="gpus_throttling", label="GPUs slowed by heat",
+                           value=sum(j.gpus_throttled for j in self.jobs), unit=f"of {sum(j.gpus for j in self.jobs)}",
+                           source="live GPU readings (simulated)"),
+                SiteMetric(key="gpu_compute_lost_per_hour", label="GPU compute lost right now",
+                           value=round(sum(j.lost_usd_per_hour for j in self.jobs), 2), unit="USD/h", source=gsrc),
+                SiteMetric(key="gpu_jobs_full_speed", label="GPU jobs at full speed",
+                           value=sum(j.pace_pct >= 99 for j in self.jobs), unit=f"of {len(self.jobs)}",
+                           source="live GPU readings (simulated)"),
+            ]
         drives = [m for m in ms if m.asset_type == "storage_drive"]
         coolers = [m.latest_values["temperature_c"] for m in ms if m.asset_type == "cooling_unit" and m.latest_values]
         return out + [
@@ -264,7 +282,8 @@ def fleet_map(store: Store, settings: Settings, history: int, site: str = "datac
                              status=worst([r.status for r in hr] + [u.status for u in units]),
                              racks=hr, machines=units + rack_machines))
     return FleetMap(site_id=layout.site_id, site_name=layout.site_name, grid_unit=layout.grid_unit, generated_at=now(),
-                    live=snap.live, summary=snap.summary(list(racks.values())), site_metrics=snap.metrics(), halls=halls)
+                    live=snap.live, summary=snap.summary(list(racks.values())), site_metrics=snap.metrics(), halls=halls,
+                    jobs=snap.jobs)
 
 
 def fleet_status(store: Store, settings: Settings, history: int, status: str | None, hall_id: str | None,
@@ -301,4 +320,26 @@ def rack_detail(store: Store, settings: Settings, rack_id: str, history: int) ->
         incs = [summary(i) for i in store.incidents.values() if i.asset_id in rack.asset_ids]
     incs.sort(key=lambda i: i.opened_at, reverse=True)
     return RackDetail(**snap.rack(rack).model_dump(), machines=[snap.machines[a] for a in rack.asset_ids],
+                      server_ids=list(rack.server_ids),
                       cooling_units=[snap.machines[c] for c in rack.cooled_by if c in snap.machines], incidents=incs)
+
+
+def server_detail(store: Store, settings: Settings, server_id: str, history: int) -> ServerDetail:
+    """One GPU server: its 8 GPUs, power supplies, inlet air, and the job it is part of."""
+    layout = next((lay for lay in all_layouts() if server_id in lay.assets), None)
+    if layout is None or layout.assets[server_id].asset_type != "gpu_server":
+        raise not_found("SERVER_NOT_FOUND", f"GPU server '{server_id}' does not exist.", server_id=server_id)
+    snap = Snapshot(store, layout, history, settings)
+    m = snap.machines[server_id]
+    rack = layout.racks[m.placement.rack_id]
+    v = m.latest_values if m.power_state != "off" else None
+    job = layout.job_of(server_id)
+    num = lambda k: v.get(k) if v else None  # noqa: E731
+    return ServerDetail(
+        machine=m, rack_id=rack.rack_id, inlet_temp_c=num("inlet_temp_c"),
+        online=None if v is None else bool(v.get("online", 1)), psus_ok=num("psu_ok"), psus_total=2,
+        ecc_errors=num("ecc_errors"), power_w=0.0 if m.power_state == "off" else num("power_w"),
+        gpus=gpus.gpu_list(v, layout) if m.power_state != "off" else
+        [g.model_copy(update={"status": "offline", "clock_pct": 0.0}) for g in gpus.gpu_list(None, layout)],
+        job=next((j for j in snap.jobs if job and j.job_id == job.job_id), None),
+        cooled_by=[snap.machines[c] for c in rack.cooled_by if c in snap.machines])

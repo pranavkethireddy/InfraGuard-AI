@@ -21,7 +21,7 @@ from ..core.config import Settings
 from ..core.errors import not_found
 from ..schemas.ops import CurvePoint, OptionCosts, WhatIf, WhatIfOption
 from . import impact as impact_service
-from . import mining, ops
+from . import gpus, mining, ops
 from .assets import all_assets
 from .incidents import now
 from .layout import site_of
@@ -89,9 +89,11 @@ def _path(store: Store, settings: Settings, inc, asset, imp) -> Path_:
     if inc.detector_id == "cooling-rule-v1":
         ys = _series(store, asset.asset_id, "temperature_c")
         th = cfg["thermal"]
+        with store.lock:  # GPU jobs on the racks it cools are already slowed by the heat
+            slow = gpus.lost_per_hour_from_cooling(store, asset.asset_id)
         return Path_("temperature_c", "C", ys[-1] if ys else None, max(0.0, trend_per_hour(ys, settings, CAUTIOUS_Q)),
-                     th["rack_shutdown_c"], min(ys) if ys else None, 0.0, per_h, th["mitigation"],
-                     th["mitigated_rise_factor"], th["mitigation_cost_per_hour"], 0.0, None, band=wobble(ys, settings))
+                     th["rack_shutdown_c"], min(ys) if ys else None, slow, per_h, th["mitigation"],
+                     th["mitigated_rise_factor"], th["mitigation_cost_per_hour"], slow, None, band=wobble(ys, settings))
     if inc.detector_id == "miner-rule-v1":
         hp = mining.hashprice(settings.hashprice_data_path)
         price_h = (hp.usd_per_th_day / 24) if hp else 0.0
@@ -110,11 +112,34 @@ def _path(store: Store, settings: Settings, inc, asset, imp) -> Path_:
                          band=wobble(chip, settings))
         return Path_("hashrate_ths", "TH/s", ths[-1] if ths else None, 0.0, None, None, lost_now, per_h, None, 1.0,
                      0.0, lost_now, None, rated=rated)
+    if inc.detector_id == "server-rule-v1":
+        return _server_path(store, asset, imp, per_h)
     cost_fail = impact_service.compute(imp).cost_if_it_fails if imp else None
     note = ("The model gives a high 30-day failure risk, not a failure time, so the timing is not projected. "
             f"If it fails before the repair: about ${cost_fail:,.0f} (downtime plus unplanned repair)." if cost_fail
             else "Failure timing is not projected for this detector.")
     return Path_(None, None, None, 0.0, None, None, 0.0, per_h, None, 1.0, 0.0, 0.0, note)
+
+
+def _server_path(store: Store, asset, imp, per_h: float) -> Path_:
+    """GPU server fault. A stopped server or lost GPU stalls its whole job until the job is restarted
+    without it (the mitigation), after which only its own GPUs are lost. A lost power supply costs
+    nothing until the second one fails."""
+    with store.lock:
+        rows = store.readings.get(asset.asset_id)
+        v = rows[-1].reading.values if rows else {}
+    lay = site_of(asset.asset_id)
+    sp = gpus.spec(lay)
+    own = int(sp.get("gpus", 8)) * float(sp.get("gpu_hour_usd", 0.0))
+    stalled = (not v.get("online", 1)) or v.get("gpus_online", 8) < int(sp.get("gpus", 8))
+    if stalled:
+        return Path_("compute_pct", "%", float(v.get("compute_pct", 0.0)), 0.0, None, None, per_h, per_h,
+                     "Restart the job from its last checkpoint without this server", 1.0, 0.0, own,
+                     None, rated=None)
+    note = (f"No compute is lost yet, but the server has no spare power supply: if the second one fails, it stops "
+            f"and stalls its job (about ${per_h:,.0f}/h).")
+    return Path_("compute_pct", "%", float(v.get("compute_pct", 100.0)), 0.0, None, None, 0.0, per_h, None, 1.0, 0.0,
+                 0.0, note)
 
 
 def _project(p: Path_, start: float | None, repair_h: float, mitigate: bool, site: str, st, settings: Settings,
@@ -171,7 +196,7 @@ def compute(store: Store, settings: Settings, incident_id: str) -> WhatIf:
     repair_h = imp.estimated_repair_hours if imp and imp.estimated_repair_hours else 1.0
     horizon = float(cfg["projection_hours"])
     restart_h = cfg["thermal"]["restart_hours"]
-    already_failed = inc.detector_id == "miner-rule-v1" and p.metric == "hashrate_ths"
+    already_failed = (inc.detector_id == "miner-rule-v1" and p.metric == "hashrate_ths") or inc.detector_id == "server-rule-v1"
 
     def option(oid: str, label: str, desc: str, cand, start: float | None, mitigate: bool) -> WhatIfOption:
         curve, sd, down, loss, done = _project(p, start, repair_h, mitigate, lay.site_id, st, settings, horizon, restart_h)

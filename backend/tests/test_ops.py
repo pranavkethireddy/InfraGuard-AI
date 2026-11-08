@@ -141,7 +141,7 @@ def test_cooling_fault_shuts_racks_down_and_a_repair_brings_them_back(client, se
                 break
             time.sleep(0.05)
         assert {m.placement.row for m in off} == {"B1"} and "Thermal shutdown" in off[0].power_reason
-        assert st.summary.machines_powered_off == len(off) == 8
+        assert st.summary.machines_powered_off == len(off) == 24  # 4 racks x (2 drives + 4 GPU servers)
         rack = RackDetail.model_validate(client.get("/api/v1/fleet/racks/B1-01?history=0").json())
         assert rack.power_state == "off" and any("Thermal shutdown" in r for r in rack.reasons)
         inc = next(i["incident_id"] for i in client.get("/api/v1/incidents").json()["items"] if i["asset_id"] == "cooling-03")

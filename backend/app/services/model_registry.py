@@ -12,7 +12,9 @@ COOLING_RULE_ID = "cooling-rule-v1"
 INDUSTRIAL_ID = "industrial-failure-v1"
 DRIVE_ID = "drive-failure-v1"
 MINER_RULE_ID = "miner-rule-v1"
-RULE_IDS = (COOLING_RULE_ID, MINER_RULE_ID)
+SERVER_RULE_ID = "server-rule-v1"
+RULE_IDS = (COOLING_RULE_ID, MINER_RULE_ID, SERVER_RULE_ID)
+GPUS_PER_SERVER = 8
 DRIVE_FEATURES = [
     ("reallocated_sectors", "count"), ("reported_uncorrectable", "count"), ("command_timeout", "count"),
     ("pending_sectors", "count"), ("offline_uncorrectable", "count"), ("crc_errors", "count"),
@@ -117,6 +119,41 @@ def list_models(settings: Settings) -> list[ModelInfo]:
             source_dataset=None,
             model_card_url=None,
             limitations=["No public labelled ASIC failure dataset exists; this is a transparent rule, not a trained model.",
+                         "Thresholds are demo assumptions, not vendor limits."],
+        ),
+        ModelInfo(
+            detector_id=SERVER_RULE_ID,
+            model_name="gpu-server-rule",
+            model_version="1.0.0",
+            kind="rule",
+            asset_types=["gpu_server"],
+            score_kind="heuristic",
+            target="sustained GPU server fault: server not responding, GPU off the bus, GPU memory errors or lost power redundancy",
+            prediction_horizon_hours=None,
+            input_fields=[
+                InputField(name="online", unit=None, required=True),
+                InputField(name="gpus_online", unit="GPUs", required=True),
+                InputField(name="psu_ok", unit="PSUs", required=True),
+                InputField(name="ecc_errors", unit="count", required=False),
+                InputField(name="inlet_temp_c", unit="C", required=False),
+                InputField(name="gpus_throttled", unit="GPUs", required=False),
+                InputField(name="max_gpu_temp_c", unit="C", required=False),
+                InputField(name="min_gpu_clock_pct", unit="%", required=False),
+                InputField(name="compute_pct", unit="%", required=False),
+                InputField(name="power_w", unit="W", required=False),
+                *[InputField(name=f"gpu{i}_{f}", unit=u, required=False)
+                  for i in range(1, GPUS_PER_SERVER + 1) for f, u in (("temp_c", "C"), ("clock_pct", "%"))],
+            ],
+            risk_thresholds=RiskThresholds(medium=0.4, high=0.7),
+            # Demo assumptions; not vendor limits.
+            rule_config={"gpus": GPUS_PER_SERVER, "psus": 2, "max_ecc_errors": 10, "consecutive_readings": 3,
+                         "cooldown_readings": 3},
+            status="available",
+            evaluation_status="not_applicable",
+            metrics=None,
+            source_dataset=None,
+            model_card_url=None,
+            limitations=["Transparent rule on simulated server telemetry, not a trained model.",
                          "Thresholds are demo assumptions, not vendor limits."],
         ),
     ]

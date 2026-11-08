@@ -14,14 +14,14 @@ def test_list_assets(client):
     assert r.status_code == 200
     page = Page[AssetSummary].model_validate(r.json())
     ids = [a.asset_id for a in page.items]
-    assert page.total == 190 and ids == sorted(ids)
+    assert page.total == 262 and ids == sorted(ids)
     assert {"cooling-01", "drive-01", "mill-01"} <= set(ids)
     assert all(a.data_origin == "simulated" for a in page.items)
 
 
 def test_list_assets_pagination(client):
     page = client.get("/api/v1/assets?limit=1&offset=1").json()
-    assert page["total"] == 190 and page["limit"] == 1 and page["offset"] == 1
+    assert page["total"] == 262 and page["limit"] == 1 and page["offset"] == 1
     assert [a["asset_id"] for a in page["items"]] == ["cooling-02"]
 
 

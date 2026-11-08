@@ -11,7 +11,8 @@ from .incidents import IncidentSummary
 # incident, or (racks) a cooling unit serving the rack is not healthy; healthy: latest risk low; no_data: no readings.
 HealthStatus = Literal["healthy", "warning", "critical", "no_data"]
 LiveState = Literal["running", "stopped"]
-FaultKind = Literal["cooling_failure", "drive_degradation", "machine_overstrain", "fan_failure", "hashboard_failure"]
+FaultKind = Literal["cooling_failure", "drive_degradation", "machine_overstrain", "fan_failure", "hashboard_failure",
+                    "gpu_fault", "psu_failure", "server_crash"]
 SiteId = Literal["datacenter", "mining"]
 FaultPhase = Literal["ramping", "holding", "recovering", "ended"]
 
@@ -158,6 +159,49 @@ class LiveStatus(ContractModel):
     active_faults: list[FaultInfo]
 
 
+class GpuStatus(ContractModel):
+    index: int
+    temp_c: float | None
+    clock_pct: float | None
+    # throttling: hot enough that the GPU slowed its clock; offline: dropped off the bus or server down.
+    status: Literal["ok", "throttling", "offline", "no_data"]
+    throttle_c: float
+
+
+class JobStatus(ContractModel):
+    """One synchronous GPU job across a row's servers: the slowest GPU sets its pace."""
+
+    job_id: str
+    name: str
+    row: str
+    hall_id: str
+    server_ids: list[str]
+    gpus: int
+    gpus_running: int
+    pace_pct: float
+    gpus_throttled: int
+    servers_down: list[str]
+    # Compute paid for but not delivered right now: idle GPUs plus the slowdown of the running ones.
+    lost_usd_per_hour: float
+    gpu_hour_usd: float
+    reasons: list[str]
+    assumptions_source: str
+
+
+class ServerDetail(ContractModel):
+    machine: MachineStatus
+    rack_id: str
+    inlet_temp_c: float | None
+    online: bool | None
+    psus_ok: int | None
+    psus_total: int
+    ecc_errors: int | None
+    power_w: float | None
+    gpus: list[GpuStatus]
+    job: JobStatus | None
+    cooled_by: list[MachineStatus]
+
+
 class FleetMap(ContractModel):
     site_id: SiteId = "datacenter"
     site_name: str
@@ -167,6 +211,7 @@ class FleetMap(ContractModel):
     summary: FleetSummary
     site_metrics: list[SiteMetric] = []
     halls: list[HallMap]
+    jobs: list[JobStatus] = []
 
 
 class FleetStatus(ContractModel):
@@ -195,6 +240,7 @@ class SitesResponse(ContractModel):
 
 class RackDetail(RackStatus):
     machines: list[MachineStatus]
+    server_ids: list[str] = []
     cooling_units: list[MachineStatus]
     incidents: list[IncidentSummary]
 
