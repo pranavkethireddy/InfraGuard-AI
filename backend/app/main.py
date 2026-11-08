@@ -39,6 +39,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             from .services import live
 
             live.start(app.state.store, LiveStartRequest(), settings)
+            if settings.chaos_autostart:
+                from .services import chaos
+
+                chaos.set_enabled(app.state.store, settings, True)
             yield
             live.stop(app.state.store, settings)
         else:

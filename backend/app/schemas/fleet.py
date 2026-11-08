@@ -147,6 +147,17 @@ class SiteMetric(ContractModel):
     source: str
 
 
+class ChaosRequest(ContractModel):
+    enabled: bool
+
+
+class ChaosStatus(ContractModel):
+    """Demo chaos mode: random GPU server faults and priority changes, never touching protected technicians."""
+    enabled: bool
+    protected_technicians: list[str]
+    active_faults: list[str]
+
+
 class LiveStatus(ContractModel):
     status: LiveState
     run_id: str | None
