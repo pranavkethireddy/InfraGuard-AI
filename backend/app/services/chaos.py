@@ -5,7 +5,8 @@
   and drives do not crowd out the UPS, chillers or door access), then a healthy machine of that type, then any of
   its fault kinds, server parts included. `kinds` set to a list limits chaos to those kinds instead. The new
   incident is dispatched automatically to the closest qualified technician, never a protected one.
-- Every `reprioritize_every_ticks`, one open chaos incident gets a new random priority (1-5). Queues re-sort by
+- Every `reprioritize_every_ticks`, one open chaos incident gets more urgent: a random higher rank
+  (rank 5 = most urgent). Priority never goes back down. Queues re-sort by
   priority, and a waiting repair that is now more urgent than a technician's current one takes over (see
   ops.advance). Work assigned to a protected technician is never touched.
 Settings: configs/operations.json "chaos"."""
@@ -23,8 +24,8 @@ from .store import Store
 
 log = logging.getLogger(__name__)
 
-# The priority_index in the middle of each rank's band (rank 1 = fix first).
-RANK_INDEX = {1: 0.9, 2: 0.7, 3: 0.5, 4: 0.3, 5: 0.1}
+# The priority_index in the middle of each rank's band (rank 5 = most urgent).
+RANK_INDEX = {5: 0.9, 4: 0.7, 3: 0.5, 2: 0.3, 1: 0.1}
 
 
 def config(settings: Settings) -> dict:
@@ -143,11 +144,13 @@ def _reprioritize(store: Store, run, settings: Settings, rng: random.Random) -> 
             o = ops.active_order_for(st, inc.incident_id)
             if o is not None and o.technician_id in keep:
                 continue
+            if (inc.priority_rank or 1) >= 5:
+                continue  # already the most urgent
             pool.append(inc)
         if not pool:
             return
         inc = rng.choice(sorted(pool, key=lambda i: i.incident_id))
-        new = rng.choice([r for r in RANK_INDEX if r != inc.priority_rank])
+        new = rng.choice([r for r in RANK_INDEX if r > (inc.priority_rank or 1)])  # only more urgent
         inc.priority_index, inc.priority_rank = RANK_INDEX[new], new
         st.version += 1  # queues re-sort on the next crew tick; pushes the change to the crew stream
     log.info("chaos: %s is now priority %d", inc.incident_id, new)

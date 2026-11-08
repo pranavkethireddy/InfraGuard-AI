@@ -31,7 +31,7 @@ class IncidentSummary(ContractModel):
     prediction_count: int = Field(ge=1)
     simulation_id: str | None
     priority_index: float | None = Field(ge=0, le=1)
-    # 1 = fix first ... 5 = can wait. Recomputed whenever the risk changes.
+    # 5 = most urgent (fix first) ... 1 = least urgent. Only ever goes up, when the risk rises.
     priority_rank: int | None = Field(default=None, ge=1, le=5)
 
 

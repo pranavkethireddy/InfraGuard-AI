@@ -171,4 +171,4 @@ def test_live_incident_pages_the_closest_technician_automatically(client, settin
 def test_priority_rank_buckets():
     from backend.app.services import incidents
 
-    assert [incidents.rank(p) for p in (0.95, 0.7, 0.5, 0.3, 0.0, None)] == [1, 2, 3, 4, 5, 5]
+    assert [incidents.rank(p) for p in (0.95, 0.7, 0.5, 0.3, 0.0, None)] == [5, 4, 3, 2, 1, 1]
