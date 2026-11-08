@@ -1,0 +1,113 @@
+{
+  "incident_id": "inc-demo-001",
+  "asset_id": "cooling-01",
+  "detector_id": "cooling-rule-v1",
+  "status": "open",
+  "risk_level": "high",
+  "score_kind": "heuristic",
+  "data_origin": "simulated",
+  "title": "Sustained high temperature on CRAC Unit 1",
+  "opened_at": "2026-11-07T20:00:01Z",
+  "last_seen_at": "2026-11-07T20:00:01Z",
+  "acknowledged_at": null,
+  "resolved_at": null,
+  "resolved_by": null,
+  "prediction_count": 1,
+  "simulation_id": "sim-demo-001",
+  "priority_index": 0.86,
+  "latest_prediction": {
+    "prediction_id": "pred-demo-001",
+    "asset_id": "cooling-01",
+    "detector_id": "cooling-rule-v1",
+    "observed_at": "2026-11-07T20:00:00Z",
+    "generated_at": "2026-11-07T20:00:01Z",
+    "data_origin": "simulated",
+    "model_name": "cooling-rule",
+    "model_version": "1.0.0",
+    "target": "sustained supply temperature above configured threshold",
+    "risk_score": 0.8,
+    "score_kind": "heuristic",
+    "risk_level": "high",
+    "prediction_horizon_hours": null,
+    "explanation": "Temperature stayed above the configured 32.0 C threshold for 3 consecutive readings.",
+    "explanation_source": "rule",
+    "evidence": [
+      {
+        "type": "sensor_rule",
+        "field": "temperature_c",
+        "value": 35.0,
+        "threshold": 32.0,
+        "unit": "C",
+        "consecutive_readings": 3
+      }
+    ],
+    "maintenance_sources": [],
+    "limitations": [
+      "Rule thresholds are demo assumptions, not facility safety specifications."
+    ],
+    "incident_id": "inc-demo-001",
+    "simulation_id": "sim-demo-001"
+  },
+  "evidence": [
+    {
+      "type": "sensor_rule",
+      "field": "temperature_c",
+      "value": 35.0,
+      "threshold": 32.0,
+      "unit": "C",
+      "consecutive_readings": 3
+    }
+  ],
+  "maintenance_sources": [
+    {
+      "record_id": "mr-0042",
+      "asset_id": "cooling-01",
+      "recorded_at": "2025-08-14T09:30:00Z",
+      "source_name": "demo maintenance log (seeded)",
+      "excerpt": "Replaced clogged air filter on CRAC 1; supply temperature had drifted up over two days.",
+      "score": 0.71
+    }
+  ],
+  "explanation": "Supply temperature stayed above the 32.0 C threshold for 3 consecutive readings while fan speed fell. A similar drift in Aug 2025 was traced to a clogged air filter (mr-0042). Estimated impact is $51,500 (demo assumptions, not measured).",
+  "explanation_source": "agent",
+  "recommended_actions": [
+    "Inspect CRAC 1 air filter and fan (human review required).",
+    "Check supply and return air temperatures against the setpoint."
+  ],
+  "impact": {
+    "currency": "USD",
+    "estimated_downtime_hours": 4.0,
+    "cost_per_hour": 12000.0,
+    "estimated_repair_cost": 3500.0,
+    "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured",
+    "estimated_downtime_cost": 48000.0,
+    "estimated_total_impact": 51500.0,
+    "cost_per_day": 288000.0,
+    "estimated_repair_hours": 3.0
+  },
+  "priority_weights": {
+    "risk": 0.5,
+    "criticality": 0.3,
+    "impact": 0.2
+  },
+  "notes": [],
+  "agent_steps": [
+    {
+      "tool": "get_incident",
+      "summary": "high risk, cooling-rule-v1, temperature_c 35.0 above 32.0 for 3 readings"
+    },
+    {
+      "tool": "get_recent_readings",
+      "summary": "10 readings; temperature rising, fan speed falling"
+    },
+    {
+      "tool": "search_maintenance",
+      "summary": "1 match: mr-0042 (clogged air filter)"
+    },
+    {
+      "tool": "estimate_impact",
+      "summary": "$12,000/h, $288,000/day, repair $3,500 over 3 h (demo assumptions)"
+    }
+  ],
+  "investigation_status": null
+}

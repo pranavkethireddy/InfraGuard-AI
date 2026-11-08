@@ -2,7 +2,7 @@
 
 import json
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import Request, urlopen
 
 
@@ -67,6 +67,15 @@ class SimulationClient:
 
     def status(self, simulation_id):
         return self._request("GET", "/simulations/" + self._id(simulation_id))
+
+    def list_runs(self, *, status=None, asset_id=None):
+        """Discover runs after restarting the CLI, using the backend list route."""
+        if status is not None and status not in ("running", "completed", "reset"):
+            raise ValueError("status must be running, completed, or reset")
+        if asset_id is not None and (not isinstance(asset_id, str) or not asset_id.strip()):
+            raise ValueError("asset_id must be a non-empty string")
+        query = urlencode({k: v for k, v in {"status": status, "asset_id": asset_id}.items() if v is not None})
+        return self._request("GET", "/simulations" + ("?" + query if query else ""))
 
     def reset(self, simulation_id):
         return self._request("POST", "/simulations/" + self._id(simulation_id) + "/reset")

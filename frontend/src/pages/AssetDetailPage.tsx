@@ -47,8 +47,8 @@ export function AssetDetailPage({ id }: { id: string }) {
     <>
       <PageHeader title={a.name} meta={<>{a.asset_id} · {a.asset_type} · {a.location}</>}
         actions={<><RiskBadge level={a.current_risk_level} /><OriginBadge origin={a.data_origin} /></>} />
-      <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-6">
           <Section title="Temperature trend" aside={readings.data && <Mono>{readings.data.total} readings · limit {readings.data.limit}</Mono>}>
             {readings.isLoading ? <Loading /> : readings.error ? <ErrorState error={readings.error} />
               : readings.data?.items.length ? <ReadingsChart readings={readings.data.items} threshold={threshold} /> : <Empty>No readings in the returned window.</Empty>}
@@ -57,7 +57,7 @@ export function AssetDetailPage({ id }: { id: string }) {
             {readings.data?.items.length ? <ReadingsTable readings={readings.data.items} /> : readings.isLoading ? <Loading /> : <Empty>No readings.</Empty>}
           </Section>
         </div>
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-6">
           <Section title="Asset">
             <Fields rows={[
               ["Type", <Mono>{a.asset_type}</Mono>],

@@ -25,6 +25,9 @@ def main(argv=None):
     for name in ("status", "reset"):
         p = commands.add_parser(name)
         p.add_argument("simulation_id")
+    p = commands.add_parser("list", help="Find backend runs, including recovery after restarting the CLI")
+    p.add_argument("--status", choices=("running", "completed", "reset"))
+    p.add_argument("--asset-id")
     args = parser.parse_args(argv)
     try:
         if args.command == "preview":
@@ -36,6 +39,8 @@ def main(argv=None):
             client = SimulationClient(args.base_url)
             if args.command == "start":
                 result = client.start(args.scenario, args.seed, args.asset_id)
+            elif args.command == "list":
+                result = client.list_runs(status=args.status, asset_id=args.asset_id)
             else:
                 result = getattr(client, args.command)(args.simulation_id)
         print(json.dumps(result, indent=2, allow_nan=False))

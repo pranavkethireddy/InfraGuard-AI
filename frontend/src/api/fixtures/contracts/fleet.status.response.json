@@ -1,0 +1,338 @@
+{
+  "site_id": "datacenter",
+  "generated_at": "2026-11-08T00:10:09.300385Z",
+  "live": {
+    "status": "running",
+    "run_id": "live-000001",
+    "seed": 42,
+    "tick_seconds": 1.0,
+    "started_at": "2026-11-08T00:09:57.407433Z",
+    "stopped_at": null,
+    "ticks": 12,
+    "auto_investigate": true,
+    "active_faults": [
+      {
+        "asset_id": "cooling-02",
+        "kind": "cooling_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "drive-05",
+        "kind": "drive_degradation",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "mill-02",
+        "kind": "machine_overstrain",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "miner-05",
+        "kind": "fan_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "fanwall-m3",
+        "kind": "cooling_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      }
+    ]
+  },
+  "summary": {
+    "machines": 42,
+    "racks": 18,
+    "healthy": 39,
+    "warning": 0,
+    "critical": 3,
+    "no_data": 0,
+    "open_incidents": 3,
+    "racks_affected": 6,
+    "downtime_cost_per_day_at_risk": 372000.0,
+    "currency": "USD",
+    "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured",
+    "cost_if_all_fail": 75900.0,
+    "cost_to_fix_all_now": 2800.0,
+    "savings_if_fixed_now": 73100.0
+  },
+  "site_metrics": [
+    {
+      "key": "healthy_pct",
+      "label": "Machines healthy",
+      "value": 92.9,
+      "unit": "%",
+      "source": "live readings (simulated)"
+    },
+    {
+      "key": "drives_at_risk",
+      "label": "Drives predicted to fail (30 days)",
+      "value": 1.0,
+      "unit": "drives",
+      "source": "drive-failure-v1, trained on Backblaze Drive Stats"
+    },
+    {
+      "key": "max_supply_temp_c",
+      "label": "Hottest cooling unit",
+      "value": 37.01,
+      "unit": "C",
+      "source": "live readings (simulated)"
+    }
+  ],
+  "machines": [
+    {
+      "asset_id": "cooling-02",
+      "name": "CRAC Unit 2",
+      "asset_type": "cooling_unit",
+      "criticality": "high",
+      "detector_id": "cooling-rule-v1",
+      "location": "Hall A",
+      "placement": {
+        "hall_id": "hall-a",
+        "row": null,
+        "rack_id": null,
+        "slot": null,
+        "x": 1.0,
+        "y": 8.0
+      },
+      "status": "critical",
+      "risk_level": "high",
+      "risk_score": 0.8,
+      "latest_values": {
+        "temperature_c": 37.01,
+        "fan_speed_rpm": 760.1
+      },
+      "last_reading_at": "2026-11-08T00:10:08.645635Z",
+      "chart_fields": [
+        "temperature_c",
+        "fan_speed_rpm"
+      ],
+      "active_incident": {
+        "incident_id": "inc-001717",
+        "title": "Sustained high temperature on CRAC Unit 2",
+        "status": "open",
+        "risk_level": "high",
+        "opened_at": "2026-11-08T00:10:06.635476Z",
+        "estimated_total_impact": 51500.0,
+        "cost_per_day": 288000.0,
+        "investigation_status": "completed"
+      },
+      "simulated_fault": {
+        "asset_id": "cooling-02",
+        "kind": "cooling_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      "history": [
+        {
+          "observed_at": "2026-11-08T00:10:06.635476Z",
+          "values": {
+            "temperature_c": 37.41,
+            "fan_speed_rpm": 764.3
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:07.640557Z",
+          "values": {
+            "temperature_c": 37.45,
+            "fan_speed_rpm": 777.7
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:08.645635Z",
+          "values": {
+            "temperature_c": 37.01,
+            "fan_speed_rpm": 760.1
+          }
+        }
+      ]
+    },
+    {
+      "asset_id": "drive-05",
+      "name": "Rack A1-03, Drive Bay 1",
+      "asset_type": "storage_drive",
+      "criticality": "medium",
+      "detector_id": "drive-failure-v1",
+      "location": "Hall A, Row A1, Rack A1-03, Drive Bay 1",
+      "placement": {
+        "hall_id": "hall-a",
+        "row": "A1",
+        "rack_id": "A1-03",
+        "slot": 1,
+        "x": 8.0,
+        "y": 3.0
+      },
+      "status": "critical",
+      "risk_level": "high",
+      "risk_score": 0.858459,
+      "latest_values": {
+        "reallocated_sectors": 5000,
+        "reported_uncorrectable": 300,
+        "command_timeout": 0,
+        "pending_sectors": 800,
+        "offline_uncorrectable": 800,
+        "crc_errors": 0,
+        "power_on_hours": 34913,
+        "temperature_c": 37.1
+      },
+      "last_reading_at": "2026-11-08T00:10:08.645635Z",
+      "chart_fields": [
+        "temperature_c",
+        "reallocated_sectors",
+        "pending_sectors"
+      ],
+      "active_incident": {
+        "incident_id": "inc-000769",
+        "title": "Predicted drive failure within 30 days: Rack A1-03, Drive Bay 1",
+        "status": "open",
+        "risk_level": "high",
+        "opened_at": "2026-11-08T00:10:01.610076Z",
+        "estimated_total_impact": 3400.0,
+        "cost_per_day": 36000.0,
+        "investigation_status": "completed"
+      },
+      "simulated_fault": {
+        "asset_id": "drive-05",
+        "kind": "drive_degradation",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      "history": [
+        {
+          "observed_at": "2026-11-08T00:10:06.635476Z",
+          "values": {
+            "reallocated_sectors": 5000,
+            "reported_uncorrectable": 300,
+            "command_timeout": 0,
+            "pending_sectors": 800,
+            "offline_uncorrectable": 800,
+            "crc_errors": 0,
+            "power_on_hours": 34913,
+            "temperature_c": 36.6
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:07.640557Z",
+          "values": {
+            "reallocated_sectors": 5000,
+            "reported_uncorrectable": 300,
+            "command_timeout": 0,
+            "pending_sectors": 800,
+            "offline_uncorrectable": 800,
+            "crc_errors": 0,
+            "power_on_hours": 34913,
+            "temperature_c": 37.3
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:08.645635Z",
+          "values": {
+            "reallocated_sectors": 5000,
+            "reported_uncorrectable": 300,
+            "command_timeout": 0,
+            "pending_sectors": 800,
+            "offline_uncorrectable": 800,
+            "crc_errors": 0,
+            "power_on_hours": 34913,
+            "temperature_c": 37.1
+          }
+        }
+      ]
+    },
+    {
+      "asset_id": "mill-02",
+      "name": "AI4I Benchmark Machine 2",
+      "asset_type": "industrial_machine",
+      "criticality": "medium",
+      "detector_id": "industrial-failure-v1",
+      "location": "Plant Room",
+      "placement": {
+        "hall_id": "plant",
+        "row": null,
+        "rack_id": null,
+        "slot": null,
+        "x": 6.0,
+        "y": 3.0
+      },
+      "status": "critical",
+      "risk_level": "high",
+      "risk_score": 0.999995,
+      "latest_values": {
+        "type": "L",
+        "air_temperature_k": 300.96,
+        "process_temperature_k": 310.77,
+        "rotational_speed_rpm": 1285,
+        "torque_nm": 72.7,
+        "tool_wear_min": 230
+      },
+      "last_reading_at": "2026-11-08T00:10:08.645635Z",
+      "chart_fields": [
+        "torque_nm",
+        "rotational_speed_rpm",
+        "tool_wear_min"
+      ],
+      "active_incident": {
+        "incident_id": "inc-001565",
+        "title": "Elevated failure risk on AI4I Benchmark Machine 2",
+        "status": "open",
+        "risk_level": "high",
+        "opened_at": "2026-11-08T00:10:05.630393Z",
+        "estimated_total_impact": 21000.0,
+        "cost_per_day": 48000.0,
+        "investigation_status": "completed"
+      },
+      "simulated_fault": {
+        "asset_id": "mill-02",
+        "kind": "machine_overstrain",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      "history": [
+        {
+          "observed_at": "2026-11-08T00:10:06.635476Z",
+          "values": {
+            "type": "L",
+            "air_temperature_k": 300.8,
+            "process_temperature_k": 310.98,
+            "rotational_speed_rpm": 1264,
+            "torque_nm": 70.0,
+            "tool_wear_min": 230
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:07.640557Z",
+          "values": {
+            "type": "L",
+            "air_temperature_k": 300.82,
+            "process_temperature_k": 310.64,
+            "rotational_speed_rpm": 1291,
+            "torque_nm": 71.0,
+            "tool_wear_min": 230
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:08.645635Z",
+          "values": {
+            "type": "L",
+            "air_temperature_k": 300.96,
+            "process_temperature_k": 310.77,
+            "rotational_speed_rpm": 1285,
+            "torque_nm": 72.7,
+            "tool_wear_min": 230
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,14 +1,14 @@
-import type { ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/api/client";
 import type { DataOrigin, IncidentStatus, RiskLevel, ScoreKind } from "@/api/types";
 
 export function PageHeader({ title, meta, actions }: { title: string; meta?: ReactNode; actions?: ReactNode }) {
   return (
-    <header className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-rule-strong pb-3">
+    <header className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
       <div className="min-w-0">
-        <h1 className="font-display text-[22px] font-semibold leading-tight tracking-tight text-foreground">{title}</h1>
-        {meta && <div className="mt-1 font-mono text-xs text-muted-foreground">{meta}</div>}
+        <h1 className="font-display text-[30px] font-semibold leading-tight text-foreground">{title}</h1>
+        {meta && <div className="mt-2 max-w-3xl text-[13px] text-muted-foreground">{meta}</div>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-1.5">{actions}</div>}
     </header>
@@ -20,32 +20,33 @@ export function Section({ title, aside, children, flush = false, className = "" 
   title: string; aside?: ReactNode; children: ReactNode; flush?: boolean; className?: string;
 }) {
   return (
-    <section className={`border border-border bg-card ${className}`} aria-label={title}>
-      <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
-        <h2 className="eyebrow !text-foreground">{title}</h2>
-        {aside && <div className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">{aside}</div>}
+    <section className={`min-w-0 rounded-lg border border-border bg-card ${className}`} aria-label={title}>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        {aside && <div className="min-w-0 text-xs text-muted-foreground">{aside}</div>}
       </div>
-      <div className={flush ? "" : "p-3"}>{children}</div>
+      <div className={flush ? "overflow-x-auto rounded-b-lg" : "min-w-0 overflow-x-auto p-5"}>{children}</div>
     </section>
   );
 }
 
-type Tone = "neutral" | "accent" | "attention" | "strong";
+type Tone = "neutral" | "accent" | "attention" | "strong" | "healthy";
 const toneCls: Record<Tone, string> = {
   neutral: "border-border bg-muted text-muted-foreground",
   accent: "border-primary/30 bg-accent text-accent-foreground",
   attention: "border-attention/50 bg-attention-surface text-attention-foreground",
-  strong: "border-attention bg-attention text-foreground",
+  strong: "border-destructive bg-card text-destructive",
+  healthy: "border-healthy bg-healthy-surface text-healthy-foreground",
 };
 export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: Tone }) {
   return (
-    <span className={`inline-flex items-center whitespace-nowrap rounded-sm border px-1.5 py-px text-[11px] font-medium leading-4 ${toneCls[tone]}`}>
+    <span className={`inline-flex items-center whitespace-nowrap rounded-sm border px-2 py-0.5 text-[11px] font-medium leading-4 ${toneCls[tone]}`}>
       {children}
     </span>
   );
 }
 
-const riskTone: Record<RiskLevel, Tone> = { low: "neutral", medium: "attention", high: "strong" };
+const riskTone: Record<RiskLevel, Tone> = { low: "healthy", medium: "attention", high: "strong" };
 export function RiskBadge({ level }: { level: RiskLevel | null }) {
   if (!level) return <Badge>Risk: none reported</Badge>;
   return <Badge tone={riskTone[level]}>Risk: {level}</Badge>;
@@ -94,7 +95,7 @@ export const Mono = ({ children }: { children: ReactNode }) => <span className="
 
 export function money(v: number | null | undefined, currency = "USD") {
   if (v == null) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(v);
+  return new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(v);
 }
 /** Deterministic UTC timestamp: 2026-11-07 20:00 UTC */
 export function dt(v: string | null | undefined) {
@@ -135,7 +136,12 @@ export const Loading = ({ label = "Loading…" }: { label?: string }) => (
   <p className="px-3 py-4 text-[13px] text-muted-foreground" role="status">{label}</p>
 );
 
-export const btn = "inline-flex items-center justify-center rounded-sm px-3 py-1.5 text-[13px] font-medium disabled:cursor-not-allowed disabled:opacity-45";
+export const btn = "inline-flex min-h-10 items-center justify-center gap-2 rounded-sm px-4 py-2 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-45";
 export const btnPrimary = `${btn} bg-primary text-primary-foreground hover:bg-primary/90`;
 export const btnOutline = `${btn} border border-input bg-card text-foreground hover:bg-muted`;
-export const inputCls = "w-full rounded-sm border border-input bg-card px-2.5 py-1.5 text-[13px] text-foreground disabled:bg-muted";
+export const inputCls = "w-full rounded-sm border border-input bg-background px-3 py-2.5 text-[13px] text-foreground disabled:bg-muted";
+
+/** Router-neutral control shared by both runtime targets. */
+export function ConsoleButton({ variant = "outline", className = "", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "outline" | "ghost" }) {
+  return <button className={`${variant === "primary" ? btnPrimary : variant === "ghost" ? `${btn} text-foreground hover:bg-muted` : btnOutline} ${className}`} {...props} />;
+}

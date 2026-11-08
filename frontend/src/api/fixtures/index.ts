@@ -25,7 +25,9 @@ export type Widen<T> = T extends string
         : T extends (infer U)[]
           ? Widen<U>[]
           : T extends object
-            ? { [K in keyof T]: Widen<T[K]> }
+            ? string extends keyof T
+              ? { [K in keyof T]: Widen<T[K]> | undefined }
+              : { [K in keyof T]: Widen<T[K]> }
             : T;
 
 const _assetsList: Widen<Paginated<Asset>> = assetsList;

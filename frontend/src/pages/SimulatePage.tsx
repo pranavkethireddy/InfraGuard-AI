@@ -3,9 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, DATA_MODE, FIXTURE_MUTATION_MESSAGE } from "@/api/client";
 import { fixtures } from "@/api/fixtures";
 import {
-  assetsQuery, modelsQuery, readingsQuery, runningSimulationsQuery, simulationQuery, useResetSimulation, useStartSimulation,
+  assetsQuery, modelsQuery, readingsQuery, assetSimulationsQuery, pickRecoverableSimulation, simulationPollInterval, simulationQuery, useResetSimulation, useStartSimulation,
 } from "@/api/queries";
 import type { Scenario, Simulation, SimulationReset } from "@/api/types";
+import { AppLink } from "@/lib/router-adapter";
 import { ReadingsChart } from "@/components/ReadingsChart";
 import {
   Badge, Empty, ErrorMessage, ErrorState, Fields, Loading, Mono, OriginBadge, PageHeader, Section, btnOutline, btnPrimary, dt, inputCls,
@@ -14,7 +15,7 @@ import {
 export const SIM_DETECTOR = "cooling-rule-v1";
 
 export function parseSeed(raw: string): number | null {
-  if (!/^-?\d+$/.test(raw.trim())) return null;
+  if (!/^\d+$/.test(raw.trim())) return null;
   const n = Number(raw);
   return Number.isSafeInteger(n) ? n : null;
 }
@@ -72,18 +73,21 @@ export function SimulatePage() {
   const seed = parseSeed(seedRaw);
 
   // Recovery after reload: ask the backend which simulation is running for this asset.
-  const recovery = useQuery({ ...runningSimulationsQuery(assetId), enabled: !fixture && !!assetId });
-  const activeId = selectedId ?? recovery.data?.items[0]?.simulation_id ?? null;
+  // Uses the backend's run list (not only local state) so a completed run survives route changes and reload until reset.
+  const recovery = useQuery({ ...assetSimulationsQuery(assetId), enabled: !fixture && !!assetId });
+  const recovered = recovery.data ? pickRecoverableSimulation(recovery.data.items) : null;
+  const activeId = selectedId ?? recovered?.simulation_id ?? null;
   const sim = useQuery({ ...simulationQuery(activeId ?? ""), enabled: !fixture && !!activeId });
   const running = sim.data?.status === "running";
   const readings = useQuery({
     ...readingsQuery(assetId, 200),
     enabled: !fixture && !!assetId && !!sim.data,
-    refetchInterval: running ? Math.max(0.05, sim.data!.tick_seconds) * 1000 : false,
+    refetchInterval: simulationPollInterval(sim.data?.status),
   });
   const start = useStartSimulation();
   const reset = useResetSimulation();
-  const conflict = start.error instanceof ApiError && start.error.status === 409;
+  const conflict = start.error instanceof ApiError && start.error.code === "SIMULATION_ALREADY_RUNNING";
+  const fleetConflict = start.error instanceof ApiError && start.error.code === "FLEET_LIVE_RUNNING";
   const threshold = models.data?.items.find((m) => m.detector_id === SIM_DETECTOR)?.rule_config?.temperature_threshold_c ?? null;
 
   const recovering = !fixture && !!assetId && recovery.isLoading;
@@ -92,10 +96,11 @@ export function SimulatePage() {
     !assetId ? "No compatible asset" :
     recovering ? "Checking for a running simulation…" :
     recovery.error ? "Could not check for a running simulation" :
+    activeId && sim.isLoading ? "Loading recovered simulation…" :
     running ? "A simulation is running" :
     reset.isPending ? "Resetting…" :
     start.isPending ? "Starting…" :
-    seed === null ? "Seed must be an integer" : null;
+    seed === null ? "Seed must be a whole number ≥ 0" : null;
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -104,9 +109,9 @@ export function SimulatePage() {
     start.mutate({ scenario, asset_id: assetId, seed }, {
       onSuccess: (s) => setSelectedId(s.simulation_id),
       onError: (err) => {
-        if (err instanceof ApiError && err.status === 409) {
+        if (err instanceof ApiError && err.code === "SIMULATION_ALREADY_RUNNING") {
           setSelectedId(null);
-          void qc.refetchQueries({ queryKey: ["simulations", "running", assetId] });
+          void qc.refetchQueries({ queryKey: ["simulations", "asset", assetId] });
         }
       },
     });
@@ -137,11 +142,11 @@ export function SimulatePage() {
                   ))}
                 </div>
               </fieldset>
-              <label className="block text-[13px]"><span className="text-muted-foreground">Seed (integer)</span>
+              <label className="block text-[13px]"><span className="text-muted-foreground">Seed (whole number ≥ 0)</span>
                 <input className={`${inputCls} mt-1 font-mono`} inputMode="numeric" value={seedRaw} onChange={(e) => setSeedRaw(e.target.value)}
                   aria-invalid={seed === null} aria-describedby="seed-help" />
                 <span id="seed-help" className={`mt-1 block text-xs ${seed === null ? "text-destructive" : "text-muted-foreground"}`}>
-                  {seed === null ? "Seed must be a whole number." : "Same seed reproduces the same run."}
+                  {seed === null ? "Seed must be a whole number of 0 or more." : "Same seed reproduces the same run."}
                 </span>
               </label>
               <div className="flex items-center gap-3">
@@ -149,7 +154,9 @@ export function SimulatePage() {
                 {startDisabledReason && !fixture && <span className="text-xs text-muted-foreground">{startDisabledReason}</span>}
               </div>
               {conflict && <p role="alert" className="text-[13px] text-attention-foreground">A simulation is already running for this asset. Showing it alongside.</p>}
-              {start.error && !conflict && <div role="alert" className="border-l-2 border-destructive pl-2"><ErrorMessage error={start.error} /></div>}
+              {start.error && !conflict && <div role="alert" className="border-l-2 border-destructive pl-2"><ErrorMessage error={start.error} />
+                {fleetConflict && <p className="mt-2 text-sm">Stop the fleet loop on <AppLink to="/fleet" className="text-primary underline">Live fleet</AppLink> before starting a single-asset simulation.</p>}
+              </div>}
             </form>
           )}
         </Section>
@@ -163,7 +170,7 @@ export function SimulatePage() {
               </>
             ) : recovering ? <Loading label="Checking for a running simulation…" />
               : recovery.error ? <ErrorState error={recovery.error} title="Could not check for a running simulation" />
-              : !activeId ? (lastReset ? <ResetSummary r={lastReset} /> : <Empty>No simulation running for this asset.</Empty>)
+              : !activeId ? (lastReset ? <ResetSummary r={lastReset} /> : <Empty>No running or completed simulation for this asset.</Empty>)
               : sim.isLoading ? <Loading label="Loading simulation…" />
               : sim.error ? <ErrorState error={sim.error} title="Could not load simulation status" />
               : sim.data && (
@@ -171,7 +178,15 @@ export function SimulatePage() {
                   <SimulationStatus sim={sim.data} />
                   {sim.data.status !== "reset" && (
                     <button className={btnOutline} disabled={reset.isPending}
-                      onClick={() => reset.mutate(sim.data!.simulation_id, { onSuccess: (r) => { setLastReset(r); setSelectedId(null); } })}>
+                      onClick={() => { if (!sim.data) return; reset.mutate(sim.data.simulation_id, {
+                        onSuccess: (r) => {
+                          setLastReset(r); setSelectedId(null);
+                          qc.removeQueries({ queryKey: ["simulation", r.simulation_id] });
+                          // Drop the cached run list so the reset run cannot be resurrected from stale data.
+                          qc.setQueryData(["simulations", "asset", assetId], (old: { items: Simulation[] } | undefined) =>
+                            old ? { ...old, items: old.items.map((x) => (x.simulation_id === r.simulation_id ? { ...x, status: "reset" as const } : x)) } : old);
+                        },
+                      }); }}>
                       {reset.isPending ? "Resetting…" : "Reset simulation"}
                     </button>
                   )}

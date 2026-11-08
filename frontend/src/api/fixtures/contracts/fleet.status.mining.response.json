@@ -1,0 +1,281 @@
+{
+  "site_id": "mining",
+  "generated_at": "2026-11-08T00:10:09.318719Z",
+  "live": {
+    "status": "running",
+    "run_id": "live-000001",
+    "seed": 42,
+    "tick_seconds": 1.0,
+    "started_at": "2026-11-08T00:09:57.407433Z",
+    "stopped_at": null,
+    "ticks": 12,
+    "auto_investigate": true,
+    "active_faults": [
+      {
+        "asset_id": "cooling-02",
+        "kind": "cooling_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "drive-05",
+        "kind": "drive_degradation",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "mill-02",
+        "kind": "machine_overstrain",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "miner-05",
+        "kind": "fan_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      {
+        "asset_id": "fanwall-m3",
+        "kind": "cooling_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      }
+    ]
+  },
+  "summary": {
+    "machines": 148,
+    "racks": 24,
+    "healthy": 146,
+    "warning": 0,
+    "critical": 2,
+    "no_data": 0,
+    "open_incidents": 2,
+    "racks_affected": 7,
+    "downtime_cost_per_day_at_risk": 239.96,
+    "currency": "USD",
+    "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured; lost revenue = rated hashrate x hashprice $0.0324/TH/day on 2026-11-07 (CloudMineCrypto open data (CC BY 4.0), https://cloudminecrypto.com/data)",
+    "cost_if_all_fail": 6686.18,
+    "cost_to_fix_all_now": 960.0,
+    "savings_if_fixed_now": 5726.18
+  },
+  "site_metrics": [
+    {
+      "key": "healthy_pct",
+      "label": "Machines healthy",
+      "value": 98.6,
+      "unit": "%",
+      "source": "live readings (simulated)"
+    },
+    {
+      "key": "hashrate_phs",
+      "label": "Farm hashrate",
+      "value": 28.64,
+      "unit": "PH/s",
+      "source": "live readings (simulated)"
+    },
+    {
+      "key": "hashrate_availability_pct",
+      "label": "Hashrate vs rated",
+      "value": 99.4,
+      "unit": "%",
+      "source": "live readings (simulated)"
+    },
+    {
+      "key": "revenue_per_day",
+      "label": "Mining revenue per day",
+      "value": 928.66,
+      "unit": "USD/day",
+      "source": "farm hashrate x hashprice (CloudMineCrypto open data (CC BY 4.0), https://cloudminecrypto.com/data, 2026-11-07)"
+    },
+    {
+      "key": "revenue_lost_per_day",
+      "label": "Revenue lost to faults per day",
+      "value": 10.41,
+      "unit": "USD/day",
+      "source": "hashrate below rated x hashprice (CloudMineCrypto open data (CC BY 4.0), https://cloudminecrypto.com/data, 2026-11-07)"
+    },
+    {
+      "key": "efficiency_j_per_th",
+      "label": "Energy efficiency",
+      "value": 17.56,
+      "unit": "J/TH",
+      "source": "live readings (simulated)"
+    },
+    {
+      "key": "power_kw",
+      "label": "Power draw",
+      "value": 503.0,
+      "unit": "kW",
+      "source": "live readings (simulated)"
+    },
+    {
+      "key": "hashprice_usd_per_th_day",
+      "label": "Hashprice",
+      "value": 0.032426,
+      "unit": "USD/TH/day",
+      "source": "CloudMineCrypto open data (CC BY 4.0), https://cloudminecrypto.com/data, 2026-11-07"
+    }
+  ],
+  "machines": [
+    {
+      "asset_id": "fanwall-m3",
+      "name": "Fan Wall M3",
+      "asset_type": "cooling_unit",
+      "criticality": "high",
+      "detector_id": "cooling-rule-v1",
+      "location": "Container 2",
+      "placement": {
+        "hall_id": "container-2",
+        "row": null,
+        "rack_id": null,
+        "slot": null,
+        "x": 1.0,
+        "y": 2.0
+      },
+      "status": "critical",
+      "risk_level": "high",
+      "risk_score": 0.8,
+      "latest_values": {
+        "temperature_c": 35.14,
+        "fan_speed_rpm": 752.4
+      },
+      "last_reading_at": "2026-11-08T00:10:08.645635Z",
+      "chart_fields": [
+        "temperature_c",
+        "fan_speed_rpm"
+      ],
+      "active_incident": {
+        "incident_id": "inc-002023",
+        "title": "Sustained high temperature on Fan Wall M3",
+        "status": "open",
+        "risk_level": "high",
+        "opened_at": "2026-11-08T00:10:07.640557Z",
+        "estimated_total_impact": 6116.73,
+        "cost_per_day": 233.47,
+        "investigation_status": "completed"
+      },
+      "simulated_fault": {
+        "asset_id": "fanwall-m3",
+        "kind": "cooling_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      "history": [
+        {
+          "observed_at": "2026-11-08T00:10:06.635476Z",
+          "values": {
+            "temperature_c": 35.14,
+            "fan_speed_rpm": 723.6
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:07.640557Z",
+          "values": {
+            "temperature_c": 35.46,
+            "fan_speed_rpm": 756.9
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:08.645635Z",
+          "values": {
+            "temperature_c": 35.14,
+            "fan_speed_rpm": 752.4
+          }
+        }
+      ]
+    },
+    {
+      "asset_id": "miner-05",
+      "name": "Rack M1-01, Slot 5",
+      "asset_type": "asic_miner",
+      "criticality": "medium",
+      "detector_id": "miner-rule-v1",
+      "location": "Container 1, Row M1, Rack M1-01, Slot 5",
+      "placement": {
+        "hall_id": "container-1",
+        "row": "M1",
+        "rack_id": "M1-01",
+        "slot": 5,
+        "x": 4.0,
+        "y": 2.0
+      },
+      "status": "critical",
+      "risk_level": "high",
+      "risk_score": 0.8,
+      "latest_values": {
+        "hashrate_ths": 147.0,
+        "rated_hashrate_ths": 200.0,
+        "chip_temp_c": 94.7,
+        "fan_speed_rpm": 438,
+        "power_w": 2830,
+        "hw_error_pct": 0.325
+      },
+      "last_reading_at": "2026-11-08T00:10:08.645635Z",
+      "chart_fields": [
+        "hashrate_ths",
+        "chip_temp_c",
+        "fan_speed_rpm",
+        "hw_error_pct"
+      ],
+      "active_incident": {
+        "incident_id": "inc-001573",
+        "title": "ASIC miner fault: Rack M1-01, Slot 5",
+        "status": "open",
+        "risk_level": "high",
+        "opened_at": "2026-11-08T00:10:05.630393Z",
+        "estimated_total_impact": 569.45,
+        "cost_per_day": 6.49,
+        "investigation_status": "completed"
+      },
+      "simulated_fault": {
+        "asset_id": "miner-05",
+        "kind": "fan_failure",
+        "phase": "holding",
+        "injected_at": "2026-11-08T00:10:00.921281Z",
+        "progress": 1.0
+      },
+      "history": [
+        {
+          "observed_at": "2026-11-08T00:10:06.635476Z",
+          "values": {
+            "hashrate_ths": 145.2,
+            "rated_hashrate_ths": 200.0,
+            "chip_temp_c": 93.9,
+            "fan_speed_rpm": 436,
+            "power_w": 2777,
+            "hw_error_pct": 0.322
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:07.640557Z",
+          "values": {
+            "hashrate_ths": 148.1,
+            "rated_hashrate_ths": 200.0,
+            "chip_temp_c": 93.4,
+            "fan_speed_rpm": 446,
+            "power_w": 2792,
+            "hw_error_pct": 0.321
+          }
+        },
+        {
+          "observed_at": "2026-11-08T00:10:08.645635Z",
+          "values": {
+            "hashrate_ths": 147.0,
+            "rated_hashrate_ths": 200.0,
+            "chip_temp_c": 94.7,
+            "fan_speed_rpm": 438,
+            "power_w": 2830,
+            "hw_error_pct": 0.325
+          }
+        }
+      ]
+    }
+  ]
+}

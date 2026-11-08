@@ -1,4 +1,4 @@
-import { NavLink, Route, Routes, useParams } from "react-router-dom";
+import { NavLink, Route, Routes, useParams, useSearchParams } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { RouterAdapterProvider, type AppLinkProps, type RouterAdapter } from "@/lib/router-adapter";
 import { OverviewPage } from "@/pages/OverviewPage";
@@ -8,6 +8,7 @@ import { SimulatePage } from "@/pages/SimulatePage";
 import { IncidentsPage } from "@/pages/IncidentsPage";
 import { IncidentDetailPage } from "@/pages/IncidentDetailPage";
 import { ModelsPage } from "@/pages/ModelsPage";
+import { FleetPage } from '@/pages/FleetPage';
 
 function RRLink({ to, className = "", activeClassName, exact, onClick, children }: AppLinkProps) {
   return (
@@ -25,6 +26,11 @@ function AssetDetailRoute() {
 function IncidentDetailRoute() {
   return <IncidentDetailPage id={useParams().id ?? ""} />;
 }
+function FleetRoute() {
+  const [search, setSearch] = useSearchParams();
+  const site = search.get('site') === 'mining' ? 'mining' : 'datacenter';
+  return <FleetPage site={site} onSiteChange={(next) => setSearch((prev) => { const p = new URLSearchParams(prev); p.set('site', next); return p; })} />;
+}
 
 export function App() {
   return (
@@ -32,6 +38,7 @@ export function App() {
       <AppShell>
         <Routes>
           <Route path="/" element={<OverviewPage />} />
+          <Route path="/fleet" element={<FleetRoute />} />
           <Route path="/assets" element={<AssetsPage />} />
           <Route path="/assets/:id" element={<AssetDetailRoute />} />
           <Route path="/simulate" element={<SimulatePage />} />
