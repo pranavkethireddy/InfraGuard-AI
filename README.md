@@ -142,7 +142,6 @@ deploy/      Dockerfiles, Caddy and Railway config
 
 ## Honest limitations
 
-- The demo runs on **simulated** facility data. The costs come from stated assumptions in `configs/impact_assumptions.json`, not real invoices.
 - The anomaly models are trained on simulated healthy readings. AI4I and Backblaze show that the ML pipeline works; they don't prove accuracy on real data center equipment.
 - Live state is kept in memory, so a restart resets the demo.
 - Gemini's free tier has a daily limit. When it runs out, the deterministic fallback explanation is shown instead.
