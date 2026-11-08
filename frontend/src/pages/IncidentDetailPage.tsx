@@ -33,13 +33,15 @@ export function ImpactLedger({ impact: im }: { impact: Impact }) {
           <tr><td className="font-sans text-muted-foreground">Repair cost</td><td className="text-right">{money(im.estimated_repair_cost, c)}</td></tr>
           {im.cost_per_day !== undefined && <tr><td className="font-sans text-muted-foreground">Cost per day</td><td className="text-right">{money(im.cost_per_day, c)}</td></tr>}
           {im.estimated_repair_hours !== undefined && <tr><td className="font-sans text-muted-foreground">Estimated repair time</td><td className="text-right">{val(im.estimated_repair_hours)} h</td></tr>}
+          {(['cost_if_it_fails', 'cost_to_fix_now', 'savings_if_fixed_now'] as const).map((key) => im[key] !== undefined && <tr key={key}><td className="font-sans text-muted-foreground">{({ cost_if_it_fails: 'Cost if it fails', cost_to_fix_now: 'Cost to fix now', savings_if_fixed_now: 'Savings if fixed now' })[key]}</td><td className="text-right">{im[key] == null ? 'No data' : money(im[key], c)}</td></tr>)}
+          {im.return_on_repair !== undefined && <tr><td className="font-sans text-muted-foreground">Return on repair</td><td className="text-right">{im.return_on_repair == null ? 'No data' : im.return_on_repair}</td></tr>}
           <tr className="border-t-2 border-rule-strong">
             <td className="font-sans font-semibold text-foreground">Estimated total impact</td>
             <td className="text-right text-[15px] font-semibold text-foreground">{money(im.estimated_total_impact, c)}</td>
           </tr>
         </tbody>
       </table>
-      <p className="mt-2 px-3 text-xs text-muted-foreground"><Badge tone="attention">Demo assumptions</Badge> Figures as returned by the API ({c}). Not measured costs.</p>
+      <p className="mt-2 px-3 text-xs text-muted-foreground"><Badge tone="attention">Demo repair assumptions</Badge> Figures as returned by the API ({c}). Repair and downtime durations are illustrative; mining lost revenue uses the historical hashprice source/date below when provided.</p>
       {im.assumptions_source && <p className="mt-1 px-3 text-xs text-attention-foreground">Source: {im.assumptions_source}</p>}
     </div>
   );
@@ -76,9 +78,9 @@ export function IncidentDetailPage({ id }: { id: string }) {
         meta={<>{i.incident_id} · asset <AppLink to={`/assets/${i.asset_id}`} className="text-primary underline underline-offset-2">{i.asset_id}</AppLink> · {i.detector_id}{i.simulation_id ? ` · ${i.simulation_id}` : ""}</>}
         actions={<><StatusBadge status={i.status} /><RiskBadge level={i.risk_level} /><OriginBadge origin={i.data_origin} /></>} />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)]">
         {/* Investigation: evidence */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-6">
           <Section title="Rule evidence" flush>
             {i.evidence.length ? (
               <div className="overflow-x-auto">
@@ -101,9 +103,12 @@ export function IncidentDetailPage({ id }: { id: string }) {
           </Section>
 
           <Section title="Investigation" aside={i.explanation_source && <Badge tone={i.explanation_source === "agent" ? "accent" : "neutral"}>source: {i.explanation_source}</Badge>}>
+            {i.investigation_status && <p role="status" className="mb-2 text-xs">Auto investigation: {i.investigation_status}</p>}
+            {i.problem && <p className="mb-2"><strong>Problem: </strong>{i.problem}</p>}
+            {i.likely_cause && <p className="mb-2"><strong>Likely cause: </strong>{i.likely_cause}</p>}
             <div className="mb-3 flex flex-wrap items-center gap-3">
-              <button type="button" className={btnPrimary} disabled={fixture || investigate.isPending} aria-busy={investigate.isPending}
-                onClick={() => { if (!fixture && !investigate.isPending) investigate.mutate(); }}>
+              <button type="button" className={btnPrimary} disabled={fixture || investigate.isPending || i.investigation_status === 'queued' || i.investigation_status === 'running'} aria-busy={investigate.isPending}
+                onClick={() => { if (!fixture && !investigate.isPending && i.investigation_status !== 'queued' && i.investigation_status !== 'running') investigate.mutate(); }}>
                 {investigate.isPending && <span aria-hidden className="mr-1.5 inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />}
                 {investigate.isPending ? "Investigating…" : investigate.error ? "Retry investigation" : "Investigate"}
               </button>
@@ -160,7 +165,7 @@ export function IncidentDetailPage({ id }: { id: string }) {
         </div>
 
         {/* Ledger + actions */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-6">
           <Section title="Impact ledger" flush>
             {i.impact ? <div className="pb-3"><ImpactLedger impact={i.impact} /></div> : <Empty>No impact estimate.</Empty>}
           </Section>

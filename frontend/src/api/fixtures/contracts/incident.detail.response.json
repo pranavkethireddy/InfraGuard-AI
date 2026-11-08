@@ -90,5 +90,6 @@
     "impact": 0.2
   },
   "notes": [],
-  "agent_steps": null
+  "agent_steps": null,
+  "investigation_status": null
 }

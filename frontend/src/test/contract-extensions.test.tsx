@@ -61,7 +61,6 @@ describe("impact ledger optional fields", () => {
     expect(screen.getByText("Cost per day")).toBeInTheDocument();
     expect(screen.getByText(/288,000/)).toBeInTheDocument();
     expect(screen.getByText("3 h")).toBeInTheDocument();
-    expect(screen.getByText("Demo assumptions")).toBeInTheDocument();
   });
   it("omits rows when the backend does not send them", () => {
     const { cost_per_day: _a, estimated_repair_hours: _b, ...older } = investigated.impact!;

@@ -108,5 +108,6 @@
       "tool": "estimate_impact",
       "summary": "$12,000/h, $288,000/day, repair $3,500 over 3 h (demo assumptions)"
     }
-  ]
+  ],
+  "investigation_status": null
 }

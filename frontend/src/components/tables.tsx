@@ -35,6 +35,16 @@ export function EquipmentTable({ assets }: { assets: Asset[] }) {
 
 /** Incidents in the order the API returned them; priority_index is server-calculated. */
 export function IncidentQueue({ incidents, compact = false }: { incidents: IncidentSummary[]; compact?: boolean }) {
+  if (compact) return (
+    <ul className="divide-y divide-border">
+      {incidents.map((i) => <li key={i.incident_id} className="space-y-3 p-5">
+        <div className="flex flex-wrap items-center gap-2"><RiskBadge level={i.risk_level} /><StatusBadge status={i.status} /></div>
+        <AppLink to={`/incidents/${i.incident_id}`} className="block text-sm font-semibold leading-relaxed hover:text-primary">{i.title}</AppLink>
+        <p className="break-all font-mono text-[11px] text-muted-foreground">{i.incident_id} · {i.asset_id}</p>
+        <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"><span>Priority <Mono>{val(i.priority_index)}</Mono></span><span>{dt(i.opened_at)}</span></div>
+      </li>)}
+    </ul>
+  );
   return (
     <div className="overflow-x-auto">
       <table className="data-table">

@@ -1,27 +1,33 @@
 import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import type { IncidentPatch, SimulationRequest } from "./types";
+import type { IncidentPatch, Simulation, SimulationRequest } from "./types";
 
 const POLL_MS = 15_000;
 /** Simulation status and readings are polled every 2 s while a run is active. */
 export const SIM_POLL_MS = 2_000;
 export const simulationPollInterval = (status: string | undefined): number | false => (status === "running" ? SIM_POLL_MS : false);
 
-export const assetsQuery = () =>
-  queryOptions({ queryKey: ["assets"], queryFn: () => api.listAssets({ limit: 100 }), refetchInterval: POLL_MS });
+export const assetsQuery = (limit = 100, offset = 0) =>
+  queryOptions({ queryKey: ["assets", { limit, offset }], queryFn: () => api.listAssets({ limit, offset }), refetchInterval: POLL_MS });
 export const assetQuery = (id: string) => queryOptions({ queryKey: ["assets", id], queryFn: () => api.getAsset(id) });
 export const readingsQuery = (id: string, limit = 500) =>
   queryOptions({ queryKey: ["assets", id, "readings", limit], queryFn: () => api.getReadings(id, { limit }), refetchInterval: POLL_MS });
 export const incidentsQuery = (status?: "open" | "acknowledged" | "resolved") =>
   queryOptions({ queryKey: ["incidents", { status }], queryFn: () => api.listIncidents({ status, limit: 100 }), refetchInterval: POLL_MS });
-export const incidentQuery = (id: string) => queryOptions({ queryKey: ["incident", id], queryFn: () => api.getIncident(id) });
+export const investigationPollInterval = (status: string | null | undefined): number | false => status === 'queued' || status === 'running' ? 1_000 : false;
+export const incidentQuery = (id: string) => queryOptions({ queryKey: ["incident", id], queryFn: () => api.getIncident(id), refetchInterval: (q) => investigationPollInterval(q.state.data?.investigation_status) });
 export const modelsQuery = () => queryOptions({ queryKey: ["models"], queryFn: () => api.listModels() });
-export const runningSimulationsQuery = (assetId: string) =>
+/** Recovery: all runs for an asset in backend order; the page picks the active one (see pickRecoverableSimulation). */
+export const assetSimulationsQuery = (assetId: string) =>
   queryOptions({
-    queryKey: ["simulations", "running", assetId],
-    queryFn: () => api.listSimulations({ status: "running", asset_id: assetId }),
+    queryKey: ["simulations", "asset", assetId],
+    queryFn: () => api.listSimulations({ asset_id: assetId }),
     retry: false,
   });
+/** Prefer a running run, otherwise the first (newest, per backend ordering) completed run. Reset runs are never active. */
+export function pickRecoverableSimulation(items: Simulation[]): Simulation | null {
+  return items.find((s) => s.status === "running") ?? items.find((s) => s.status === "completed") ?? null;
+}
 export const simulationQuery = (id: string) =>
   queryOptions({
     queryKey: ["simulation", id],

@@ -1,0 +1,47 @@
+{
+  "status": "running",
+  "run_id": "live-000001",
+  "seed": 42,
+  "tick_seconds": 1.0,
+  "started_at": "2026-11-08T00:09:57.407433Z",
+  "stopped_at": null,
+  "ticks": 12,
+  "auto_investigate": true,
+  "active_faults": [
+    {
+      "asset_id": "cooling-02",
+      "kind": "cooling_failure",
+      "phase": "holding",
+      "injected_at": "2026-11-08T00:10:00.921281Z",
+      "progress": 1.0
+    },
+    {
+      "asset_id": "drive-05",
+      "kind": "drive_degradation",
+      "phase": "holding",
+      "injected_at": "2026-11-08T00:10:00.921281Z",
+      "progress": 1.0
+    },
+    {
+      "asset_id": "mill-02",
+      "kind": "machine_overstrain",
+      "phase": "holding",
+      "injected_at": "2026-11-08T00:10:00.921281Z",
+      "progress": 1.0
+    },
+    {
+      "asset_id": "miner-05",
+      "kind": "fan_failure",
+      "phase": "holding",
+      "injected_at": "2026-11-08T00:10:00.921281Z",
+      "progress": 1.0
+    },
+    {
+      "asset_id": "fanwall-m3",
+      "kind": "cooling_failure",
+      "phase": "holding",
+      "injected_at": "2026-11-08T00:10:00.921281Z",
+      "progress": 1.0
+    }
+  ]
+}

@@ -89,7 +89,7 @@ describe("SimulatePage (live API, mocked HTTP)", () => {
     expect(await screen.findByText("Status: running")).toBeInTheDocument();
     expect(startBtn()).toBeDisabled();
     const calls = h.fetch.mock.calls.map((c) => String(c[0]));
-    expect(calls).toContain("http://t/api/v1/simulations?status=running&asset_id=cooling-01");
+    expect(calls).toContain("http://t/api/v1/simulations?asset_id=cooling-01");
   });
 
   it("on 409 refetches running simulations and shows the existing run", async () => {
@@ -97,7 +97,7 @@ describe("SimulatePage (live API, mocked HTTP)", () => {
     backend({
       ...common,
       "GET /simulations": () => { listCalls += 1; return json(page(listCalls > 1 ? [sim()] : [])); },
-      "POST /simulations": () => err(409, "simulation_running"),
+      "POST /simulations": () => err(409, "SIMULATION_ALREADY_RUNNING"),
       "GET /simulations/sim-demo-001": () => json(sim()),
     });
     renderPage();
@@ -114,6 +114,18 @@ describe("SimulatePage (live API, mocked HTTP)", () => {
     expect(await screen.findByText("Could not check for a running simulation", { selector: "p" })).toBeInTheDocument();
     expect(screen.getByText(/request_id req-503/)).toBeInTheDocument();
     expect(startBtn()).toBeDisabled();
+  });
+
+  it("shows fleet conflict with request ID and fleet link without claiming single-asset recovery", async () => {
+    backend({ ...common, "GET /simulations": () => json(page([])), "POST /simulations": () => err(409, "FLEET_LIVE_RUNNING") });
+    renderPage();
+    await waitFor(() => expect(startBtn()).toBeEnabled());
+    fireEvent.click(startBtn());
+    expect(await screen.findByText("backend says FLEET_LIVE_RUNNING")).toBeInTheDocument();
+    expect(screen.getByText(/request_id req-409/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Live fleet" })).toHaveAttribute("href", "/fleet");
+    expect(screen.queryByText(/already running for this asset/)).not.toBeInTheDocument();
+    expect(h.fetch.mock.calls.filter((c) => String(c[0]).includes('/simulations?')).length).toBe(1);
   });
 
   it("shows asset load errors without fallback options", async () => {

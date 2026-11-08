@@ -18,8 +18,8 @@ npm --prefix frontend run build          # output: frontend/dist
 
 | `VITE_DATA_MODE` | Behaviour |
 | --- | --- |
-| `fixture` (default) | Serves the approved contract fixtures in `src/api/fixtures/contracts/` verbatim through the same typed client (404 for anything without a fixture). A persistent "Fixture preview — illustrative data, not live" banner is shown. Incident status changes and simulations are disabled with an explanation. |
-| `live` | Calls `VITE_API_BASE_URL` (default `http://localhost:8000/api/v1`). Errors (`{error:{code,message,details,request_id}}`, HTTP 404/409/422/503 or network) are shown with the request ID. **There is never a fallback to fixtures.** |
+| `fixture` (explicit offline preview/tests) | Serves the approved contract fixtures in `src/api/fixtures/contracts/` verbatim through the same typed client (404 for anything without a fixture). A persistent "Fixture preview — illustrative data, not live" banner is shown. All mutations are disabled. Fleet snapshots are static; the approved mining status fixture is available, but no mining map/rack fixture exists. |
+| `live` (default) | Calls `VITE_API_BASE_URL` (default `http://localhost:8000/api/v1`). Errors (`{error:{code,message,details,request_id}}`, HTTP 404/409/422/503 or network) are shown with the request ID. **There is never a fallback to fixtures.** |
 
 The FastAPI backend must allow CORS from the dev origin (`http://localhost:5173`).
 `VITE_*` values are bundled into the browser — never put secrets in them.
@@ -37,15 +37,22 @@ The FastAPI backend must allow CORS from the dev origin (`http://localhost:5173`
 
 ## Routes
 
-`/`, `/assets`, `/assets/:id`, `/simulate`, `/incidents`, `/incidents/:id`, `/models`.
+`/`, `/fleet?site=datacenter|mining`, `/assets`, `/assets/:id`, `/simulate`, `/incidents`, `/incidents/:id`, `/models`.
 
 ## Contract rules
+
+- Fleet sites share one backend live loop. Site tabs persist in `?site=`; switching clears rack selection and action feedback. Map/status/rack query keys include site and poll every 1 second with `history=30`. Site directory metrics also refresh every second. Backend machine ordering is preserved.
+- Floor-grid coordinates and hall dimensions are returned by the backend; racks support click, Enter and Space, with status labels and a legend. Rack detail renders returned reasons, cooling relationships, machines, incident links and each `chart_fields` history.
+- Start posts `{seed:42,tick_seconds:1}`; stop preserves data; faults post `{count:3,site:selectedSite}` and may start the shared loop. Nothing auto-starts on mount. Clear requires confirmation: all readings/predictions/incidents across BOTH sites are deleted, faults cleared and single-asset simulations reset, while the live loop continues.
+- Queued/running incident investigations poll every second; optional problem/likely cause and business fields are displayed only when returned. Hashprice source/date comes from the API, distinct from demo repair/downtime assumptions. Heuristic mining scores and uncalibrated drive scores are not probabilities; a returned 720h drive horizon is shown as 30 days.
+- Assets use real `limit=50&offset=` pagination; all 190 backend assets are reachable, with no fixture fallback on live failure.
+- The hosted Lovable preview remains fixture by default. This standalone export remains live by default; Vitest explicitly sets fixture mode unless a test mocks live HTTP. No Gemini or other private key belongs in `VITE_*`.
 
 - All risk levels, scores, costs, impact and priority values are displayed exactly as the API returns them; the browser never computes them.
 - `heuristic` and `model_score` values are labelled "not a probability"; only `calibrated_probability` is called a probability.
 - Models without returned metrics show "Not evaluated" (or "not applicable" for rules). No metrics are invented.
 - Impact assumptions are read-only (editing deferred). There is no approve/handoff action.
-- Simulations: `POST /simulations`, recovery via `GET /simulations?status=running&asset_id=`, polling `GET /simulations/{id}` at `tick_seconds`, `POST /simulations/{id}/reset`. A 409 shows "already running".
+- Simulations: `POST /simulations`; recovery via `GET /simulations?asset_id=` (backend ordering) picks a running run, otherwise the newest completed run; reset runs are never shown as active. A completed run keeps its status, readings and Reset across route changes and reload until reset succeeds. Status and `GET /assets/{id}/readings` are polled every 2 s while running. `POST /simulations/{id}/reset` clears the selection and cache and refreshes assets/readings/incidents. Seed must be a whole number ≥ 0. Start is disabled while recovery loads. A 409 shows "already running".
 
 ## Layout
 
