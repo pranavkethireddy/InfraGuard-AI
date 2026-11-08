@@ -89,7 +89,7 @@ describe("completed simulation recovery", () => {
   it("disables start while status recovery is loading", async () => {
     h.fetch.mockImplementation(async (url: string) => {
       const u = String(url);
-      if (u.includes("/assets?limit=100")) return json(fixtures.assetsList);
+      if (u.includes("/assets?limit=200")) return json(fixtures.assetsList);
       if (u.includes("/models")) return json(fixtures.modelsList);
       return new Promise<Response>(() => {});
     });

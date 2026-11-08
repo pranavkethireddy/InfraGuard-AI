@@ -5,6 +5,7 @@ import type { SiteId } from '@/api/fleet-types';
 import { FleetButton, FleetFloor, FleetMachines, FleetMetrics, FleetRackPane } from '@/components/FleetWorkspace';
 import { Badge, Empty, ErrorState, Loading, PageHeader, Section } from '@/components/ui-kit';
 import { AppLink } from '@/lib/router-adapter';
+import { GpuJobs } from '@/components/GpuJobs';
 
 export function OverviewPage({ site = 'datacenter', onSiteChange = () => {} }: { site?: SiteId; onSiteChange?: (site: SiteId) => void }) {
   return <FacilityOverview key={site} site={site} onSiteChange={onSiteChange} />;
@@ -33,6 +34,7 @@ function FacilityOverview({ site, onSiteChange }: { site: SiteId; onSiteChange: 
         </> : <Empty>No facility status reported.</Empty>}
       </Section>
       {selected && <Section title={`Rack investigation · ${selected}`} aside={<FleetButton aria-label="Close rack details" onClick={() => setSelected(null)}>×</FleetButton>}>{rack.isLoading ? <Loading /> : rack.error ? <ErrorState error={rack.error} /> : rack.data ? <FleetRackPane rack={rack.data} /> : <Empty>No rack details returned.</Empty>}</Section>}
+      <Section title="GPU jobs">{map.isLoading ? <Loading /> : map.error ? <ErrorState error={map.error} /> : <GpuJobs jobs={map.data?.jobs} />}</Section>
       <Section title="Affected machines — backend order" flush>{status.isLoading ? <Loading /> : status.error ? <ErrorState error={status.error} /> : affected.length ? <FleetMachines machines={affected} /> : <Empty>No affected machines reported. Power availability may be unreported.</Empty>}</Section>
       <Section title="Incident queue" aside={<AppLink to="/incidents" className="text-primary underline">All incidents</AppLink>} flush>{status.isLoading ? <Loading /> : status.error ? <ErrorState error={status.error} /> : incidents.length ? <FleetMachines machines={incidents} /> : <Empty>No active incidents reported.</Empty>}</Section>
     </div>

@@ -1,5 +1,5 @@
 {
-  "incident_id": "inc-001573",
+  "incident_id": "inc-002221",
   "asset_id": "miner-05",
   "detector_id": "miner-rule-v1",
   "status": "open",
@@ -7,8 +7,8 @@
   "score_kind": "heuristic",
   "data_origin": "simulated",
   "title": "ASIC miner fault: Rack M1-01, Slot 5",
-  "opened_at": "2026-11-08T01:25:09.283065Z",
-  "last_seen_at": "2026-11-08T01:25:12.293517Z",
+  "opened_at": "2026-11-08T02:56:14.578991Z",
+  "last_seen_at": "2026-11-08T02:56:17.594211Z",
   "acknowledged_at": null,
   "resolved_at": null,
   "resolved_by": null,
@@ -16,11 +16,11 @@
   "simulation_id": "live-000001",
   "priority_index": 0.6522,
   "latest_prediction": {
-    "prediction_id": "pred-002145",
+    "prediction_id": "pred-003009",
     "asset_id": "miner-05",
     "detector_id": "miner-rule-v1",
-    "observed_at": "2026-11-08T01:25:12.293517Z",
-    "generated_at": "2026-11-08T01:25:12.389046Z",
+    "observed_at": "2026-11-08T02:56:17.594211Z",
+    "generated_at": "2026-11-08T02:56:17.688618Z",
     "data_origin": "simulated",
     "model_name": "miner-rule",
     "model_version": "1.0.0",
@@ -62,7 +62,7 @@
       "No public labelled ASIC failure dataset exists; this is a transparent rule, not a trained model.",
       "Thresholds are demo assumptions, not vendor limits."
     ],
-    "incident_id": "inc-001573",
+    "incident_id": "inc-002221",
     "simulation_id": "live-000001"
   },
   "evidence": [
@@ -140,7 +140,7 @@
   "agent_steps": [
     {
       "tool": "get_incident",
-      "summary": "Read incident inc-001573 (high risk)"
+      "summary": "Read incident inc-002221 (high risk)"
     },
     {
       "tool": "get_recent_readings",

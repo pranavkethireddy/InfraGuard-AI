@@ -5,6 +5,7 @@ import { fleetMapQuery, fleetRackQuery, fleetSitesQuery, fleetStatusQuery } from
 import type { SiteId } from '@/api/fleet-types';
 import { FleetButton, FleetFloor, FleetMachines, FleetMetrics, FleetRackPane } from '@/components/FleetWorkspace';
 import { Empty, ErrorMessage, ErrorState, Loading, PageHeader, Section } from '@/components/ui-kit';
+import { GpuJobs } from '@/components/GpuJobs';
 
 export function FleetPage({ site, onSiteChange }: { site: SiteId; onSiteChange: (site: SiteId) => void }) {
   return <FleetSiteWorkspace key={site} site={site} onSiteChange={onSiteChange} />;
@@ -64,6 +65,7 @@ function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange
       <Section title="Site summary">{status.isLoading ? <Loading /> : status.error ? <ErrorState error={status.error} /> : status.data ? <FleetMetrics metrics={status.data.site_metrics} summary={status.data.summary} /> : <Empty>No site status.</Empty>}{sites.error && <ErrorState error={sites.error} />}{sites.isLoading && <Loading label="Loading site directory…" />}{!sites.error && current && <details className="mt-3 text-xs"><summary>Site directory metrics and sources</summary><div className="mt-3"><FleetMetrics metrics={current.site_metrics} /></div></details>}</Section>
       <Section title="Floor map">{map.isLoading ? <Loading /> : map.error ? <ErrorState error={map.error} /> : map.data?.halls.length ? <FleetFloor halls={map.data.halls} gridUnit={map.data.grid_unit} selected={selected} onSelect={setSelected} /> : <Empty>No halls returned.</Empty>}</Section>
       {selected && <Section title={`Rack investigation · ${selected}`} aside={<FleetButton aria-label="Close rack details" onClick={() => setSelected(null)}>×</FleetButton>}>{rack.isLoading ? <Loading /> : rack.error ? <ErrorState error={rack.error} /> : rack.data ? <FleetRackPane rack={rack.data} /> : <Empty>No rack detail.</Empty>}</Section>}
+      <Section title="GPU jobs">{map.isLoading ? <Loading /> : map.error ? <ErrorState error={map.error} /> : <GpuJobs jobs={map.data?.jobs} />}</Section>
       <Section title="Machine queue — backend order" flush>{status.isLoading ? <Loading /> : status.error ? <ErrorState error={status.error} /> : <FleetMachines machines={status.data?.machines ?? []} />}</Section>
     </div>
   </>;
