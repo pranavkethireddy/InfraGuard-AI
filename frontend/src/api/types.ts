@@ -139,6 +139,7 @@ export interface IncidentNote {
 }
 
 export interface IncidentDetail extends IncidentSummary {
+  failure_mode?: FailureMode | null;
   latest_prediction: Prediction | null;
   evidence: Evidence[];
   maintenance_sources: MaintenanceSource[];
@@ -153,6 +154,12 @@ export interface IncidentDetail extends IncidentSummary {
   problem?: string | null;
   likely_cause?: string | null;
   work_order_id?: string | null;
+}
+
+export interface FailureMode {
+  mode_id: string; title: string; cause: string; reasoning: string;
+  signals: string[]; steps: string[]; repair_hours: number | null;
+  parts_cost_usd: number | null; evidence: Record<string, number>;
 }
 
 export interface AgentStep {

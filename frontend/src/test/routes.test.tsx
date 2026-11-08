@@ -23,6 +23,9 @@ describe("routes (react-router-dom)", () => {
   it.each([
     ["/", "Overview"], ["/fleet", "Live fleet"], ["/assets", "Assets"], ["/simulate", "Simulate"], ["/incidents", "Incidents"], ["/models", "Models"],
     ["/assets/cooling-01", "CRAC Unit 1"], ["/incidents/inc-demo-001", "Sustained high temperature on CRAC Unit 1"],
+    ["/fleet/servers/srv-A1-01-1/components/fan5", "Fan 5"], ["/fleet/racks/A1-03", "Rack A1-03"],
+    ["/fleet/servers/srv-A1-01-1", "Server srv-A1-01-1"],
+    ["/servers/srv-B1-04-3?gpu=7", "Rack B1-04, GPU Server 3"],
   ])("%s renders %s heading", async (path, heading) => {
     renderAt(path);
     expect(await screen.findByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
@@ -41,6 +44,15 @@ describe("routes (react-router-dom)", () => {
   it("always shows the fixture banner in fixture mode", () => {
     renderAt("/");
     expect(screen.getByText("Fixture preview — illustrative data, not live.")).toBeInTheDocument();
+  });
+  it('canonical server exposes exact approved parts even without a chassis fixture', async () => {
+    renderAt('/fleet/servers/srv-A1-01-1');
+    expect(await screen.findByRole('region', { name: 'Server parts' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Fan 5.*ok/ }));
+    expect(await screen.findByRole('heading', { name: 'Fan 5', level: 1 })).toBeInTheDocument();
+    expect(screen.getByLabelText('Current URL')).toHaveTextContent('/fleet/servers/srv-A1-01-1/components/fan5');
+    fireEvent.click(screen.getByRole('link', { name: /Parent server/ }));
+    expect(await screen.findByRole('region', { name: 'Server parts' })).toBeInTheDocument();
   });
   it('persists fleet site selection in the URL and restores mining from a direct URL', async () => {
     renderAt('/fleet?site=mining');

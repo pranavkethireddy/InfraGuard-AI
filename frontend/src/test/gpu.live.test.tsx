@@ -63,7 +63,7 @@ it('targets explicit GPU fault with a kind selector and blocks duplicate pending
 });
 it('links returned rack server IDs explicitly and renders exact job reasons/prices without financial calculations', () => {
   mount(<><FleetRackPane rack={f.rack} /><GpuJobs jobs={g.jobs.jobs} /></>);
-  for (const id of f.rack.server_ids ?? []) expect(screen.getAllByRole('link', { name: id })[0]).toHaveAttribute('href', `/servers/${id}`);
+  for (const id of f.rack.server_ids ?? []) expect(screen.getAllByRole('link', { name: id })[0]).toHaveAttribute('href', `/fleet/servers/${id}`);
   expect(screen.getByText('48.96')).toBeVisible(); expect(screen.getByText('84.7 %')).toBeVisible(); expect(screen.getByText("34 GPUs are throttling from heat; the job runs at the slowest GPU's speed")).toBeVisible();
   const prices = screen.getAllByText(/demo price, not an actual bill/);
   expect(prices).toHaveLength(4);

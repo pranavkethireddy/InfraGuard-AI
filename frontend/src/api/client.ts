@@ -7,6 +7,8 @@ import { DEFAULT_DATA_MODE } from "./mode-default";
 import { fleetFixtures } from './fleet-fixtures';
 import { opsFixtures } from './ops-fixtures';
 import { gpuFixtures } from './gpu-fixtures';
+import { partsFixtures } from './parts-fixtures';
+import type { ComponentDetail, ServerComponents } from './parts-types';
 import type { AutoDispatchResponse, DispatchRequest, DispatchResponse, FloorPlan, LearningCases, LearningMatrix, PagerActionRequest, PagerView, PlanResponse, TechniciansResponse, WhatIfResponse } from './ops-types';
 import { pagerFixtures } from './pager-fixtures';
 import type { ChaosStatus, ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteId, SitesResponse } from './fleet-types';
@@ -60,6 +62,8 @@ export interface ApiClient {
   fleetStatus(site: SiteId): Promise<FleetStatus>;
   fleetRack(id: string): Promise<RackDetail>;
   fleetServer(id: string): Promise<ServerDetail>;
+  fleetServerComponents(id: string): Promise<ServerComponents>;
+  fleetServerComponent(id: string, cid: string): Promise<ComponentDetail>;
   startFleet(body?: LiveStartRequest): Promise<LiveStatus>;
   stopFleet(): Promise<LiveStatus>;
   injectFaults(body: FaultRequest): Promise<FaultResponse>;
@@ -140,6 +144,8 @@ export function createLiveClient(baseUrl = API_BASE_URL, fetchImpl: typeof fetch
     fleetStatus: (site) => req(`/fleet/status${qs({ site, history: 30 })}`),
     fleetRack: (id) => req(`/fleet/racks/${enc(id)}?history=30`),
     fleetServer: (id) => req(`/fleet/servers/${enc(id)}?history=30`),
+    fleetServerComponents: (id) => req(`/fleet/servers/${enc(id)}/components`),
+    fleetServerComponent: (id, cid) => req(`/fleet/servers/${enc(id)}/components/${enc(cid)}?history=60`),
     startFleet: (body) => req('/fleet/live/start', json('POST', body)),
     stopFleet: () => req('/fleet/live/stop', json('POST')),
     injectFaults: (body) => req('/fleet/faults', json('POST', body)),
@@ -178,7 +184,7 @@ export function createFixtureClient(): ApiClient {
     getReadings: (id) => (id === f.assetReadings.asset_id ? later(f.assetReadings) : Promise.reject(notFound(`Readings for "${id}" (no fixture)`))),
     listIncidents: (q = {}) =>
       later({ ...f.incidentsList, items: f.incidentsList.items.filter((i) => !q.status || i.status === q.status) }),
-    getIncident: (id) => (id === f.incidentDetail.incident_id ? later(f.incidentDetail) : id === fleetFixtures.minerIncident.incident_id ? later(fleetFixtures.minerIncident) : Promise.reject(notFound(`Incident "${id}"`))),
+    getIncident: (id) => (id === partsFixtures.incident.incident_id ? later(partsFixtures.incident) : id === f.incidentDetail.incident_id ? later(f.incidentDetail) : id === fleetFixtures.minerIncident.incident_id ? later(fleetFixtures.minerIncident) : Promise.reject(notFound(`Incident "${id}"`))),
     patchIncident: disabled,
     investigateIncident: disabled,
     // No running simulation is reported in fixture mode: no fake live progress.
@@ -192,6 +198,8 @@ export function createFixtureClient(): ApiClient {
     fleetStatus: (site) => later(site === 'mining' ? fleetFixtures.mining : fleetFixtures.status),
     fleetRack: (id) => id === fleetFixtures.rack.rack_id ? later(fleetFixtures.rack) : Promise.reject(notFound(`Rack ${id} (no approved fixture)`)),
     fleetServer: (id) => id === gpuFixtures.server.machine.asset_id ? later(gpuFixtures.server) : id === gpuFixtures.crashed.machine.asset_id ? later(gpuFixtures.crashed) : Promise.reject(notFound(`Server ${id} (no approved fixture)`)),
+    fleetServerComponents: (id) => id === partsFixtures.components.server_id ? later(partsFixtures.components) : Promise.reject(new ApiError(`Server ${id} (no approved fixture) was not found.`, 404, 'SERVER_NOT_FOUND')),
+    fleetServerComponent: (id, cid) => id !== partsFixtures.component.server_id ? Promise.reject(new ApiError(`Server ${id} (no approved fixture) was not found.`, 404, 'SERVER_NOT_FOUND')) : cid === partsFixtures.component.component.component_id ? later(partsFixtures.component) : Promise.reject(new ApiError(`Component ${cid} (no approved fixture) was not found.`, 404, 'COMPONENT_NOT_FOUND')),
     startFleet: disabled, stopFleet: disabled, injectFaults: disabled, clearFleet: disabled,
     fleetChaos: () => Promise.reject(notFound('Chaos status (no approved fixture)')),
     setFleetChaos: disabled,

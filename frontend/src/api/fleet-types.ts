@@ -18,7 +18,7 @@ export interface IncidentBrief {
   opened_at: string; estimated_total_impact: number | null; cost_per_day: number | null;
   investigation_status: InvestigationStatus | null;
 }
-export type FaultKind = 'cooling_failure' | 'drive_degradation' | 'machine_overstrain' | 'fan_failure' | 'hashboard_failure' | 'gpu_fault' | 'psu_failure' | 'server_crash';
+export type FaultKind = 'cooling_failure' | 'drive_degradation' | 'machine_overstrain' | 'fan_failure' | 'hashboard_failure' | 'gpu_fault' | 'psu_failure' | 'server_crash' | 'memory_fault' | 'nic_failure' | 'server_fan_failure';
 export interface FaultInfo {
   asset_id: string; kind: FaultKind;
   phase: 'ramping' | 'holding' | 'recovering' | 'ended'; injected_at: string; progress: number;

@@ -1,0 +1,51 @@
+{
+  "server_id": "srv-A1-01-1",
+  "component": {
+    "component_id": "fan5",
+    "kind": "fan",
+    "name": "Fan 5",
+    "status": "warning",
+    "metrics": {
+      "rpm": 2747.0
+    },
+    "note": "Slow."
+  },
+  "history": [
+    {
+      "observed_at": "2026-11-08T08:16:38.474953Z",
+      "status": "ok",
+      "metrics": {
+        "rpm": 8238.0
+      }
+    },
+    {
+      "observed_at": "2026-11-08T08:16:39.668997Z",
+      "status": "warning",
+      "metrics": {
+        "rpm": 2747.0
+      }
+    }
+  ],
+  "failure_mode": {
+    "mode_id": "server-fan",
+    "title": "Chassis fan failed",
+    "cause": "A chassis fan slowed or stopped, so the parts behind it run hotter.",
+    "reasoning": "Slowest fan at 2,747 rpm (others about 9,000) with CPUs up to 70.3 C and GPUs up to 70.2 C.",
+    "signals": [
+      "min_fan_rpm",
+      "max_cpu_temp_c",
+      "max_gpu_temp_c"
+    ],
+    "steps": [
+      "Hot-swap the failed fan module.",
+      "Confirm all six fans are back near 9,000 rpm."
+    ],
+    "repair_hours": 0.5,
+    "parts_cost_usd": 80.0,
+    "evidence": {
+      "min_fan_rpm": 2747.0,
+      "max_cpu_temp_c": 70.3,
+      "max_gpu_temp_c": 70.2
+    }
+  }
+}
