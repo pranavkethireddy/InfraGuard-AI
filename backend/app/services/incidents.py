@@ -46,6 +46,25 @@ def rank(priority_index: float | None) -> int:
     return 1 if p >= 0.8 else 2 if p >= 0.6 else 3 if p >= 0.4 else 4 if p >= 0.2 else 5
 
 
+APPROVAL = "A human must approve physical work."
+
+
+def _apply_playbook(store: Store, inc: IncidentDetail, asset_type: str) -> None:
+    """Match the failure playbook from the asset's recent readings; its steps become the recommended actions."""
+    from . import diagnosis
+
+    rows = store.readings.get(inc.asset_id, [])[-60:]
+    mode = diagnosis.diagnose(asset_type, [dict(r.reading.values) for r in rows])
+    if mode is None:
+        return
+    changed = inc.failure_mode is None or inc.failure_mode.mode_id != mode.mode_id
+    inc.failure_mode = mode
+    if changed:
+        inc.recommended_actions = [*mode.steps, APPROVAL]
+        if not inc.likely_cause or inc.explanation_source in ("template", "rule"):
+            inc.likely_cause = f"{mode.title}: {mode.reasoning}"
+
+
 def open_or_update(store: Store, pred: PredictionResponse, asset, settings: Settings) -> IncidentDetail:
     """Called under store.lock for a triggering prediction."""
     inc = store.active_incident(pred.asset_id, pred.detector_id)
@@ -62,6 +81,8 @@ def open_or_update(store: Store, pred: PredictionResponse, asset, settings: Sett
             inc.priority_rank = new
         inc.risk_level = pred.risk_level
         inc.evidence = pred.evidence
+        if inc.failure_mode is None or inc.prediction_count % 5 == 0:
+            _apply_playbook(store, inc, asset.asset_type)
         return inc
     assumptions = impact_service.for_asset(settings.impact_assumptions_path, asset.asset_id, asset.asset_type)
     imp = impact_service.compute(assumptions) if assumptions else None
@@ -83,6 +104,7 @@ def open_or_update(store: Store, pred: PredictionResponse, asset, settings: Sett
         recommended_actions=list(ACTIONS.get(pred.detector_id, [])), impact=imp, priority_weights=PRIORITY_WEIGHTS,
         notes=[], agent_steps=None,
     )
+    _apply_playbook(store, inc, asset.asset_type)
     store.incidents[inc.incident_id] = inc
     return inc
 

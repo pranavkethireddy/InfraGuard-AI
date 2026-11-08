@@ -164,11 +164,24 @@ def test_diagnosis_names_the_cause_from_the_readings():
     assert "fan belt" in belt and "790" in belt
     assert "filter" in diagnosis.likely_cause("cooling_unit", {"temperature_c": 33.0, "fan_speed_rpm": 1150})
     assert diagnosis.likely_cause("cooling_unit", {"temperature_c": 23.8, "fan_speed_rpm": 1160}) is None
-    assert "crashed" in diagnosis.likely_cause("gpu_server", {"online": 0, "gpus_online": 0})
-    assert "cooling unit" in diagnosis.likely_cause("gpu_server", {"online": 1, "gpus_online": 8, "gpus_throttled": 5,
-                                                                   "inlet_temp_c": 33.1, "ecc_errors": 0, "psu_ok": 2})
+    assert "crashed" in diagnosis.likely_cause("gpu_server", {"online": 0, "gpus_online": 0, "power_w": 250})
+    heat = diagnosis.diagnose("gpu_server", [{"online": 1, "gpus_online": 8, "gpus_throttled": 5, "inlet_temp_c": 33.1,
+                                              "ecc_errors": 0, "psu_ok": 2, "min_gpu_clock_pct": 80.0}])
+    assert heat.mode_id == "server-heat" and "33.1" in heat.reasoning and heat.steps
     assert diagnosis.is_unknown("The cause is unknown based on current readings.")
 
+
+def test_every_equipment_type_has_a_general_playbook_and_valid_templates():
+    from backend.app.services import diagnosis
+
+    for asset_type, modes in diagnosis.catalog().items():
+        assert modes[-1]["when"] == [], asset_type  # a cause is always named
+        for m in modes:
+            for c in m["when"]:
+                assert c[1] in diagnosis.OPS and c[0] in m["signals"] + ["load_pct", "rated_hashrate_ths",
+                                                                            "breaker_rating_amps"], (m["mode_id"], c)
+            filled = diagnosis.to_model(m, {})
+            assert filled.reasoning and filled.steps
 
 def test_vultr_writes_the_explanation_when_its_key_is_set(client, settings, monkeypatch):
     calls = []
