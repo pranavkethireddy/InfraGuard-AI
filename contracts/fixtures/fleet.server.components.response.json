@@ -1,0 +1,410 @@
+{
+  "server_id": "srv-A1-01-1",
+  "observed_at": "2026-11-08T08:16:38.474953Z",
+  "components": [
+    {
+      "component_id": "gpu1",
+      "kind": "gpu",
+      "name": "GPU 1",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 70.5,
+        "clock_pct": 100.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "gpu2",
+      "kind": "gpu",
+      "name": "GPU 2",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 63.4,
+        "clock_pct": 100.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "gpu3",
+      "kind": "gpu",
+      "name": "GPU 3",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 70.9,
+        "clock_pct": 100.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "gpu4",
+      "kind": "gpu",
+      "name": "GPU 4",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 70.4,
+        "clock_pct": 100.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "gpu5",
+      "kind": "gpu",
+      "name": "GPU 5",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 69.9,
+        "clock_pct": 100.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "gpu6",
+      "kind": "gpu",
+      "name": "GPU 6",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 68.6,
+        "clock_pct": 100.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "gpu7",
+      "kind": "gpu",
+      "name": "GPU 7",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 65.2,
+        "clock_pct": 100.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "gpu8",
+      "kind": "gpu",
+      "name": "GPU 8",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 66.1,
+        "clock_pct": 100.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "cpu1",
+      "kind": "cpu",
+      "name": "CPU 1",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 66.2,
+        "util_pct": 64.8
+      },
+      "note": null
+    },
+    {
+      "component_id": "cpu2",
+      "kind": "cpu",
+      "name": "CPU 2",
+      "status": "ok",
+      "metrics": {
+        "temp_c": 66.1,
+        "util_pct": 64.8
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm1",
+      "kind": "dimm",
+      "name": "Memory DIMM 1",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm2",
+      "kind": "dimm",
+      "name": "Memory DIMM 2",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm3",
+      "kind": "dimm",
+      "name": "Memory DIMM 3",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm4",
+      "kind": "dimm",
+      "name": "Memory DIMM 4",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm5",
+      "kind": "dimm",
+      "name": "Memory DIMM 5",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm6",
+      "kind": "dimm",
+      "name": "Memory DIMM 6",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm7",
+      "kind": "dimm",
+      "name": "Memory DIMM 7",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm8",
+      "kind": "dimm",
+      "name": "Memory DIMM 8",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm9",
+      "kind": "dimm",
+      "name": "Memory DIMM 9",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm10",
+      "kind": "dimm",
+      "name": "Memory DIMM 10",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm11",
+      "kind": "dimm",
+      "name": "Memory DIMM 11",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm12",
+      "kind": "dimm",
+      "name": "Memory DIMM 12",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm13",
+      "kind": "dimm",
+      "name": "Memory DIMM 13",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm14",
+      "kind": "dimm",
+      "name": "Memory DIMM 14",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm15",
+      "kind": "dimm",
+      "name": "Memory DIMM 15",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "dimm16",
+      "kind": "dimm",
+      "name": "Memory DIMM 16",
+      "status": "ok",
+      "metrics": {
+        "ecc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "fan1",
+      "kind": "fan",
+      "name": "Fan 1",
+      "status": "ok",
+      "metrics": {
+        "rpm": 8605.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "fan2",
+      "kind": "fan",
+      "name": "Fan 2",
+      "status": "ok",
+      "metrics": {
+        "rpm": 8369.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "fan3",
+      "kind": "fan",
+      "name": "Fan 3",
+      "status": "ok",
+      "metrics": {
+        "rpm": 8442.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "fan4",
+      "kind": "fan",
+      "name": "Fan 4",
+      "status": "ok",
+      "metrics": {
+        "rpm": 8365.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "fan5",
+      "kind": "fan",
+      "name": "Fan 5",
+      "status": "ok",
+      "metrics": {
+        "rpm": 8238.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "fan6",
+      "kind": "fan",
+      "name": "Fan 6",
+      "status": "ok",
+      "metrics": {
+        "rpm": 8151.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "psu1",
+      "kind": "psu",
+      "name": "Power supply 1",
+      "status": "ok",
+      "metrics": {
+        "watts": 3034.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "psu2",
+      "kind": "psu",
+      "name": "Power supply 2",
+      "status": "ok",
+      "metrics": {
+        "watts": 3034.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "nic1",
+      "kind": "nic",
+      "name": "Network port 1",
+      "status": "ok",
+      "metrics": {
+        "link_up": 1.0,
+        "crc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "nic2",
+      "kind": "nic",
+      "name": "Network port 2",
+      "status": "ok",
+      "metrics": {
+        "link_up": 1.0,
+        "crc_errors": 0.0
+      },
+      "note": null
+    },
+    {
+      "component_id": "nvme1",
+      "kind": "nvme",
+      "name": "NVMe drive 1",
+      "status": "ok",
+      "metrics": {
+        "wear_pct": 31.2,
+        "temp_c": 36.8
+      },
+      "note": null
+    },
+    {
+      "component_id": "nvme2",
+      "kind": "nvme",
+      "name": "NVMe drive 2",
+      "status": "ok",
+      "metrics": {
+        "wear_pct": 29.7,
+        "temp_c": 36.8
+      },
+      "note": null
+    },
+    {
+      "component_id": "bmc",
+      "kind": "bmc",
+      "name": "Management controller (BMC)",
+      "status": "ok",
+      "metrics": {
+        "ok": 1.0
+      },
+      "note": null
+    }
+  ]
+}

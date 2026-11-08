@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Query
 
 from ...schemas.errors import ErrorResponse
-from ...schemas.fleet import (ChaosRequest, ChaosStatus, ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, HealthStatus,
+from ...schemas.fleet import (ChaosRequest, ChaosStatus, ClearResponse, ComponentDetail, ServerComponents, FaultRequest, FaultResponse, FleetMap, FleetStatus, HealthStatus,
                               LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteId, SitesResponse)
-from ...services import chaos, fleet_view, live
+from ...services import chaos, components, fleet_view, live
 from ..deps import SettingsDep, StoreDep
 
 router = APIRouter(prefix="/fleet", tags=["fleet"])
@@ -41,6 +41,20 @@ def get_rack(rack_id: str, store: StoreDep, settings: SettingsDep, history: Hist
 def get_server(server_id: str, store: StoreDep, settings: SettingsDep, history: History = 60) -> ServerDetail:
     """One GPU server: per-GPU temperature and clock, power supplies, inlet air and its job's cost right now."""
     return fleet_view.server_detail(store, settings, server_id, history)
+
+
+@router.get("/servers/{server_id}/components", response_model=ServerComponents,
+            responses={404: {"model": ErrorResponse}})
+def get_components(server_id: str, store: StoreDep) -> ServerComponents:
+    """Every part inside the server (GPUs, CPUs, memory, fans, PSUs, network ports, NVMe, BMC) with its status."""
+    return components.server_components(store, server_id)
+
+
+@router.get("/servers/{server_id}/components/{component_id}", response_model=ComponentDetail,
+            responses={404: {"model": ErrorResponse}})
+def get_component(server_id: str, component_id: str, store: StoreDep, history: History = 60) -> ComponentDetail:
+    """One part: its readings over time, status, and the failure playbook when it is not ok."""
+    return components.component_detail(store, server_id, component_id, history)
 
 
 @router.get("/live", response_model=LiveStatus)

@@ -13,6 +13,9 @@ ramps one machine toward a failure signature over a few ticks, holds it, then en
   THROTTLE_C slows its clock to protect itself. gpu_fault: one GPU heats up and logs memory (ECC) errors,
   then drops off the bus. psu_failure: one of two power supplies dies (no lost compute, no redundancy).
   server_crash: the server stops (the management controller still reports).
+  Server parts (2 CPUs, 16 memory DIMMs, 6 fans, 2 PSUs, 2 NICs, 2 NVMe drives) report too. memory_fault: one
+  DIMM's ECC errors climb. nic_failure: one network port's CRC errors climb, then its link drops.
+  server_fan_failure: one chassis fan slows and stops, so the GPUs run a few degrees hotter.
 Values are demo assumptions, not facility specifications. No risk scores or costs are produced here.
 """
 
@@ -32,6 +35,8 @@ FAULT_KINDS = {
 # Every fault an asset type can get; FAULT_KINDS holds the default one.
 FAULT_CHOICES = {t: (k,) for t, k in FAULT_KINDS.items()} | {"asic_miner": ("hashboard_failure", "fan_failure"),
                                                           "gpu_server": ("gpu_fault", "psu_failure", "server_crash")}
+# Faults that only happen when asked for by kind (kept out of FAULT_CHOICES so seeded random draws stay the same).
+FAULT_EXPLICIT = {"gpu_server": ("memory_fault", "nic_failure", "server_fan_failure")}
 # (ramp, hold, recover) in ticks.
 FAULT_TICKS = {
     "cooling_failure": (6, 30, 6),
@@ -42,6 +47,9 @@ FAULT_TICKS = {
     "gpu_fault": (4, 36, 0),
     "psu_failure": (2, 38, 0),
     "server_crash": (1, 39, 0),
+    "memory_fault": (4, 36, 0),
+    "nic_failure": (3, 37, 0),
+    "server_fan_failure": (3, 37, 0),
 }
 # Faults that keep getting worse while nobody fixes them: degrees added per unit of progress above 1.
 # Progress may go up to MAX_ESCALATION for these (the backend drives it from configs/operations.json).
@@ -54,6 +62,8 @@ MINER_RATED_W = 3500.0
 GPUS_PER_SERVER = 8
 THROTTLE_C = 83.0  # GPU temperature where the clock starts to drop
 GPU_HEAT_C = 50.0  # GPU temperature above inlet air at full load
+CPUS, DIMMS, FANS, NICS, NVMES = 2, 16, 6, 2, 2
+FAN_RPM = 9000.0
 
 
 def rng_for(seed: int, asset_id: str) -> random.Random:
@@ -77,8 +87,12 @@ def profile(asset_type: str, asset_id: str, seed: int) -> dict:
     if asset_type == "asic_miner":
         return base | {"eff": r.uniform(0.97, 1.02), "chip_c": r.uniform(64, 74), "fan_rpm": r.uniform(4200, 5400)}
     if asset_type == "gpu_server":
-        return base | {"load": r.uniform(0.86, 0.96), "offsets": [r.uniform(-3, 5) for _ in range(GPUS_PER_SERVER)],
+        prof = base | {"load": r.uniform(0.86, 0.96), "offsets": [r.uniform(-3, 5) for _ in range(GPUS_PER_SERVER)],
                        "faulty_gpu": r.randrange(GPUS_PER_SERVER)}
+        q = rng_for(seed, "parts:" + asset_id)  # own stream: adding parts does not move the GPU baseline
+        return prof | {"faulty_dimm": q.randrange(DIMMS), "faulty_fan": q.randrange(FANS), "faulty_nic": q.randrange(NICS),
+                       "nvme_wear": [round(q.uniform(3, 40), 1) for _ in range(NVMES)],
+                       "fan_rpm": [q.uniform(8600, 9400) for _ in range(FANS)]}
     raise ValueError(f"unknown asset_type {asset_type!r}")
 
 
@@ -184,4 +198,39 @@ def server_sample(prof: dict, wave: float, rng: random.Random, p: float, kind: s
     }
     values |= {f"gpu{i + 1}_temp_c": t for i, t in enumerate(temps)}
     values |= {f"gpu{i + 1}_clock_pct": round(100 * c, 1) for i, c in enumerate(clocks)}
-    return values
+    return values | _server_parts(prof, wave, rng, p, kind, inlet, crashed, values["power_w"])
+
+
+def _server_parts(prof: dict, wave: float, rng: random.Random, p: float, kind: str, inlet: float, crashed: bool,
+                  power_w: float) -> dict:
+    """CPUs, memory, fans, power supplies, network ports and NVMe drives inside a GPU server."""
+    pp = min(p, 1.0)
+    load = 0.0 if crashed else prof["load"]
+    out: dict = {}
+    fans = []
+    for i in range(FANS):
+        rpm = prof.get("fan_rpm", [FAN_RPM] * FANS)[i] * (0.35 + 0.65 * load) + 120 * wave + rng.uniform(-80, 80)
+        if kind == "server_fan_failure" and i == prof.get("faulty_fan", 0):
+            rpm *= max(0.0, 1 - pp)
+        fans.append(max(0.0, round(rpm)))
+    out |= {f"fan{i + 1}_rpm": f for i, f in enumerate(fans)}
+    hot = 6.0 * pp if kind == "server_fan_failure" else 0.0
+    cpus = [round(inlet + 8 + 40 * load + hot + 1.5 * wave + rng.uniform(-1, 1), 1) for _ in range(CPUS)]
+    out |= {f"cpu{i + 1}_temp_c": t for i, t in enumerate(cpus)}
+    out["cpu_util_pct"] = round(min(100.0, 100 * load * 0.7 + 5 * wave + rng.uniform(-3, 3)), 1) if not crashed else 0.0
+    dimms = [0] * DIMMS
+    if kind == "memory_fault":
+        dimms[prof.get("faulty_dimm", 0)] = round(400 * pp)
+    out |= {f"dimm{i + 1}_ecc": e for i, e in enumerate(dimms)}
+    bad_nic = prof.get("faulty_nic", 0) if kind == "nic_failure" else None
+    links = [0 if (crashed or (i == bad_nic and pp >= 0.6)) else 1 for i in range(NICS)]
+    out |= {f"nic{i + 1}_link": v for i, v in enumerate(links)}
+    out["nic_crc_errors"] = round(800 * pp) if bad_nic is not None else 0
+    psu_dead = kind == "psu_failure" and p >= 0.5
+    out |= {"psu1_w": round(power_w if psu_dead else power_w / 2), "psu2_w": 0 if psu_dead else round(power_w / 2)}
+    wear = prof.get("nvme_wear", [10.0] * NVMES)
+    out |= {f"nvme{i + 1}_wear_pct": w for i, w in enumerate(wear)}
+    out["nvme_temp_c"] = round(inlet + 12 + 3 * load + rng.uniform(-0.5, 0.5), 1)
+    out |= {"bmc_ok": 1, "max_cpu_temp_c": max(cpus), "min_fan_rpm": min(fans), "dimm_max_ecc": max(dimms),
+            "nic_links_up": sum(links)}
+    return out

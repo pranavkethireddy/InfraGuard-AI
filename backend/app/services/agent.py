@@ -40,8 +40,9 @@ for the operator: the problem, the likely cause, how to fix it, and what it cost
 Rules: use only numbers in the tool results; never invent costs, times, or records; cite maintenance records by
 record_id (or learned case_id, from repairs at any InfraGuard site) and say which unit and site it is from; records
 from another unit of the same equipment type are valid evidence for this one. diagnose_readings gives the cause the
-latest reading points to: use it as the likely cause unless the records clearly show another one; say the cause is
-unknown only when diagnose_readings has none; a human must approve any physical work.
+latest reading points to, from InfraGuard's failure playbook (failure_mode: cause, reasoning from the readings,
+repair steps): use it as the likely cause and build the steps on its playbook unless the records clearly show
+another cause; never call the cause unknown; a human must approve any physical work.
 Answer with ONLY this JSON object:
 {"problem": "<1 sentence: what is wrong, on which machine, where>",
  "likely_cause": "<1 sentence from the readings and records, or say the cause is unknown>",
@@ -122,9 +123,11 @@ class Toolbox:
             asset_type = asset_service.get_asset(asset_id).asset_type
         except ApiError:
             return {"error": "unknown asset"}
-        # Newest reading that shows a pattern: a fault that has since recovered still names its cause.
-        cause = next((c for v in reversed(recent) if (c := diagnosis.likely_cause(asset_type, v))), None)
-        return {"likely_cause": cause}
+        # Failure playbook: the newest reading that shows a pattern names the mode (never unknown).
+        mode = diagnosis.diagnose(asset_type, recent)
+        if mode is None:
+            return {"likely_cause": None}
+        return {"likely_cause": f"{mode.title}: {mode.reasoning}", "failure_mode": mode.model_dump()}
 
 
 def _summ(name: str, args: dict, out: dict) -> str:

@@ -42,6 +42,21 @@ class AgentStep(ContractModel):
     summary: str
 
 
+class FailureMode(ContractModel):
+    """The failure playbook this incident matches (configs/failure_catalog.json), filled with its readings."""
+
+    mode_id: str
+    title: str
+    cause: str
+    reasoning: str
+    signals: list[str]
+    steps: list[str]
+    repair_hours: float | None = None
+    parts_cost_usd: float | None = None
+    # The readings the reasoning is based on (signal -> value).
+    evidence: dict[str, float] = {}
+
+
 class IncidentDetail(IncidentSummary):
     latest_prediction: PredictionResponse | None
     evidence: list[Evidence]
@@ -60,6 +75,8 @@ class IncidentDetail(IncidentSummary):
     likely_cause: str | None = None
     # Open or last work order for this incident (additive; see /ops).
     work_order_id: str | None = None
+    # Matched failure playbook: named cause, reasoning and repair steps (never unknown).
+    failure_mode: FailureMode | None = None
 
 
 class IncidentPatchRequest(ContractModel):

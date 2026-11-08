@@ -5,14 +5,14 @@ from typing import Literal
 from pydantic import AwareDatetime, Field
 
 from .common import ContractModel, Criticality, InvestigationStatus, ReadingValue, RiskLevel
-from .incidents import IncidentSummary
+from .incidents import FailureMode, IncidentSummary
 
 # critical: unresolved high-risk incident or latest risk high; warning: medium risk, any other unresolved
 # incident, or (racks) a cooling unit serving the rack is not healthy; healthy: latest risk low; no_data: no readings.
 HealthStatus = Literal["healthy", "warning", "critical", "no_data"]
 LiveState = Literal["running", "stopped"]
 FaultKind = Literal["cooling_failure", "drive_degradation", "machine_overstrain", "fan_failure", "hashboard_failure",
-                    "gpu_fault", "psu_failure", "server_crash"]
+                    "gpu_fault", "psu_failure", "server_crash", "memory_fault", "nic_failure", "server_fan_failure"]
 SiteId = Literal["datacenter", "mining"]
 FaultPhase = Literal["ramping", "holding", "recovering", "ended"]
 
@@ -283,3 +283,37 @@ class ClearResponse(ContractModel):
     faults_cleared: int
     simulations_reset: int
     live: LiveStatus
+
+
+ComponentKind = Literal["gpu", "cpu", "dimm", "fan", "psu", "nic", "nvme", "bmc"]
+ComponentStatus = Literal["ok", "warning", "failed", "offline"]
+
+
+class Component(ContractModel):
+    """One part inside a GPU server, from the server's latest reading."""
+    component_id: str
+    kind: ComponentKind
+    name: str
+    status: ComponentStatus
+    metrics: dict[str, float]
+    note: str | None = None
+
+
+class ServerComponents(ContractModel):
+    server_id: str
+    observed_at: AwareDatetime | None
+    components: list[Component]
+
+
+class ComponentHistoryPoint(ContractModel):
+    observed_at: AwareDatetime
+    status: ComponentStatus
+    metrics: dict[str, float]
+
+
+class ComponentDetail(ContractModel):
+    server_id: str
+    component: Component
+    history: list[ComponentHistoryPoint]
+    # The server's matched failure playbook when this part is not ok.
+    failure_mode: FailureMode | None = None
