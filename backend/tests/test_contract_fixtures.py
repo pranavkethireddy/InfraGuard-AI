@@ -9,7 +9,7 @@ from backend.app.schemas.assets import AssetDetail, AssetSummary
 from backend.app.schemas.common import Page
 from backend.app.schemas.errors import ErrorResponse
 from backend.app.schemas.common import ContractModel
-from backend.app.schemas.fleet import (ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, JobStatus,
+from backend.app.schemas.fleet import (ClearResponse, ComponentDetail, ServerComponents, FaultRequest, FaultResponse, FleetMap, FleetStatus, JobStatus,
                                        LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteMetric, SitesResponse)
 from backend.app.schemas.health import HealthResponse
 from backend.app.schemas.ops import (AutoDispatchRequest, FloorPlan, PagerActionRequest, PagerView,
@@ -56,6 +56,10 @@ SCHEMAS = {
     "fleet.rack.response.json": RackDetail,
     "fleet.server.response.json": ServerDetail,
     "fleet.server.crashed.response.json": ServerDetail,
+    "fleet.server.components.response.json": ServerComponents,
+    "fleet.server.component.response.json": ComponentDetail,
+    "incident.detail.playbook.response.json": IncidentDetail,
+    "fleet.rack.facility.response.json": RackDetail,
     "fleet.jobs.excerpt.json": JobsExcerpt,
     "fleet.live.response.json": LiveStatus,
     "fleet.live.start.request.json": LiveStartRequest,
