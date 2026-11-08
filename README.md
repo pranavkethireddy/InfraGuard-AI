@@ -1,446 +1,156 @@
 # InfraGuard AI
 
-**Predict equipment problems, explain incidents using maintenance history, and prioritize response by operational impact.**
+**From alerts to decisions.** InfraGuard AI watches every machine in a data center, predicts failures, puts a dollar value on each one, and sends the right technician in the right order.
 
-InfraGuard AI is a hackathon project for a **two-person team**, combining a **Python FastAPI backend** with a **React + TypeScript frontend**. It demonstrates how infrastructure monitoring, predictive maintenance, and legacy maintenance intelligence can support one operator workflow.
+🌐 **Live demo:** [infraguard.health](https://infraguard.health)  ·  Built at **HackUTD** by [@pranavkethireddy](https://github.com/pranavkethireddy) and [@sohaswin](https://github.com/sohaswin)
 
-> **Implementation status:** This README is the implementation specification. The repository currently contains the team coordination template; application code, trained models, evaluation results, and deployment must still be built. Planned features below are not claims of completed capability.
+---
 
-## Problem and product
+## The problem
 
-Infrastructure operators need to connect equipment readings, failure warnings, maintenance notes, and business consequences. InfraGuard brings those signals into a dashboard so an operator can identify an affected asset, inspect the evidence, review relevant history, and decide what to address first.
+Data centers produce thousands of alerts, and only a few technicians are there to answer them. Monitoring tools tell you *something* is wrong. They don't tell you:
 
-The demo uses a simulated facility rather than a live production connection. A model trained on a public dataset demonstrates the prediction pipeline; a separate cooling scenario demonstrates the response workflow. Neither establishes production reliability for real data center equipment.
+- **What it costs:** which failure loses the most money every hour it stays down.
+- **What to do:** the likely cause and the repair steps.
+- **Who should go:** which qualified technician is closest, and what they should drop.
 
-## Scope and priorities
+GPU downtime is expensive. Technicians lose time walking, fetching parts, and working on low-value jobs while critical failures wait.
 
-**Build one validated ML model and one rule-based cooling anomaly before adding more models.** A complete prediction-to-response demonstration is the goal; five unfinished models are outside the initial scope.
+## What InfraGuard does
 
-| Priority | Deliverable | Owner | Completion criteria |
-|---|---|---|---|
-| 1 | Shared API contract, FastAPI skeleton, React shell | Both | Agreed JSON fixtures render in the UI and validate in the backend |
-| 2 | One failure detection model, preferably AI4I baseline | @pranavkethireddy | Reproducible training, held-out evaluation, saved inference pipeline |
-| 2 | Asset dashboard and deterministic cooling simulator | @sohaswin | Normal and cooling anomaly scenarios can be started and reset |
-| 3 | End-to-end predictions and incident workflow | Both | Readings produce results, charts, and deduplicated incidents |
-| 4 | Maintenance retrieval and grounded explanation | @pranavkethireddy | Relevant records are cited; missing evidence is handled explicitly |
-| 4 | Incident detail and business impact display | @sohaswin | Assumptions, estimated costs, and priority are visible |
-| 5 | Testing, deployment, and pitch rehearsal | Both | Clean setup and repeatable demonstration work |
-
-Backblaze drive failure prediction is the next ML extension after the MVP passes its acceptance checks. NASA C-MAPSS, ASHRAE, learned facility anomaly detection, WebSockets, and production integrations are stretch work.
-
-## Tracks: three sponsor challenges + HackUTD general track
-
-Confirm the event's official challenge wording, eligibility, required sponsor technologies, and submission requirements before pitching; these descriptions are not verified sponsor rules.
-
-### Sponsor challenges
-
-| Sponsor | Alignment | Evidence to show judges |
-|---|---|---|
-| **NMC²** | Predictive monitoring and infrastructure resilience for data centers | Equipment readings, evaluated failure models, risk evidence, cooling anomaly detection, and an incident response workflow |
-| **CBRE** | Facility operations and business impact | Asset criticality, transparent downtime cost and repair-time estimates, and prioritized maintenance decisions |
-| **8090.AI** | Agentic AI over legacy maintenance information | An AI agent that calls the trained models, retrieves past maintenance records, cites its sources, and recommends how to fix the problem |
-
-### HackUTD general track
-
-| Track | Evidence to show judges |
+| | |
 |---|---|
-| **Design** | A clear operations console: risk at a glance, a guided incident workflow, and plain-language explanations |
+| 🏢 **Covers the whole facility** | GPU servers down to each part (GPUs, memory, power supplies, network cards, fans, drives), plus UPS, generators, transfer switches, chillers, cooling units, power strips, network switches, smoke detection and fire suppression. That's 170 machines and 300+ assets, plus a second site, a crypto mining farm. |
+| 🔍 **Detects failures two ways** | Engineering rules catch known failures. Anomaly models (one Isolation Forest per equipment family, trained on healthy behavior) catch the ones nobody wrote a rule for. |
+| 💬 **Explains each incident with evidence** | It shows the likely cause and the repair playbook, retrieved from maintenance records and written up by an LLM agent. Physical work always needs human approval. |
+| 💵 **Puts a price on every incident** | It shows the cost per hour while down and the savings if fixed now. It compares three options: fix now, wait for the cheap maintenance window, or buy time by shifting load. It recommends the one that saves the most. |
+| 🧑‍🔧 **Dispatches technicians** | The closest qualified technician goes, counting real walking time, including the trip to the parts cabinet. Jobs auto-accept on the technician's pager. |
+| 🚨 **Uses priority levels** | Levels run from 1 to 5, where 5 is the most urgent. A level only ever goes up. Fire and smoke come first. A more urgent job takes over the current one, and the old job goes back in the queue, so nothing is lost. |
+| 🧠 **Learns from every repair** | Each finished repair records what failed, what fixed it, how long it took and what it cost. That knowledge is shared with every site that has the same equipment. |
+| 🌪️ **Has a chaos mode** | Random failures across every kind of equipment, with priorities changing, so you can watch the crew reorganize itself live. |
 
-Every project is also judged in Overall automatically. The Beginner track does not apply because it needs a majority of first-time hackers.
-
-Use one coherent demo: an asset develops a problem, InfraGuard detects it, historical records add context, and the operator sees its estimated business impact. Clearly distinguish the validated ML example from the simulated cooling example.
-
-## Full system components
-
-| Component | Responsibility | Proposed technologies | Primary owner |
-|---|---|---|---|
-| Frontend | Dashboard, assets, charts, alerts, incidents, simulation controls | React, TypeScript, Vite, Tailwind CSS, Recharts | @sohaswin |
-| Backend | Validation, orchestration, inference, incidents, retrieval APIs | Python, FastAPI, Pydantic | @pranavkethireddy |
-| Machine learning | Train, evaluate, version, and serve specialized models | scikit-learn; optional XGBoost | @pranavkethireddy |
-| Data engineering | Dataset preparation, feature definitions, reproducible splits | pandas, NumPy | @pranavkethireddy |
-| Database | Assets, readings, predictions, incidents, maintenance history | SQLite initially; PostgreSQL later | @pranavkethireddy |
-| Simulation | Seeded readings, normal behavior, cooling failure scenarios | Python simulator using the backend ingestion path | @sohaswin |
-| Maintenance AI / RAG | Ingest notes, retrieve evidence, generate grounded explanations | Retrieval index; embeddings and LLM optional | @pranavkethireddy |
-| Business logic | Criticality, downtime estimates, incident prioritization | Authoritative Python calculations; UI presentation | @sohaswin designs; @pranavkethireddy integrates |
-| API integration | Shared schemas, fixtures, loading/error states | Versioned REST JSON; optional WebSockets later | Both |
-| Testing and deployment | Validation, repeatable setup, integration checks, demo hosting | pytest, Vitest, React testing tools; optional Docker | Both |
-
-### Architecture and data flow
+## How it works
 
 ```mermaid
-flowchart TD
-    UI[React + TypeScript dashboard] --> API[FastAPI REST API]
-    SIM[Python simulator] --> API
-    API --> DB[(SQLite / PostgreSQL)]
-    API --> MODEL[Validated model inference]
-    API --> RULES[Cooling rules and incident logic]
-    API --> IMPACT[Business impact calculator]
-    API --> RETRIEVE[Maintenance retrieval]
-    RETRIEVE --> EXPLAIN[Grounded explanation / optional LLM]
-    DATA[Public dataset preparation] --> TRAIN[Offline training and evaluation]
-    TRAIN --> MODEL
+flowchart LR
+    S[Simulator<br/>live readings every second] --> D[Detectors<br/>rules + anomaly models + ML]
+    D --> I[Incident<br/>evidence, cause, playbook]
+    I --> P[Impact & what-if<br/>cost/hour, best option]
+    P --> X[Dispatch<br/>closest qualified tech, priority queue]
+    X --> T[Technician pager<br/>walk → parts → repair → done]
+    T --> L[Learning<br/>shared across sites]
+    L -.-> I
 ```
 
-1. Ingest validated readings with asset ID, timestamp, units, and data origin.
-2. Route the asset to its compatible model or rule engine; never apply an unrelated model to arbitrary sensor data.
-3. Persist the result and create or update an incident when configured thresholds are crossed.
-4. Retrieve maintenance evidence and compute business impact using explicit assumptions.
-5. Return the incident, prediction, evidence, and estimates to React.
+1. **Simulate:** a Python simulator streams readings for every asset at both sites.
+2. **Detect:** rule detectors, per-family anomaly models and trained ML models score each reading.
+3. **Open an incident:** a failure opens an incident (deduplicated). The agent retrieves matching maintenance records and writes the likely cause and the repair steps.
+4. **Price it:** the impact assumptions give the downtime cost and repair cost. The what-if engine ranks the fix options.
+5. **Dispatch:** the backend picks a technician, plans their walk across the floor through the parts cabinet, and keeps every technician's queue sorted by priority level.
+6. **Learn:** each closed repair becomes a learned case, available to every site.
 
-Model training runs offline. The API loads saved preprocessing and model artifacts for inference. Simulation traffic uses the same validation and incident path as other readings.
+## Screens
 
-## Two-person responsibilities and handoffs
-
-### @pranavkethireddy — AI, ML, and backend
-
-Own `backend/`, `ml/`, data preparation, database migrations, inference, and maintenance retrieval. Build the FastAPI server, one evaluated failure model, model metadata, and grounded explanations. Document features, units, label definition, evaluation limitations, and model version.
-
-**Deliverable:** A server accepting supported readings and returning validated predictions, incidents, impact estimates, and evidence-backed explanations.
-
-### @sohaswin — frontend, simulation, and integration
-
-Own `frontend/` and `simulator/`. Build the dashboard, asset and incident views, Recharts visualizations, deterministic scenarios, and API integration. Define business impact assumptions with @pranavkethireddy, implement their presentation, and help package and deploy the demo.
-
-**Deliverable:** An interactive dashboard where judges can trigger a cooling problem, inspect the resulting incident, and understand the evidence and estimated impact.
-
-### Shared responsibilities
-
-Agree on the API before independent implementation. Review changes to schemas, thresholds, feature units, and environment variables together. @pranavkethireddy owns server-side calculations; @sohaswin should not duplicate authoritative risk or cost logic in React. Both own integration testing, deployment, demo rehearsal, and truthful sponsor claims.
-
-The team is **@pranavkethireddy (backend, AI, and ML)** and **@sohaswin (frontend, simulation, and integration)**. `AGENTS.md` contains the folder ownership assignments and coordination rules. New files inherit their folder owner; coordinate changes to shared contracts and files before editing them.
-
-## Folder ownership
-
-Ownership includes planned paths that have not yet been created. See `AGENTS.md` for the complete ownership table and coordination rules.
-
-| Area / paths | Owner |
+| Page | What you see |
 |---|---|
-| `backend/`, including API, schemas, database, migrations, retrieval, explanations, incident logic, impact calculations, and backend tests | @pranavkethireddy |
-| `ml/`, including training, evaluation, artifacts, and model tests | @pranavkethireddy |
-| `data/`, including preparation, datasets, and maintenance source records | @pranavkethireddy |
-| `frontend/`, including React views, charts, API client, frontend tests, and frontend configuration | @sohaswin |
-| `simulator/`, including Python scenarios, reset behavior, and simulator tests | @sohaswin |
-| `contracts/`, `configs/`, `docs/`, and cross-system `tests/` | Both |
-| `README.md`, `AGENTS.md`, `CLAUDE.md`, and `SKILL.md` if added | Both |
-| `.claude/`, `tools/`, `.github/`, root environment/configuration files, CI, and deployment | Both |
+| **Overview** | Facility floor map, facility status, GPU jobs, and the incident queue |
+| **Live fleet** | Both sites live: halls, racks, servers and their parts, fault injection, chaos mode |
+| **Incidents** | Evidence, investigation, maintenance records, impact ledger, priority, repair playbook |
+| **Operations** | Repair plan (what-if), crew on the floor map, automatic dispatch, learning matrix |
+| **Technician pager** | A technician's current job, walking ETA, steps, and priority-sorted queue |
+| **Assets / Models** | Equipment register, reading history, model cards and metrics |
 
-@pranavkethireddy owns authoritative server-side calculations and detector settings. @sohaswin leads their UI presentation, scenario settings, and jointly defined business impact assumptions. Each developer owns dependency configuration and tests within their component. Shared files require coordination; new top-level areas require an agreed owner.
+## Tech stack
 
-## Models, datasets, and evaluation
+| Layer | Tech |
+|---|---|
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, Recharts |
+| Backend | Python, FastAPI, Pydantic, server-sent events for live updates |
+| ML | scikit-learn (Isolation Forest, gradient boosting, logistic regression), pandas, NumPy |
+| AI agent | Vultr Serverless Inference or Gemini, with a deterministic retrieval-based fallback |
+| Simulation | Python simulator with seeded scenarios and chaos mode |
+| Deploy | Docker, Railway, custom domain [infraguard.health](https://infraguard.health) |
 
-| Module | Dataset or source | Intended task | Phase |
+## Models and measured results
+
+Every number below comes from the training scripts in `scripts/`, measured on a held-out test split. See `ml/artifacts/model_cards/`.
+
+| Model | Data | Task | Test results |
 |---|---|---|---|
-| Industrial failure | UCI AI4I | Demonstrate machinery failure classification on its own feature schema | MVP first choice |
-| Cooling anomaly | Synthetic facility readings | Detect a configured temperature/operating anomaly with explicit rules | MVP, **not a trained model** |
-| Drive failure | Backblaze | Predict drive failure within a documented future horizon | Next extension |
-| Engine degradation | NASA C-MAPSS | Research remaining useful life | Stretch |
-| Building energy anomaly | ASHRAE | Research unusual energy behavior under a defined task | Stretch |
+| `industrial-failure-v1` | UCI AI4I 2020 | Machine failure at time of observation | F1 0.78 · precision 0.87 · recall 0.71 · PR-AUC 0.81 · ROC-AUC 0.98 |
+| `drive-failure-v1` | Backblaze drive stats 2025 Q1 | Drive fails within 30 days | ROC-AUC 0.83 · PR-AUC 0.13 (no-skill baseline 0.001) · recall 0.33 |
+| Facility anomaly models | Simulated healthy readings | One Isolation Forest per equipment family | Scores in about 0.03 ms per reading |
 
-Keep unrelated datasets and models separate. AI4I is a demonstration domain, not evidence that its predictions generalize to cooling systems, UPS units, or drives. Download datasets from their official providers and record versions, licenses, preparation steps, and applicable use terms.
+## Run it locally
 
-### Validation requirements for the first model
-
-- Define the target and input feature schema before training. Exclude targets, failure sublabels, identifiers, and other leakage-prone columns from predictors.
-- Create reproducible train/validation/test splits. Fit preprocessing only on training data and keep the test set untouched until final evaluation.
-- Compare a simple baseline with a candidate such as Random Forest; add XGBoost only if it provides a demonstrated benefit.
-- Report class balance, precision, recall, F1, PR-AUC, and a confusion matrix at the chosen threshold. Report ROC-AUC where meaningful; accuracy alone is insufficient.
-- Select thresholds on validation data based on false alarm and missed failure tradeoffs. Document any resampling and apply it only within training folds.
-- A score is not automatically a calibrated probability. Evaluate calibration separately before making probability claims.
-- Save the preprocessing pipeline, feature order and units, model version, dataset version, seed, threshold, metrics, and evaluation report together.
-- Verify inference parity between offline evaluation and the API. Report actual measurements; do not invent accuracy targets or claim production validation.
-
-For Backblaze, define the prediction horizon and label construction, avoid future information, use time-aware evaluation and drive separation appropriate to the generalization claim, and account for incomplete follow-up. For C-MAPSS, separate engines; for building energy work, account for time and building identity.
-
-## Cooling simulation
-
-Implement seeded scenarios: `normal` and `cooling_anomaly`. @sohaswin owns the Python scenario generator and @pranavkethireddy exposes ingestion and scenario endpoints. The frontend triggers scenarios through FastAPI.
-
-A demo rule can open an incident after temperature exceeds a configured threshold for a configured number of consecutive readings. Record the threshold, units, persistence window, reset behavior, and cooldown in configuration. Values are demo assumptions, not facility safety specifications.
-
-All synthetic readings and results must carry `data_origin: "simulated"`. Use `score_kind: "heuristic"` for rule scores, display the trigger evidence, and never label them as ML failure probabilities. Reset must clear the active scenario state so the demo is repeatable.
-
-## Shared API JSON contract
-
-Use `/api/v1`, UTC ISO 8601 timestamps, stable string IDs, explicit units, and a versioned contract. FastAPI Pydantic models and its generated OpenAPI document are the schema authority; commit matching TypeScript types or generate them. Keep shared example fixtures in `contracts/` so both developers can work independently.
-
-### Planned endpoints
-
-| Method | Route | Purpose |
-|---|---|---|
-| GET | `/health` | Service and dependency readiness |
-| GET | `/api/v1/assets` | Asset inventory and current state |
-| GET | `/api/v1/assets/{asset_id}` | Asset detail |
-| GET | `/api/v1/assets/{asset_id}/readings` | Bounded, time-filtered reading history |
-| POST | `/api/v1/readings` | Validate and persist readings |
-| POST | `/api/v1/predictions` | Run a compatible model or rule engine |
-| GET | `/api/v1/incidents` | Filtered, paginated incidents |
-| GET | `/api/v1/incidents/{incident_id}` | Evidence, predictions, impact, and explanation |
-| PATCH | `/api/v1/incidents/{incident_id}` | Acknowledge or resolve an incident |
-| POST | `/api/v1/simulations` | Start a seeded scenario |
-| POST | `/api/v1/simulations/{simulation_id}/reset` | Reset scenario state |
-| POST | `/api/v1/maintenance/search` | Retrieve relevant maintenance records |
-
-`POST /predictions` persists a prediction and updates the associated active incident when a trigger qualifies. Readings ingestion stores readings; the simulator explicitly requests evaluation after ingestion. Deduplicate active incidents by asset and detector so repeated evaluations do not flood the UI.
-
-### Prediction request example — cooling simulation
-
-```json
-{
-  "asset_id": "cooling-01",
-  "observed_at": "2026-11-07T20:00:00Z",
-  "data_origin": "simulated",
-  "detector_id": "cooling-rule-v1",
-  "readings": {
-    "temperature_c": 35.0,
-    "fan_speed_rpm": 850
-  }
-}
-```
-
-This example belongs to the cooling rule schema. The trained model must define its own required inputs; do not reuse this payload for AI4I inference.
-
-### Prediction response example — illustrative values
-
-```json
-{
-  "prediction_id": "pred-demo-001",
-  "asset_id": "cooling-01",
-  "observed_at": "2026-11-07T20:00:00Z",
-  "data_origin": "simulated",
-  "model_name": "cooling-rule",
-  "model_version": "1.0.0",
-  "risk_score": 0.8,
-  "score_kind": "heuristic",
-  "risk_level": "high",
-  "prediction_horizon_hours": null,
-  "explanation": "The configured sustained temperature threshold was exceeded.",
-  "explanation_source": "rule",
-  "evidence": [
-    {
-      "type": "sensor_rule",
-      "field": "temperature_c",
-      "value": 35.0,
-      "threshold": 32.0,
-      "consecutive_readings": 3
-    }
-  ],
-  "maintenance_sources": [],
-  "incident_id": "inc-demo-001"
-}
-```
-
-Required prediction fields include `asset_id`, `model_name`, `risk_score`, `risk_level`, and `explanation`. Also require provenance and score semantics:
-
-- `risk_score`: number in `[0, 1]`; `score_kind`: `heuristic`, `model_score`, or `calibrated_probability`.
-- `risk_level`: `low`, `medium`, or `high`, assigned by documented detector-specific thresholds.
-- `data_origin`: `simulated` or `observed`; historical replay must remain distinguishable in asset metadata/UI.
-- `prediction_horizon_hours`: positive number only when the evaluated task supports a future horizon; otherwise `null`.
-- `explanation_source`: `rule`, `template`, or `rag`; source records include IDs and excerpts when retrieval is used.
-- Unsupported assets/features must return a validation error, never a fabricated score. Unavailable model or retrieval dependencies must produce explicit status/error information.
-
-### Errors and incident state
-
-```json
-{
-  "error": {
-    "code": "INVALID_FEATURES",
-    "message": "Required detector input is missing.",
-    "details": {"missing_fields": ["temperature_c"]},
-    "request_id": "req-demo-001"
-  }
-}
-```
-
-Use `422` for invalid input, `404` for unknown IDs, `409` for invalid state transitions, and `503` for unavailable dependencies. Normalize FastAPI validation errors into the agreed envelope. Define incident states `open`, `acknowledged`, and `resolved`; record timestamps and reject unsupported transitions. Agree on pagination and time-filter semantics before implementing list views.
-
-## Database and maintenance intelligence
-
-Store assets, timestamped readings, model predictions, incidents, maintenance records, and links between retrieved evidence and incidents. Asset metadata includes asset type, location, criticality, compatible detector, and impact assumptions. Persist model version and data provenance with each prediction.
-
-Start with SQLite and migrations. Keep data access separate from API handlers to ease a later PostgreSQL move. Bound history queries and index asset/timestamp lookups.
-
-For maintenance retrieval, begin with seeded, clearly labeled demo records. Preserve record IDs, asset associations, dates, source names, and original text. Retrieve relevant excerpts before generating an explanation. An optional LLM may summarize evidence and suggest investigation steps, but must cite the records used and distinguish sensor evidence from historical context. When no useful records exist, say so; use a deterministic rule/template explanation if the LLM is unavailable. Treat record text as data, not executable instructions. No autonomous equipment actuation is part of the MVP.
-
-## Business impact and prioritization
-
-Use transparent assumptions rather than presenting estimates as measured losses:
-
-```text
-estimated_downtime_cost = estimated_downtime_hours × cost_per_hour
-estimated_total_impact = estimated_downtime_cost + estimated_repair_cost
-```
-
-Store currency, source of assumptions, and calculation inputs with the estimate. Show estimated ranges where practical. @sohaswin defines how operators see and compare impact; @pranavkethireddy exposes the authoritative calculation through incident responses.
-
-A priority index may combine normalized risk, criticality, and estimated impact using documented weights. Keep it separate from the model score. Do not multiply a heuristic score by cost and call the result expected financial loss. An expected-loss calculation requires a defensible probability and matching time horizon.
-
-## Frontend experience
-
-- **Overview:** asset health, active incidents, explicitly labeled demo data, and priority ranking.
-- **Assets:** inventory, asset detail, sensor history, compatible detector, score meaning, and model version.
-- **Incidents:** trigger evidence, status controls, maintenance sources, explanation, recommended investigation, and impact assumptions.
-- **Simulation controls:** start normal/cooling scenarios, show progress, and reset the demo.
-
-Handle loading, empty, invalid-input, and unavailable-service states. Start with REST polling; add WebSockets only after integration is reliable. Keep credentials and LLM calls on the backend.
-
-## Proposed repository layout
-
-The directories below are the implementation target, not a claim that they already exist.
-
-```text
-InfraGuard-AI/
-├── README.md
-├── AGENTS.md                  # Team coordination and assigned folder ownership
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── api/
-│   │   ├── schemas/
-│   │   ├── services/
-│   │   └── db/
-│   ├── tests/
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   ├── package.json
-│   └── .env.example
-├── ml/
-│   ├── training/
-│   ├── evaluation/
-│   └── artifacts/
-├── simulator/
-├── contracts/                 # JSON examples and shared schema artifacts
-├── configs/                   # Detector thresholds and scenario settings
-├── data/                      # Ignored raw/processed data; documented acquisition
-├── docs/                      # Architecture, evaluation reports, demo guide
-├── tools/board                # Existing GitHub coordination tool
-└── .env.example
-```
-
-## Local development target
-
-**These commands apply after the implementation creates the referenced directories and dependency files. They are not runnable setup instructions for the current template alone.** Use Python 3.11+ and a Node.js version supported by the chosen Vite release; pin tested dependency versions in the implementation.
-
-Backend, from the repository root:
+You need Python 3.11+ and Node 20+.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r backend/requirements.txt
-python -m uvicorn backend.app.main:app --reload --port 8000
+# Backend (from the repo root)
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r backend/requirements.txt -r ml/requirements.txt
+cp backend/.env.example backend/.env    # optional: add GEMINI_API_KEY for AI explanations
+uvicorn backend.app.main:app --reload --port 8000
 ```
 
-Frontend, in another terminal:
-
 ```bash
+# Frontend (second terminal)
 cd frontend
 npm install
 npm run dev
 ```
 
-Proposed configuration:
+Open the URL Vite prints, go to **Live fleet**, start the live loop, and turn on chaos mode or inject a fault.
 
-```dotenv
-# Backend .env.example
-DATABASE_URL=sqlite:///./infraguard.db
-CORS_ORIGINS=http://localhost:5173
-MODEL_ARTIFACT_PATH=ml/artifacts/ai4i/pipeline.joblib
-SIMULATION_ENABLED=true
-# Optional backend-only provider credentials belong in ignored .env files.
+Without an AI key, the incident agent uses its deterministic fallback, which is built from the same maintenance records.
 
-# Frontend frontend/.env.example
-VITE_API_BASE_URL=http://localhost:8000/api/v1
+**Tests:**
+
+```bash
+python -m pytest backend/tests ml/tests simulator
+cd frontend && npm test
 ```
 
-Implement parsing for these settings and document the working directory for relative paths. Configure CORS for the actual frontend origin. Add explicit data preparation, training, migration, and seed commands when those scripts exist. Never commit secrets, raw datasets, local databases, or large model files inadvertently. Provide a clear model-loading error if artifacts have not been trained/downloaded.
+**Docker (one server, one URL):**
 
-## Testing and definition of done
-
-The MVP is ready when both developers can demonstrate:
-
-- A clean documented setup, database initialization, seeded assets, and successful health check.
-- One reproducible model evaluation with saved metrics, leakage checks, and compatible API inference.
-- Shared JSON fixtures accepted by backend schemas and rendered correctly by React.
-- A normal scenario without an anomaly, then a sustained cooling anomaly that produces a single active incident.
-- Clear separation of model results, heuristic simulation scores, data origin, and estimated business impact.
-- Maintenance retrieval with traceable sources, plus a useful no-evidence/provider-unavailable fallback.
-- Incident acknowledgement/resolution, scenario reset, and a repeatable rerun.
-- Validation of missing features, unknown assets, unavailable artifacts, and frontend error states.
-
-Use pytest for backend, model integration, rules, and impact calculation; use Vitest and React testing tools for meaningful UI behavior and contract integration. Run an end-to-end smoke test through the actual backend before the pitch. Record actual results rather than claiming tests that have not run.
-
-## Demo narrative
-
-1. Introduce the facility dashboard and label the data as simulated.
-2. Show the separate validated ML example with its evaluation evidence and limitations.
-3. Start the cooling anomaly; show changing readings and the explicit rule trigger.
-4. Open the incident and inspect maintenance evidence and a grounded explanation.
-5. Show criticality, estimated impact, and the priority decision.
-6. Acknowledge or resolve the incident and reset the scenario.
-7. Pitch to all three sponsors (NMC² monitoring and resilience, CBRE facility impact, 8090.AI agentic maintenance intelligence) and the Design track, using the verified event requirements.
-
-## Existing team coordination guide
-
-The repository began as a hackathon agent-board template. The original guide is retained below for its setup instructions, commands, examples, and links. The banner path refers to the existing repository asset; a standalone downloaded README must be placed at the repository root for that image to resolve. Board posting is a team workflow described here, not an action performed by this README update.
-
----
-
-# Hackathon agent board
-
-![The hacking floor at Cal Hacks](docs/banner.jpg)
-
-One pinned GitHub issue that every teammate's coding agent posts to. Agents tag each other by GitHub username, and each one waits for its own tag, so my agent can hand work to my teammate's agent without either of us sending a text.
-
-Full walkthrough with the templates and an FAQ: **[marvelous-relative-5de.notion.site/hack](https://marvelous-relative-5de.notion.site/hack)**
-
-## How it works
-
-```mermaid
-sequenceDiagram
-    participant A as Sam's agent
-    participant B as Board (pinned issue)
-    participant C as Priya's agent
-    A->>B: [Sam's Claude] login page is merged, @priya-dev can you add the API route?
-    Note over C: tools/board wait wakes up on the @priya-dev tag
-    B->>C: new post, flagged MENTION
-    C->>B: [Priya's Codex] @sam-dev the route is up on main
+```bash
+docker compose up -d --build
 ```
 
-1. Split the project up at kickoff and give each person their own folders. The owner table in `AGENTS.md` says whose folders are whose, and every agent reads it.
-2. Pin one issue as the board. Every agent posts there when it finishes something or needs something.
-3. Tag the teammate. Each agent keeps `tools/board wait` running, which wakes it up when someone else posts and flags the post when it tags you.
+## Repository layout
 
-## Used at
+```
+backend/     FastAPI app: API, schemas, services (detectors, incidents, impact, ops, pager, chaos, learning, agent)
+frontend/    React + TypeScript dashboard
+simulator/   Live fleet simulator and scenarios
+ml/          Training, evaluation, model artifacts and model cards
+scripts/     Data preparation and training CLIs
+configs/     Layouts, detector thresholds, impact assumptions, crew and chaos settings
+contracts/   Shared API JSON contract and fixtures
+data/        Maintenance records and datasets
+deploy/      Dockerfiles, Caddy and Railway config
+```
 
-My teams ran this at two hackathons, and both boards are public if you want to scroll through them.
+## Hackathon tracks
 
-- **Knight Hacks**, UCF's hackathon. The [Farsight board](https://github.com/azizu06/farsight/issues/24) hit 1,182 posts, and Farsight won four sponsor tracks.
-- **Cal Hacks**, UC Berkeley's hackathon. The [Backrooms board](https://github.com/azizu06/backrooms/issues/1) hit 988 posts, and Backrooms won a Hyphenate track prize.
-
-## Setup in 5 minutes
-
-1. Click **Use this template** to make your hackathon repo from this one.
-2. Open a new issue from the **Message board** template and pin it. If it's the first issue in the repo it's #1 and you can skip the next step.
-3. If it isn't issue #1, every teammate sets `export BOARD_ISSUE=<number>`.
-4. Fill in your team's GitHub logins and the owner table in `AGENTS.md`.
-5. Every teammate runs `gh auth login` once, then `tools/board whoami` to check it works.
-
-## Commands
-
-| Command | What it does |
+| Track | How InfraGuard fits |
 |---|---|
-| `tools/board post "[Sam's Claude] ..."` | Posts to the board. Every post starts with whose agent it is. |
-| `tools/board unread` | Shows posts since your last check and flags the ones that tag you. |
-| `tools/board wait` | Blocks until someone else posts, then prints it. |
-| `tools/board read -n 20` | Shows the last 20 posts. |
-| `tools/board whoami` | Prints your GitHub login so you can check `gh` is set up. |
+| **NMC²**: data center resilience | Live monitoring of every facility system, evaluated failure models, anomaly detection, and an end-to-end incident response |
+| **CBRE**: facility operations | Downtime cost, repair-time estimates, fix-now vs. wait vs. buy-time decisions, and technician dispatch |
+| **8090.AI**: agentic AI on legacy data | An agent that calls the models, retrieves past maintenance records, cites them, and recommends the fix |
+| **Design** | A clear operations console: risk at a glance, a guided incident flow, and a technician pager |
 
-`tools/board wait` checks once every 30 seconds, and when nothing is new that check is one API call, so a whole team stays well under GitHub's rate limit. Use `--interval 60` if a lot of agents share one account.
+## Honest limitations
 
-## Works with any coding agent
+- The anomaly models are trained on simulated healthy readings. AI4I and Backblaze show that the ML pipeline works; they don't prove accuracy on real data center equipment.
+- Live state is kept in memory, so a restart resets the demo.
+- Gemini's free tier has a daily limit. When it runs out, the deterministic fallback explanation is shown instead.
 
-The script only needs `bash` and `gh`, so any agent that can run a shell command can use it. Claude Code also gets the hooks in `.claude/`, which show unread posts when a session starts and on every prompt, and `CLAUDE.md` pulls in the rules from `AGENTS.md`. Every other agent reads `AGENTS.md` and runs `tools/board unread` before each task.
+## How we built it
 
-## Requirements
+Two people, each with a coding agent. The agents coordinated through a pinned GitHub issue used as a message board (`tools/board`, rules in `AGENTS.md`). Each agent tagged the other when a contract changed or a handoff was ready. Each person owned their own folders, and the API contract in `contracts/` was agreed before either side built against it.
 
-`bash`, `git`, and the [GitHub CLI](https://cli.github.com) logged in with `gh auth login`.
+| | Owned |
+|---|---|
+| **Pranav Kethireddy** ([@pranavkethireddy](https://github.com/pranavkethireddy)) | Backend, AI agent, ML models, detection, impact, dispatch, deployment |
+| **Sohaswin** ([@sohaswin](https://github.com/sohaswin)) | Frontend dashboard, simulator, integration |
