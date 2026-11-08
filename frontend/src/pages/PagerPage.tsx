@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LoaderCircle } from 'lucide-react';
 import { api, DATA_MODE, FIXTURE_MUTATION_MESSAGE, ApiError } from '@/api/client';
 import { isPagerView, newerPager, pagerKey, usePagerStream } from '@/api/ops-stream';
-import type { PagerAction, PagerView } from '@/api/ops-types';
+import type { PagerView } from '@/api/ops-types';
 import { AppLink } from '@/lib/router-adapter';
 import { PriorityRank } from '@/components/PriorityRank';
 import { StreamStatus } from '@/components/StreamStatus';
@@ -17,7 +17,7 @@ function PagerWorkspace({ id, onTechnicianChange }: { id: string; onTechnicianCh
   const qc = useQueryClient();
   const lock = useRef(false);
   const mutation = useMutation({ mutationKey: ['pager', id], retry: false,
-    mutationFn: async ({ command, order }: { command: 'claim' | 'release' | PagerAction; order?: string }) => {
+    mutationFn: async ({ command, order }: { command: 'claim' | 'release' | 'done'; order?: string }) => {
       if (command !== 'claim' && command !== 'release' && !order) throw new Error('No work order returned');
       const result = command === 'claim' ? await api.claimPager(id) : command === 'release' ? await api.releasePager(id) : await api.pagerAction(id, { action: command, work_order_id: order ?? '' });
       if (!isPagerView(result) || result.technician.technician_id !== id) throw new Error('Invalid pager action response. Refresh the pager before retrying.');
@@ -30,8 +30,10 @@ function PagerWorkspace({ id, onTechnicianChange }: { id: string; onTechnicianCh
   const fixture = DATA_MODE === 'fixture';
   const data = pager.data; const job = data?.job;
   const queue = data?.technician.queued_work_order_ids.map((id) => ({ id, order: data.queue.find((w) => w.work_order_id === id) })) ?? [];
-  const execute = (command: 'claim' | 'release' | PagerAction) => {
+  const execute = (command: 'claim' | 'release' | 'done') => {
     if (fixture || lock.current || mutation.isPending || !data) return;
+    if (command === 'claim' && data.technician.device_controlled !== false) return;
+    if (command === 'release' && data.technician.device_controlled !== true) return;
     if (command !== 'claim' && command !== 'release' && !job?.actions.includes(command)) return;
     lock.current = true; mutation.mutate({ command, ...(job ? { order: job.work_order.work_order_id } : {}) });
   };
@@ -41,8 +43,8 @@ function PagerWorkspace({ id, onTechnicianChange }: { id: string; onTechnicianCh
     {pager.isLoading ? <Loading label="Loading pager…" /> : !data ? <ErrorState error={pager.error} /> : <div className="space-y-6">
       {pager.error && <ErrorState error={pager.error} />}
       <Section title={data.technician.name} aside={<Badge>{data.technician.status}</Badge>}>
-        <div className="flex flex-wrap items-center justify-between gap-4"><p>Device-controlled: <strong>{data.technician.device_controlled ? 'Yes' : 'No'}</strong><span className="ml-3 text-xs text-muted-foreground">DEMO clock {data.demo_time} · version {data.version}</span></p>
-          <ConsoleButton className="min-h-12 px-6" variant="primary" aria-busy={mutation.isPending} disabled={fixture || mutation.isPending} onClick={() => execute(data.technician.device_controlled ? 'release' : 'claim')}>{mutation.isPending && <LoaderCircle aria-hidden className="h-4 w-4 animate-spin motion-reduce:animate-none" />}{data.technician.device_controlled ? 'Release control' : 'Take control'}</ConsoleButton>
+        <div className="flex flex-wrap items-center justify-between gap-4"><p>Device-controlled: <strong>{data.technician.device_controlled == null ? 'Not reported' : data.technician.device_controlled ? 'Yes' : 'No'}</strong><span className="ml-3 text-xs text-muted-foreground">DEMO clock {data.demo_time} · version {data.version}</span></p>
+          <ConsoleButton className="min-h-12 px-6" variant="primary" aria-busy={mutation.isPending} disabled={fixture || mutation.isPending || data.technician.device_controlled == null} onClick={() => execute(data.technician.device_controlled ? 'release' : 'claim')}>{mutation.isPending && <LoaderCircle aria-hidden className="h-4 w-4 animate-spin motion-reduce:animate-none" />}{data.technician.device_controlled ? 'Release control' : 'Take control'}</ConsoleButton>
         </div>
         {fixture && <p className="mt-3 text-xs text-muted-foreground">{FIXTURE_MUTATION_MESSAGE}</p>}
         {mutation.error && <div role="alert" className="mt-4"><ErrorState error={mutation.error} /><p className="mt-2 text-sm">Review the latest allowed actions before retrying.</p><ConsoleButton className="mt-2 min-h-11" disabled={mutation.isPending} onClick={() => { mutation.reset(); void pager.refetch(); }}>Refresh pager</ConsoleButton></div>}
@@ -55,8 +57,8 @@ function PagerWorkspace({ id, onTechnicianChange }: { id: string; onTechnicianCh
           <ol className="list-decimal space-y-3 pl-6">{job.steps.map((step, i) => <li key={i}>{step}</li>)}</ol>
           <div className="flex flex-wrap gap-4">{job.asset_id && <AppLink className="inline-flex min-h-11 items-center text-primary underline" to={`/assets/${encodeURIComponent(job.asset_id)}`}>Asset</AppLink>}{job.incident_id && <AppLink className="inline-flex min-h-11 items-center text-primary underline" to={`/incidents/${encodeURIComponent(job.incident_id)}`}>Incident investigation</AppLink>}</div>
           {job.work_order.cost && <div className="overflow-x-auto"><table className="data-table"><caption className="text-left">Returned completed cost · USD</caption><tbody>{Object.entries(job.work_order.cost).map(([key, value]) => <tr key={key}><th>{key}</th><td>{value}</td></tr>)}</tbody></table></div>}
-          <div className="flex flex-wrap gap-3">{job.actions.filter((a) => ['accept', 'decline', 'done'].includes(a)).map((action) => <ConsoleButton key={action} className="min-h-14 min-w-32 px-8 text-base" variant={action === 'decline' ? 'outline' : 'primary'} aria-busy={mutation.isPending} disabled={fixture || mutation.isPending} onClick={() => execute(action)}>{mutation.isPending && <LoaderCircle aria-hidden className="h-4 w-4 animate-spin motion-reduce:animate-none" />}{action === 'accept' ? 'Accept job' : action === 'decline' ? 'Decline job' : 'Done'}</ConsoleButton>)}</div>
-          {!job.actions.length && <p className="text-muted-foreground">No actions currently allowed by the backend.</p>}
+          {job.actions.includes('done') && <ConsoleButton className="min-h-14 min-w-32 px-8 text-base" variant="primary" aria-busy={mutation.isPending} disabled={fixture || mutation.isPending} onClick={() => execute('done')}>{mutation.isPending && <LoaderCircle aria-hidden className="h-4 w-4 animate-spin motion-reduce:animate-none" />}Done</ConsoleButton>}
+          {!job.actions.includes('done') && <p className="text-muted-foreground">Completion confirmation not currently available.</p>}
         </div> : <Empty>No current job returned.</Empty>}
       </Section>
       <Section title="Queued jobs">{queue.length ? <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Work order / task</th><th>Asset</th><th>Priority rank</th><th>Status</th><th>Scheduled / ETA</th></tr></thead><tbody>{queue.map(({ id, order: w }) => <tr key={id}><td>{id}<p>{w?.title ?? 'Work order not reported'}</p></td><td>{w?.asset_name ?? w?.asset_id ?? 'Not reported'}</td><td><PriorityRank incidentId={w?.incident_id} /></td><td>{w?.status ?? 'Not reported'}</td><td>{w?.scheduled_start ?? 'Not reported'} · {w?.eta_minutes ?? 'Not reported'} DEMO minutes</td></tr>)}</tbody></table></div> : <Empty>No queued jobs returned.</Empty>}</Section>
