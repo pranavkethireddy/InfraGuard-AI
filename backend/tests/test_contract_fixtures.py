@@ -12,7 +12,8 @@ from backend.app.schemas.common import ContractModel
 from backend.app.schemas.fleet import (ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, JobStatus,
                                        LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteMetric, SitesResponse)
 from backend.app.schemas.health import HealthResponse
-from backend.app.schemas.ops import (DispatchRequest, DispatchResponse, LearnedCases, LearningMatrix, PlanResponse,
+from backend.app.schemas.ops import (AutoDispatchRequest, FloorPlan, PagerActionRequest, PagerView,
+                                     DispatchRequest, DispatchResponse, LearnedCases, LearningMatrix, PlanResponse,
                                      TechniciansResponse, WhatIf)
 from backend.app.schemas.incidents import IncidentDetail, IncidentPatchRequest, IncidentSummary
 from backend.app.schemas.maintenance import MaintenanceSearchRequest, MaintenanceSearchResponse
@@ -66,6 +67,12 @@ SCHEMAS = {
     "incident.miner.response.json": IncidentDetail,
     "incident.whatif.response.json": WhatIf,
     "incident.server.whatif.response.json": WhatIf,
+    "ops.floor.response.json": FloorPlan,
+    "ops.autodispatch.request.json": AutoDispatchRequest,
+    "ops.pager.claim.response.json": PagerView,
+    "ops.pager.paged.response.json": PagerView,
+    "ops.pager.walking.response.json": PagerView,
+    "ops.pager.action.request.json": PagerActionRequest,
     "ops.technicians.response.json": TechniciansResponse,
     "ops.plan.response.json": PlanResponse,
     "ops.dispatch.request.json": DispatchRequest,

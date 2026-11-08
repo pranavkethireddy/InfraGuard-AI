@@ -2,7 +2,10 @@
 
 Time runs on a demo clock: every live tick advances it by configs/operations.json
 demo_minutes_per_tick, so a 3 h repair takes 90 ticks at 2 minutes per tick. Technicians travel,
-work, pause routine jobs when moved to a repair, and resume them afterwards. When a repair work order
+work, pause routine jobs when moved to a repair, and resume them afterwards. Technicians walk the floor
+plan (services/floor.py) at a demo pace, so travel time is walking distance and the closest qualified
+technician is the one who can start soonest. A technician claimed by a pager (an iPad) is
+device-controlled: their repairs wait on the pager to accept and to confirm done. When a repair work order
 finishes, the incident is resolved by the technician, the fault on the machine is repaired (readings
 recover), and the repair becomes a learned case shared with every site.
 """
@@ -18,8 +21,9 @@ from zoneinfo import ZoneInfo
 
 from ..core.config import Settings
 from ..core.errors import ApiError, not_found
-from ..schemas.ops import (DispatchRequest, DispatchResponse, Technician, TechniciansResponse, Window, WorkOrder,
-                           WorkOrderCost)
+from ..schemas.ops import (DispatchRequest, DispatchResponse, FloorPoint, Technician, TechniciansResponse, Window,
+                           WorkOrder, WorkOrderCost)
+from . import floor
 from . import impact as impact_service
 from . import mining
 from .assets import all_assets
@@ -63,14 +67,20 @@ class Order:
     overtime: bool = False
     shutdown_seen: bool = False
     cost: WorkOrderCost | None = None
+    spot: FloorPoint | None = None
+    declined_by: list[str] = field(default_factory=list)
+    why: str | None = None
 
 
 @dataclass
 class Tech:
     cfg: dict
     location: str
+    pos: FloorPoint
     current: str | None = None
     queue: list[str] = field(default_factory=list)
+    path: list[FloorPoint] = field(default_factory=list)
+    device: bool = False
 
 
 @dataclass
@@ -80,6 +90,8 @@ class OpsState:
     techs: dict[str, Tech] = field(default_factory=dict)
     orders: dict[str, Order] = field(default_factory=dict)
     seq: int = 0
+    version: int = 0
+    auto_dispatch: bool = True
 
 
 def tick_hours(settings: Settings) -> float:
@@ -94,18 +106,33 @@ def state(store: Store, settings: Settings) -> OpsState:
     """Created on first use (under store.lock): every technician on their routine job, or idle."""
     if store.ops is None:
         cfg = config(settings)
-        st = OpsState(start=datetime.now(ZoneInfo(cfg["timezone"])).replace(second=0, microsecond=0))
+        st = OpsState(start=datetime.now(ZoneInfo(cfg["timezone"])).replace(second=0, microsecond=0),
+                      auto_dispatch=settings.auto_dispatch)
         for t in cfg["technicians"]:
-            st.techs[t["technician_id"]] = Tech(cfg=t, location=t["home"])
+            st.techs[t["technician_id"]] = Tech(cfg=t, location=t["home"], pos=hall_spot(t["site"], t["home"]))
         for job in cfg["routine_jobs"]:
             tech = st.techs[job["technician_id"]]
             o = _new(st, settings, kind="routine", title=job["title"], site_id=tech.cfg["site"], hall_id=job["hall_id"],
                      technician_id=tech.cfg["technician_id"], hours_total=job["hours"],
-                     delay_cost_per_hour=job["delay_cost_per_hour"])
+                     delay_cost_per_hour=job["delay_cost_per_hour"], spot=hall_spot(tech.cfg["site"], job["hall_id"]))
             o.status, o.hours_done = "in_progress", job["hours"] * 0.3
-            tech.location, tech.current = job["hall_id"], o.work_order_id
+            tech.location, tech.current, tech.pos = job["hall_id"], o.work_order_id, o.spot
         store.ops = st
     return store.ops
+
+
+def hall_spot(site: str, hall_id: str) -> FloorPoint:
+    return floor.to_floor(site, floor.spot_for_hall(get_layout(site), hall_id))
+
+
+def asset_spot(asset_id: str) -> FloorPoint:
+    lay = site_of(asset_id)
+    return floor.to_floor(lay.site_id, floor.spot_for_asset(lay, asset_id))
+
+
+def walk_hours(site: str, a: FloorPoint, b: FloorPoint, settings: Settings) -> float:
+    pace = config(settings)["walk_cells_per_demo_minute"]
+    return floor.length(floor.path(site, a, b)) / pace / 60
 
 
 def _new(st: OpsState, settings: Settings, **kw) -> Order:
@@ -168,22 +195,23 @@ class Candidate:
     displaces: Order | None
 
 
-def candidates(st: OpsState, settings: Settings, site: str, asset_type: str, hall_id: str) -> list[Candidate]:
-    """Qualified technicians at the site, soonest first. Routine work can be paused; repairs cannot."""
-    travel = config(settings)["travel_minutes"] / 60
+def candidates(st: OpsState, settings: Settings, site: str, asset_type: str, hall_id: str,
+               asset_id: str | None = None, exclude: tuple[str, ...] = ()) -> list[Candidate]:
+    """Qualified technicians at the site, soonest first (the closest by walking time, or the first to finish
+    their current repair). Routine work can be paused; repairs cannot."""
+    target = asset_spot(asset_id) if asset_id else hall_spot(site, hall_id)
     out = []
     for t in st.techs.values():
-        if t.cfg["site"] != site or asset_type not in t.cfg["skills"]:
+        if t.cfg["site"] != site or asset_type not in t.cfg["skills"] or t.cfg["technician_id"] in exclude:
             continue
         cur = st.orders.get(t.current) if t.current else None
-        go = 0.0 if t.location == hall_id else travel
         if cur is None:
-            out.append(Candidate(t, go, None))
+            out.append(Candidate(t, walk_hours(site, t.pos, target, settings), None))
         elif cur.kind == "routine":
-            out.append(Candidate(t, go, cur))
+            out.append(Candidate(t, walk_hours(site, t.pos, target, settings), cur))
         else:
             left = cur.travel_left + max(0.0, cur.hours_total - cur.hours_done)
-            out.append(Candidate(t, left + (0.0 if cur.hall_id == hall_id else travel), None))
+            out.append(Candidate(t, left + walk_hours(site, cur.spot or t.pos, target, settings), None))
     out.sort(key=lambda c: (c.start_in_hours, c.displaces is not None, c.tech.cfg["rate_per_hour"]))
     return out
 
@@ -203,16 +231,19 @@ def work_order(o: Order, st: OpsState, settings: Settings) -> WorkOrder:
         mitigation_active=o.mitigation_active, hours_total=round(o.hours_total, 3), hours_done=round(o.hours_done, 3),
         progress=round(min(1.0, o.hours_done / o.hours_total) if o.hours_total else 1.0, 3),
         eta_minutes=_eta_minutes(o, st, settings), scheduled_start=o.scheduled_start, created_at=o.created_at,
-        completed_at=o.completed_at, displaced_work_order_id=o.displaced_work_order_id, cost=o.cost)
+        completed_at=o.completed_at, displaced_work_order_id=o.displaced_work_order_id, cost=o.cost, spot=o.spot,
+        asset_name=all_assets()[o.asset_id].name if o.asset_id else None)
 
 
 def technician(t: Tech, st: OpsState, settings: Settings) -> Technician:
     cur = st.orders.get(t.current) if t.current else None
-    status = "idle" if cur is None else ("traveling" if cur.status == "traveling" else "working")
+    status = "idle" if cur is None or cur.status == "paged" else ("traveling" if cur.status == "traveling" else "working")
+    walking = cur is not None and cur.status == "traveling"
     return Technician(technician_id=t.cfg["technician_id"], name=t.cfg["name"], role=t.cfg["role"], site_id=t.cfg["site"],
                       skills=list(t.cfg["skills"]), rate_per_hour=t.cfg["rate_per_hour"], status=status,
                       location_hall_id=t.location, current_work_order=work_order(cur, st, settings) if cur else None,
-                      queued_work_order_ids=list(t.queue))
+                      queued_work_order_ids=list(t.queue), position=t.pos, path=list(t.path) if walking else [],
+                      walking_minutes_left=round(cur.travel_left * 60, 1) if walking else None, device_controlled=t.device)
 
 
 def technicians(store: Store, settings: Settings, site: str | None) -> TechniciansResponse:
@@ -226,6 +257,8 @@ def technicians(store: Store, settings: Settings, site: str | None) -> Technicia
         orders += [work_order(o, st, settings) for o in done]
         return TechniciansResponse(demo_time=demo_now(st, settings),
                                    demo_minutes_per_tick=config(settings)["demo_minutes_per_tick"],
+                                   auto_dispatch=st.auto_dispatch,
+                                   walk_cells_per_demo_minute=config(settings)["walk_cells_per_demo_minute"],
                                    technicians=techs, work_orders=orders,
                                    assumptions_source=config(settings)["assumptions_source"])
 
@@ -242,7 +275,7 @@ def mitigated(store: Store, asset_id: str) -> bool:
 
 # ---- dispatch ------------------------------------------------------------------------------------
 
-def dispatch(store: Store, settings: Settings, req: DispatchRequest) -> DispatchResponse:
+def dispatch(store: Store, settings: Settings, req: DispatchRequest, exclude: tuple[str, ...] = ()) -> DispatchResponse:
     from . import whatif
 
     with store.lock:
@@ -269,7 +302,7 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest) -> Dispatch
         asset = all_assets()[inc.asset_id]
         lay = site_of(inc.asset_id)
         hall = lay.placements[inc.asset_id].hall_id
-        cands = candidates(st, settings, lay.site_id, asset.asset_type, hall)
+        cands = candidates(st, settings, lay.site_id, asset.asset_type, hall, asset.asset_id, exclude)
         if req.technician_id:
             tech = st.techs.get(req.technician_id)
             if tech is None:
@@ -279,8 +312,11 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest) -> Dispatch
             if cand is None:
                 raise ApiError(422, "TECHNICIAN_NOT_QUALIFIED", f"{tech.cfg['name']} cannot repair {asset.asset_type} at this site.",
                                {"technician_id": req.technician_id, "asset_type": asset.asset_type, "site_id": lay.site_id})
-        elif cands:  # the technician the chosen future was priced with
+        elif cands and chosen.start_in_hours is not None and chosen.start_in_hours > cands[0].start_in_hours + 0.05:
+            # A later start (e.g. the window): the technician the chosen future was priced with.
             cand = next((c for c in cands if c.tech.cfg["technician_id"] == chosen.technician_id), cands[0])
+        elif cands:  # starts now: the closest qualified technician
+            cand = cands[0]
         else:
             raise ApiError(409, "NO_TECHNICIAN", "No qualified technician at this site.", {"asset_type": asset.asset_type})
         tech = cand.tech
@@ -295,7 +331,13 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest) -> Dispatch
         action = steps[0]
         o = _new(st, settings, kind="repair", title=f"{asset.name}: {action}", site_id=lay.site_id, hall_id=hall,
                  technician_id=tech.cfg["technician_id"], hours_total=hours, asset_id=asset.asset_id,
-                 incident_id=inc.incident_id, option=option, mitigation_active=option == "buy_time")
+                 incident_id=inc.incident_id, option=option, mitigation_active=option == "buy_time",
+                 spot=asset_spot(asset.asset_id), declined_by=list(exclude))
+        mins = cand.start_in_hours * 60
+        o.why = ("You were picked by the operator." if req.technician_id else
+                 f"Closest qualified technician: about {mins:.0f} demo minutes away." if not cand.displaces else
+                 f"Closest qualified technician (about {mins:.0f} demo minutes away); your routine job "
+                 f"\"{cand.displaces.title}\" is paused.")
         start_h = chosen.start_in_hours or 0.0
         displaced = None
         if option == "fix_now" or start_h <= cand.start_in_hours + 0.05:  # starts as soon as they can get there
@@ -307,6 +349,7 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest) -> Dispatch
         inc.work_order_id = o.work_order_id
         if inc.status == "open":
             inc.status, inc.acknowledged_at = "acknowledged", now()
+        st.version += 1
         return DispatchResponse(work_order=work_order(o, st, settings), technician=technician(tech, st, settings),
                                 displaced=work_order(displaced, st, settings) if displaced else None)
 
@@ -325,10 +368,22 @@ def _start_now(st: OpsState, settings: Settings, tech: Tech, o: Order) -> Order 
         o.displaced_work_order_id = displaced_id = cur.work_order_id
         displaced = st.orders[displaced_id]
     o.overtime = not in_window(o.site_id, 0.0, st, settings)
-    o.travel_left = 0.0 if tech.location == o.hall_id else config(settings)["travel_minutes"] / 60
-    o.status = "traveling" if o.travel_left > 0 else "in_progress"
     tech.current = o.work_order_id
+    if tech.device and o.kind == "repair":
+        o.status = "paged"  # the pager accepts before they set off
+        return displaced
+    _set_off(st, settings, tech, o)
     return displaced
+
+
+def _set_off(st: OpsState, settings: Settings, tech: Tech, o: Order) -> None:
+    """Start walking to the job (or start work if already there)."""
+    target = o.spot or hall_spot(o.site_id, o.hall_id)
+    tech.path = floor.path(o.site_id, tech.pos, target)
+    o.travel_left = floor.length(tech.path) / config(settings)["walk_cells_per_demo_minute"] / 60
+    o.status = "traveling" if o.travel_left > 1e-6 else "in_progress"
+    if o.status == "in_progress":
+        tech.path, tech.location = [], o.hall_id
 
 
 # ---- clock ---------------------------------------------------------------------------------------
@@ -361,24 +416,33 @@ def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Ord
                 continue
             tech.queue.remove(nxt.work_order_id)
             if nxt.kind == "routine":
-                nxt.travel_left = 0.0 if tech.location == nxt.hall_id else config(settings)["travel_minutes"] / 60
-                nxt.status = "traveling" if nxt.travel_left > 0 else "in_progress"
                 tech.current = nxt.work_order_id
+                _set_off(st, settings, tech, nxt)
             else:
                 _start_now(st, settings, tech, nxt)
             cur = nxt
+        if cur.status in ("paged", "awaiting_confirmation"):
+            continue  # waiting on the pager
         if cur.status == "traveling":
-            cur.travel_left -= h
+            pace = config(settings)["walk_cells_per_demo_minute"]
+            tech.pos, tech.path = floor.walk(tech.path or [tech.pos], pace * h * 60)
+            if tech.pos.hall_id:
+                tech.location = tech.pos.hall_id
+            cur.travel_left = floor.length(tech.path) / pace / 60
             if cur.travel_left <= 1e-9:
-                cur.travel_left, cur.status, tech.location = 0.0, "in_progress", cur.hall_id
+                cur.travel_left, cur.status, tech.location, tech.path = 0.0, "in_progress", cur.hall_id, []
             continue
         cur.hours_done += h
         if cur.hours_done + 1e-9 >= cur.hours_total:
             if cur.kind == "routine":  # routine work repeats
                 cur.hours_done = 0.0
                 continue
+            if tech.device:
+                cur.hours_done, cur.status = cur.hours_total, "awaiting_confirmation"
+                continue
             _finish(store, settings, st, tech, cur, t_now)
             finished.append(cur)
+    st.version += 1
     return finished
 
 

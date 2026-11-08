@@ -1,0 +1,49 @@
+{
+  "site_id": "datacenter",
+  "width": 48.0,
+  "depth": 14.0,
+  "corridor_y": 13.0,
+  "lane_offset": 2.0,
+  "grid_unit": "floor tile (about 0.6 m)",
+  "halls": [
+    {
+      "hall_id": "hall-a",
+      "name": "Hall A",
+      "x": 0.0,
+      "y": 0.0,
+      "width": 18.0,
+      "depth": 12.0,
+      "door": {
+        "x": 2.0,
+        "y": 12.0,
+        "hall_id": "hall-a"
+      }
+    },
+    {
+      "hall_id": "hall-b",
+      "name": "Hall B",
+      "x": 20.0,
+      "y": 0.0,
+      "width": 16.0,
+      "depth": 12.0,
+      "door": {
+        "x": 22.0,
+        "y": 12.0,
+        "hall_id": "hall-b"
+      }
+    },
+    {
+      "hall_id": "plant",
+      "name": "Plant Room",
+      "x": 38.0,
+      "y": 0.0,
+      "width": 10.0,
+      "depth": 6.0,
+      "door": {
+        "x": 40.0,
+        "y": 6.0,
+        "hall_id": "plant"
+      }
+    }
+  ]
+}

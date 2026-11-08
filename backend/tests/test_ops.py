@@ -70,7 +70,9 @@ def test_dispatch_moves_a_technician_off_routine_work_and_the_repair_teaches_eve
     assert client.get(f"/api/v1/incidents/{inc}").json()["status"] == "acknowledged"
     again = client.post("/api/v1/ops/dispatch", json={"incident_id": inc})
     assert again.status_code == 409 and again.json()["error"]["code"] == "ALREADY_DISPATCHED"
-    run_ticks(client, settings, 5 + 90)  # 10 min travel + 3 h repair at 2 demo minutes per tick
+    # Walk from Hall B to CRAC Unit 1 in Hall A, then the 3 h repair, at 2 demo minutes per tick.
+    assert 180 < d.work_order.eta_minutes < 180 + 30
+    run_ticks(client, settings, int(d.work_order.eta_minutes / 2) + 2)
     detail = client.get(f"/api/v1/incidents/{inc}").json()
     assert detail["status"] == "resolved" and detail["resolved_by"] == "technician"
     techs = client.get("/api/v1/ops/technicians").json()
@@ -182,19 +184,27 @@ def test_buy_time_promise_holds_in_the_live_simulation(client, settings):
     promises = []
     try:
         for seed, unit in ((42, "cooling-03"), (7, "cooling-01")):
-            client.post("/api/v1/fleet/live/stop")
-            client.post("/api/v1/fleet/clear")
-            assert client.post("/api/v1/fleet/live/start", json={"seed": seed}).status_code == 200
-            client.post("/api/v1/fleet/faults", json={"asset_ids": [unit]})
-            inc = until(lambda: next((i["incident_id"] for i in client.get("/api/v1/incidents").json()["items"]
-                                      if i["asset_id"] == unit), None))
-            start = store.live.ticks
-            until(lambda: store.live.ticks - start >= 40)  # trend window past the ramp
-            w = client.get(f"/api/v1/incidents/{inc}/whatif").json()
+            # The projection is a promise for dispatching now. On a busy machine the live loop can run several
+            # unmitigated ticks between reading the what-if and the dispatch; then the scenario is rerun.
+            for _attempt in range(4):
+                client.post("/api/v1/fleet/live/stop")
+                client.post("/api/v1/fleet/clear")
+                assert client.post("/api/v1/fleet/live/start", json={"seed": seed}).status_code == 200
+                client.post("/api/v1/fleet/faults", json={"asset_ids": [unit]})
+                inc = until(lambda: next((i["incident_id"] for i in client.get("/api/v1/incidents").json()["items"]
+                                          if i["asset_id"] == unit), None))
+                start = store.live.ticks
+                until(lambda: store.live.ticks - start >= 40)  # trend window past the ramp
+                before = store.live.ticks
+                w = client.get(f"/api/v1/incidents/{inc}/whatif").json()
+                assert client.post("/api/v1/ops/dispatch", json={"incident_id": inc, "option": "buy_time"}).status_code == 201
+                if store.live.ticks - before <= 2:
+                    break
+            else:
+                raise AssertionError("machine too busy: dispatch kept lagging the what-if")
             buy = next(o for o in w["options"] if o["option"] == "buy_time")
             promised_safe = buy["shutdown_at_hours"] is None
             promises.append(promised_safe)
-            assert client.post("/api/v1/ops/dispatch", json={"incident_id": inc, "option": "buy_time"}).status_code == 201
             until(lambda: client.get(f"/api/v1/incidents/{inc}").json()["status"] == "resolved", 60)
             case = client.get("/api/v1/learning/cases").json()["items"][0]
             expected = "fixed_before_failure" if promised_safe else "fixed_after_shutdown"
