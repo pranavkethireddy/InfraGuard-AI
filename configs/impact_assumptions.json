@@ -1,15 +1,20 @@
 {
-  "_note": "Demo assumptions for InfraGuard AI, not measured values. Backend reads this file; React only displays results. Assets without their own entry use asset_type_defaults.",
+  "_note": "Demo assumptions for InfraGuard AI, not measured values. Backend reads this file; React only displays results. Assets without their own entry use asset_type_defaults. estimated_repair_cost is the unplanned repair after a failure; planned_repair_cost is fixing it now, before it fails. cost_basis 'hashprice' means cost_per_hour is lost mining revenue: rated hashrate x the latest daily hashprice in data/market/hashprice_daily.csv.",
   "currency": "USD",
   "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured",
   "assets": {
-    "cooling-01": {"estimated_downtime_hours": 4.0, "cost_per_hour": 12000.0, "estimated_repair_cost": 3500.0, "estimated_repair_hours": 3.0},
-    "mill-01": {"estimated_downtime_hours": 8.0, "cost_per_hour": 2000.0, "estimated_repair_cost": 5000.0, "estimated_repair_hours": 6.0},
-    "drive-01": {"estimated_downtime_hours": 2.0, "cost_per_hour": 1500.0, "estimated_repair_cost": 400.0, "estimated_repair_hours": 1.0}
+    "cooling-01": {"estimated_downtime_hours": 4.0, "cost_per_hour": 12000.0, "estimated_repair_cost": 3500.0, "planned_repair_cost": 900.0, "estimated_repair_hours": 3.0},
+    "mill-01": {"estimated_downtime_hours": 8.0, "cost_per_hour": 2000.0, "estimated_repair_cost": 5000.0, "planned_repair_cost": 1500.0, "estimated_repair_hours": 6.0},
+    "drive-01": {"estimated_downtime_hours": 2.0, "cost_per_hour": 1500.0, "estimated_repair_cost": 400.0, "planned_repair_cost": 400.0, "estimated_repair_hours": 1.0},
+    "fanwall-m1": {"cost_basis": "hashprice", "estimated_downtime_hours": 12.0, "estimated_repair_cost": 6000.0, "planned_repair_cost": 900.0, "estimated_repair_hours": 4.0},
+    "fanwall-m2": {"cost_basis": "hashprice", "estimated_downtime_hours": 12.0, "estimated_repair_cost": 6000.0, "planned_repair_cost": 900.0, "estimated_repair_hours": 4.0},
+    "fanwall-m3": {"cost_basis": "hashprice", "estimated_downtime_hours": 12.0, "estimated_repair_cost": 6000.0, "planned_repair_cost": 900.0, "estimated_repair_hours": 4.0},
+    "fanwall-m4": {"cost_basis": "hashprice", "estimated_downtime_hours": 12.0, "estimated_repair_cost": 6000.0, "planned_repair_cost": 900.0, "estimated_repair_hours": 4.0}
   },
   "asset_type_defaults": {
-    "cooling_unit": {"estimated_downtime_hours": 4.0, "cost_per_hour": 12000.0, "estimated_repair_cost": 3500.0, "estimated_repair_hours": 3.0},
-    "storage_drive": {"estimated_downtime_hours": 2.0, "cost_per_hour": 1500.0, "estimated_repair_cost": 400.0, "estimated_repair_hours": 1.0},
-    "industrial_machine": {"estimated_downtime_hours": 8.0, "cost_per_hour": 2000.0, "estimated_repair_cost": 5000.0, "estimated_repair_hours": 6.0}
+    "cooling_unit": {"estimated_downtime_hours": 4.0, "cost_per_hour": 12000.0, "estimated_repair_cost": 3500.0, "planned_repair_cost": 900.0, "estimated_repair_hours": 3.0},
+    "storage_drive": {"estimated_downtime_hours": 2.0, "cost_per_hour": 1500.0, "estimated_repair_cost": 400.0, "planned_repair_cost": 400.0, "estimated_repair_hours": 1.0},
+    "industrial_machine": {"estimated_downtime_hours": 8.0, "cost_per_hour": 2000.0, "estimated_repair_cost": 5000.0, "planned_repair_cost": 1500.0, "estimated_repair_hours": 6.0},
+    "asic_miner": {"cost_basis": "hashprice", "estimated_downtime_hours": 72.0, "estimated_repair_cost": 550.0, "planned_repair_cost": 60.0, "estimated_repair_hours": 1.0}
   }
 }
