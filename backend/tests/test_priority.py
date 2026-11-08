@@ -74,3 +74,14 @@ def test_jobs_stay_with_their_technician_even_when_others_are_free(client, setti
         ops.advance(store, settings, set())
         assert high.technician_id == SAM and sam.current == high.work_order_id
         assert low.technician_id == SAM and low.work_order_id in sam.queue
+
+
+def test_operator_can_queue_a_less_urgent_job_on_a_busy_technician(client, settings):
+    store = client.app.state.store
+    store_ids = [server_incident(client, a) for a in ("srv-B1-01-2", "srv-B1-02-2", "srv-B1-03-2")]
+    for iid in store_ids:
+        r = client.post("/api/v1/ops/dispatch", json={"incident_id": iid, "option": "fix_now", "technician_id": SAM})
+        assert r.status_code == 201, r.text
+        assert r.json()["work_order"]["technician_id"] == SAM
+    view = client.get(f"/api/v1/ops/pager/{SAM}").json()
+    assert view["job"] is not None and len(view["queue"]) == 2

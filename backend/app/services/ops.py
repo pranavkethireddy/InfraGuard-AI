@@ -348,12 +348,7 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest, exclude: tu
             raise ApiError(409, "NO_TECHNICIAN", "No qualified technician at this site.", {"asset_type": asset.asset_type})
         tech = cand.tech
         cur = st.orders.get(tech.current) if tech.current else None
-        probe = Order(work_order_id="", kind="repair", title="", site_id=lay.site_id, hall_id=hall,
-                      technician_id="", hours_total=0.0, created_at=now(), asset_id=asset.asset_id,
-                      incident_id=inc.incident_id, risk_level=inc.risk_level)
-        if req.technician_id and cur is not None and cur.kind == "repair" and not _worse(st, probe, cur, store):
-            raise ApiError(409, "TECHNICIAN_BUSY", f"{tech.cfg['name']} is on another repair.",
-                           {"technician_id": tech.cfg["technician_id"], "work_order_id": cur.work_order_id})
+        # A busy technician picked by the operator gets the job queued behind their current repair (by level).
         imp = impact_service.for_asset(settings.impact_assumptions_path, asset.asset_id, asset.asset_type)
         hours = imp.estimated_repair_hours if imp and imp.estimated_repair_hours else 1.0
         # The first real step, not the reminder that physical work needs approval.
