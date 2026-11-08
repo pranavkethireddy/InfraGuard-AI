@@ -396,19 +396,21 @@ def _tick(store: Store, run: LiveRun, settings: Settings) -> None:
         pager.escalate(store, settings, incident_id, *_route_for(store, run, incident_id, settings))
 
 
-def _route_for(store: Store, run: LiveRun, incident_id: str, settings: Settings) -> tuple[tuple[str, ...], str | None]:
-    """(technicians to exclude, technician to try first). Chaos incidents never go to protected technicians; while
-    chaos is on, faults injected by hand go to the demo technician (the iPad) first."""
+def _route_for(store: Store, run: LiveRun, incident_id: str,
+               settings: Settings) -> tuple[tuple[str, ...], str | None, str | None]:
+    """(technicians to exclude, technician to try first, option). Chaos incidents never go to protected
+    technicians and start at once (fix_now) so the crew visibly moves; while chaos is on, faults injected by hand
+    go to the demo technician (the iPad) first."""
     cfg = ops.config(settings).get("chaos", {})
     keep = tuple(cfg.get("protected_technicians", []))
     demo = cfg.get("demo_technician") or (keep[0] if keep else None)
     with store.lock:
         inc = store.incidents.get(incident_id)
         if inc is None:
-            return (), None
+            return (), None, None
         if inc.asset_id in run.chaos_assets:
-            return keep, None
-        return (), demo if run.chaos else None
+            return keep, None, "fix_now"
+        return (), demo if run.chaos else None, None
 
 
 def _maybe_queue(store: Store, incident_id: str, settings: Settings) -> None:

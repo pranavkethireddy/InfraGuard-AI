@@ -23,7 +23,7 @@ def test_chaos_faults_are_dispatched_to_the_rack(client, settings):
     with store.lock:
         st = ops.state(store, settings)
         chaos_orders = [o for o in st.orders.values() if o.asset_id in run.chaos_assets]
-        assert chaos_orders
+        assert chaos_orders and all(o.option == "fix_now" for o in chaos_orders)  # they set off at once
         assert {o.spot.hall_id for o in chaos_orders} <= {"hall-a", "hall-b"}  # they walk to the rack
 
 
