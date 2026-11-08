@@ -348,8 +348,10 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest, exclude: tu
             raise ApiError(409, "NO_TECHNICIAN", "No qualified technician at this site.", {"asset_type": asset.asset_type})
         tech = cand.tech
         cur = st.orders.get(tech.current) if tech.current else None
-        if req.technician_id and cur is not None and cur.kind == "repair" and \
-                RISK_RANK.get(inc.risk_level, 0) <= _risk(cur):
+        probe = Order(work_order_id="", kind="repair", title="", site_id=lay.site_id, hall_id=hall,
+                      technician_id="", hours_total=0.0, created_at=now(), asset_id=asset.asset_id,
+                      incident_id=inc.incident_id, risk_level=inc.risk_level)
+        if req.technician_id and cur is not None and cur.kind == "repair" and not _worse(st, probe, cur, store):
             raise ApiError(409, "TECHNICIAN_BUSY", f"{tech.cfg['name']} is on another repair.",
                            {"technician_id": tech.cfg["technician_id"], "work_order_id": cur.work_order_id})
         imp = impact_service.for_asset(settings.impact_assumptions_path, asset.asset_id, asset.asset_type)
@@ -362,17 +364,18 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest, exclude: tu
                  incident_id=inc.incident_id, option=option, mitigation_active=option == "buy_time",
                  spot=asset_spot(asset.asset_id), declined_by=list(exclude), risk_level=inc.risk_level)
         mins = cand.start_in_hours * 60
-        if cur is not None and cur.kind == "repair" and _worse(st, o, cur):
+        takeover = cur is not None and cur.kind == "repair" and _worse(st, o, cur, store)
+        if takeover:
             mins = repair_walk_hours(lay.site_id, tech.pos, o.spot, settings) * 60
-        o.why = (f"Moved off \"{cur.title}\" ({cur.risk_level} risk): this one is {inc.risk_level} risk. " if
-                 cur is not None and cur.kind == "repair" and _worse(st, o, cur) else "") + ("You were picked by the operator." if req.technician_id else
+        o.why = (f"Moved off \"{cur.title}\" ({_describe(store, cur)}): this one is {_describe(store, o)}. " if
+                 takeover else "") + ("You were picked by the operator." if req.technician_id else
                  f"Closest qualified technician: about {mins:.0f} demo minutes away." if not cand.displaces else
                  f"Closest qualified technician (about {mins:.0f} demo minutes away); your routine job "
                  f"\"{cand.displaces.title}\" is paused.")
         start_h = chosen.start_in_hours or 0.0
         displaced = None
         if option == "fix_now" or start_h <= cand.start_in_hours + 0.05:  # starts as soon as they can get there
-            displaced = _start_now(st, settings, tech, o)
+            displaced = _start_now(st, settings, tech, o, store)
         else:
             o.status = "scheduled"
             o.scheduled_start = demo_now(st, settings) + timedelta(hours=start_h)
@@ -385,14 +388,18 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest, exclude: tu
                                 displaced=work_order(displaced, st, settings) if displaced else None)
 
 
-def _start_now(st: OpsState, settings: Settings, tech: Tech, o: Order) -> Order | None:
-    """Put the technician on o at once. A routine job is paused and queued; a repair stays and o waits behind it."""
+def _start_now(st: OpsState, settings: Settings, tech: Tech, o: Order, store: Store | None = None) -> Order | None:
+    """Put the technician on o at once. A routine job is paused and queued; a less urgent repair is paused and
+    queued; an equally or more urgent repair stays and o waits behind it."""
     cur = st.orders.get(tech.current) if tech.current else None
     displaced = None
-    if cur is not None and cur.kind == "repair" and not _worse(st, o, cur):
+    if cur is not None and cur.kind == "repair" and not _worse(st, o, cur, store):
         o.status = "scheduled"
         tech.queue.insert(0, o.work_order_id)
         return None
+    if cur is not None and cur.status == "awaiting_confirmation" and store is not None:
+        _finish(store, settings, st, tech, cur, demo_now(st, settings))  # the work is done; the more urgent job can't wait for the tap
+        cur = None
     if cur is not None:
         cur.status = "paused"
         tech.queue.append(cur.work_order_id)
@@ -411,9 +418,28 @@ def _risk(o: Order) -> int:
     return RISK_RANK.get(o.risk_level, 0) if o.risk_level else -1
 
 
-def _worse(st: OpsState, new: Order, cur: Order) -> bool:
-    """True when new is a repair at a higher risk level than the repair cur the technician is on."""
-    return new.kind == "repair" and cur.kind == "repair" and _risk(new) > _risk(cur)
+# Life-safety equipment comes before everything else, whatever its priority number.
+SAFETY_TYPES = {"smoke_detector", "fire_suppression"}
+
+
+def _level(store: Store | None, o: Order) -> tuple:
+    """How urgent a repair is; smaller is more urgent: life safety first, then priority rank (1 = fix first),
+    then risk."""
+    inc = store.incidents.get(o.incident_id) if store is not None and o.incident_id else None
+    asset = all_assets().get(o.asset_id) if o.asset_id else None
+    safety = 0 if asset is not None and asset.asset_type in SAFETY_TYPES else 1
+    rank = inc.priority_rank if inc is not None and inc.priority_rank else 6
+    return (safety, rank, -_risk(o))
+
+
+def _describe(store: Store | None, o: Order) -> str:
+    safety, rank, _ = _level(store, o)
+    return ("life safety, " if safety == 0 else "") + (f"priority {rank}, " if rank <= 5 else "") + f"{o.risk_level or 'unknown'} risk"
+
+
+def _worse(st: OpsState, new: Order, cur: Order, store: Store | None = None) -> bool:
+    """True when new is a repair more urgent than the repair cur the technician is on."""
+    return new.kind == "repair" and cur.kind == "repair" and _level(store, new) < _level(store, cur)
 
 
 def _set_off(st: OpsState, settings: Settings, tech: Tech, o: Order) -> None:
@@ -431,7 +457,44 @@ def _set_off(st: OpsState, settings: Settings, tech: Tech, o: Order) -> None:
 
 def _urgency(store: Store, o: Order) -> tuple:
     inc = store.incidents.get(o.incident_id) if o.incident_id else None
-    return (o.kind != "repair", -((inc.priority_index or 0.0) if inc else 0.0), o.created_at)
+    return (o.kind != "repair", _level(store, o), -((inc.priority_index or 0.0) if inc else 0.0), o.created_at)
+
+
+def _rebalance(store: Store, settings: Settings, st: OpsState) -> None:
+    """A repair waiting behind a busy technician moves to a free qualified technician at the same site
+    (one with no repair in hand or queued), the closest first. Chaos work never goes to a protected technician."""
+    from . import chaos
+
+    keep = set(chaos.protected(settings))
+    chaos_assets = store.live.chaos_assets if store.live is not None else set()
+    for tech in list(st.techs.values()):
+        cur = st.orders.get(tech.current) if tech.current else None
+        if cur is None or cur.kind != "repair":
+            continue
+        for oid in list(tech.queue):
+            o = st.orders[oid]
+            if o.kind != "repair" or o.status != "scheduled" or o.scheduled_start is not None or o.asset_id is None:
+                continue
+            asset = all_assets().get(o.asset_id)
+            if asset is None:
+                continue
+            free = []
+            for t in st.techs.values():
+                tid = t.cfg["technician_id"]
+                if t is tech or t.cfg["site"] != o.site_id or asset.asset_type not in t.cfg["skills"] \
+                        or tid in o.declined_by or (o.asset_id in chaos_assets and tid in keep):
+                    continue
+                tc = st.orders.get(t.current) if t.current else None
+                if (tc is not None and tc.kind == "repair") or queued_repair_hours(st, t) > 0:
+                    continue
+                free.append((repair_walk_hours(o.site_id, t.pos, asset_spot(o.asset_id), settings), tid, t))
+            if not free:
+                continue
+            _, _, to = min(free, key=lambda f: (f[0], f[1]))
+            tech.queue.remove(oid)
+            o.technician_id = to.cfg["technician_id"]
+            o.why = f"Moved from {tech.cfg['name']}, who is busy; you are free and closest."
+            _start_now(st, settings, to, o, store)
 
 
 def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Order]:
@@ -450,6 +513,7 @@ def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Ord
             o.mitigation_hours += h
         if o.status != "done" and o.asset_id and (o.asset_id in powered_off or _cools_off(o.asset_id, powered_off)):
             o.shutdown_seen = True
+    _rebalance(store, settings, st)
     for tech in st.techs.values():
         # Repairs before routine work, the most urgent incident first (priority can change every tick).
         tech.queue.sort(key=lambda i: _urgency(store, st.orders[i]))
@@ -460,14 +524,14 @@ def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Ord
         # A higher-risk repair waiting for this technician takes over from a lower-risk one.
         top = next((st.orders[i] for i in tech.queue if st.orders[i].kind == "repair"
                     and st.orders[i].status in ("scheduled", "paused") and st.orders[i].scheduled_start is None), None)
-        if top is not None and cur is not None and cur.kind == "repair" and cur.status not in ("awaiting_confirmation",) \
-                and _worse(st, top, cur):
+        if top is not None and cur is not None and cur.kind == "repair" \
+                and _worse(st, top, cur, store):
             tech.queue.remove(top.work_order_id)
-            _start_now(st, settings, tech, top)
+            _start_now(st, settings, tech, top, store)
             cur = top
         if due is not None and (cur is None or cur.kind == "routine"):
             tech.queue.remove(due.work_order_id)
-            _start_now(st, settings, tech, due)
+            _start_now(st, settings, tech, due, store)
             cur = due
         if cur is None:
             nxt = next((st.orders[i] for i in tech.queue if st.orders[i].status in ("paused", "scheduled")
@@ -479,7 +543,7 @@ def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Ord
                 tech.current = nxt.work_order_id
                 _set_off(st, settings, tech, nxt)
             else:
-                _start_now(st, settings, tech, nxt)
+                _start_now(st, settings, tech, nxt, store)
             cur = nxt
         if cur.status in ("paged", "awaiting_confirmation"):
             continue  # waiting on the pager

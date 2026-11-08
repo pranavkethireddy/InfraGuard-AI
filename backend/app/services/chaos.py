@@ -5,9 +5,9 @@
   and drives do not crowd out the UPS, chillers or door access), then a healthy machine of that type, then any of
   its fault kinds, server parts included. `kinds` set to a list limits chaos to those kinds instead. The new
   incident is dispatched automatically to the closest qualified technician, never a protected one.
-- Every `reprioritize_every_ticks`, one open chaos incident gets a new random priority (1-5). Only the order of
-  technicians' queues changes; the job a technician is doing now is never interrupted, and work assigned to a
-  protected technician is never touched.
+- Every `reprioritize_every_ticks`, one open chaos incident gets a new random priority (1-5). Queues re-sort by
+  priority, and a waiting repair that is now more urgent than a technician's current one takes over (see
+  ops.advance). Work assigned to a protected technician is never touched.
 Settings: configs/operations.json "chaos"."""
 
 from __future__ import annotations
