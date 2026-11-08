@@ -195,6 +195,11 @@ class Candidate:
     displaces: Order | None
 
 
+def queued_repair_hours(st: OpsState, t: Tech) -> float:
+    return sum(max(0.0, st.orders[i].hours_total - st.orders[i].hours_done)
+               for i in t.queue if st.orders[i].kind == "repair" and st.orders[i].status != "done")
+
+
 def candidates(st: OpsState, settings: Settings, site: str, asset_type: str, hall_id: str,
                asset_id: str | None = None, exclude: tuple[str, ...] = ()) -> list[Candidate]:
     """Qualified technicians at the site, soonest first (the closest by walking time, or the first to finish
@@ -205,13 +210,14 @@ def candidates(st: OpsState, settings: Settings, site: str, asset_type: str, hal
         if t.cfg["site"] != site or asset_type not in t.cfg["skills"] or t.cfg["technician_id"] in exclude:
             continue
         cur = st.orders.get(t.current) if t.current else None
+        backlog = queued_repair_hours(st, t)  # repairs already waiting for them come first
         if cur is None:
-            out.append(Candidate(t, walk_hours(site, t.pos, target, settings), None))
+            out.append(Candidate(t, backlog + walk_hours(site, t.pos, target, settings), None))
         elif cur.kind == "routine":
-            out.append(Candidate(t, walk_hours(site, t.pos, target, settings), cur))
+            out.append(Candidate(t, backlog + walk_hours(site, t.pos, target, settings), cur))
         else:
             left = cur.travel_left + max(0.0, cur.hours_total - cur.hours_done)
-            out.append(Candidate(t, left + walk_hours(site, cur.spot or t.pos, target, settings), None))
+            out.append(Candidate(t, backlog + left + walk_hours(site, cur.spot or t.pos, target, settings), None))
     out.sort(key=lambda c: (c.start_in_hours, c.displaces is not None, c.tech.cfg["rate_per_hour"]))
     return out
 
@@ -313,8 +319,11 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest, exclude: tu
                 raise ApiError(422, "TECHNICIAN_NOT_QUALIFIED", f"{tech.cfg['name']} cannot repair {asset.asset_type} at this site.",
                                {"technician_id": req.technician_id, "asset_type": asset.asset_type, "site_id": lay.site_id})
         elif cands and chosen.start_in_hours is not None and chosen.start_in_hours > cands[0].start_in_hours + 0.05:
-            # A later start (e.g. the window): the technician the chosen future was priced with.
-            cand = next((c for c in cands if c.tech.cfg["technician_id"] == chosen.technician_id), cands[0])
+            # A later start (e.g. the window): the technician the chosen future was priced with, unless they
+            # already have repairs waiting; then the qualified technician with the least work queued.
+            priced = next((c for c in cands if c.tech.cfg["technician_id"] == chosen.technician_id), None)
+            cand = priced if priced is not None and queued_repair_hours(st, priced.tech) == 0 else \
+                min(cands, key=lambda c: (queued_repair_hours(st, c.tech), c.start_in_hours))
         elif cands:  # starts now: the closest qualified technician
             cand = cands[0]
         else:
