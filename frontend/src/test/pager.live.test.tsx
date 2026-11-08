@@ -38,7 +38,7 @@ describe('Approved pager and floor', () => {
   it('preserves approved statuses, request fields and fixture mutation blocking', async () => {
     expect(paged.job?.work_order.status).toBe('paged'); expect(paged.job?.actions).toEqual(['accept', 'decline']);
     expect(walking.job?.work_order.status).toBe('traveling'); expect(claim.technician.device_controlled).toBe(true);
-    const fixture = createFixtureClient(); expect(await fixture.opsPager('tech-03')).toEqual(paged);
+    const fixture = createFixtureClient(); expect(await fixture.opsPager('tech-03')).toEqual(pagerFixtures.autoaccepted);
     for (const action of [fixture.claimPager('tech-03'), fixture.releasePager('tech-03'), fixture.pagerAction('tech-03', { action: 'accept', work_order_id: 'wo-0006' }), fixture.setAutoDispatch(false)]) await expect(action).rejects.toMatchObject({ code: 'fixture_mode' });
   });
   it('uses the same API base and encodes technician and site stream queries', async () => {
@@ -80,33 +80,32 @@ describe('Approved pager and floor', () => {
   });
   it('handles reconnect, malformed events and cleanup on technician switch without losing good data', async () => {
     const { view, wrap } = mount(<PagerPage onTechnicianChange={vi.fn()} />);
-    await screen.findByRole('button', { name: 'Accept job' });
+    await screen.findByRole('region', { name: 'Current job' });
     const source = FakeSource.all[0]; if (!source) throw new Error('Missing source');
     act(() => { source.readyState = 1; source.emit('open'); }); expect(screen.getByText('Stream: live')).toBeInTheDocument();
     act(() => { source.readyState = 0; source.emit('error'); }); expect(screen.getByText('Stream: reconnecting')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Accept job' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Current job' })).toBeInTheDocument();
     act(() => source.emit('pager', 'bad-json')); expect(screen.getByText(/Malformed stream event/)).toBeInTheDocument();
     act(() => source.emit('pager', { ...walking, version: 20 })); expect(screen.getByText('Stream: live')).toBeInTheDocument();
     view.rerender(wrap(<PagerPage technicianId="tech-04" onTechnicianChange={vi.fn()} />));
     await waitFor(() => expect(source.closed).toBe(true)); expect(source.listeners.get('pager')?.size).toBe(0);
     view.unmount(); expect(FakeSource.all.every((s) => s.closed)).toBe(true);
   });
-  it('runs paged -> accept -> travel -> awaiting_confirmation -> done on the same page, blocking duplicates', async () => {
+  it('runs backend auto-accepted travel -> awaiting_confirmation -> done on the same page, blocking duplicates', async () => {
     let finish: ((r: Response) => void) | undefined;
     h.fetch.mockImplementation(async (_url: string, init?: RequestInit) => init?.method === 'POST' ? new Promise<Response>((r) => { finish = r; }) : response(paged));
     const { qc, view } = mount(<PagerPage onTechnicianChange={vi.fn()} />);
-    const accept = await screen.findByRole('button', { name: 'Accept job' }); expect(h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(0);
-    fireEvent.click(accept); fireEvent.click(accept); await waitFor(() => expect(accept).toBeDisabled()); expect(h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(1);
-    await act(async () => finish?.(response({ ...walking, version: 10 })));
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Accept job' })).not.toBeInTheDocument()); expect(screen.queryByRole('button', { name: 'Arrived' })).not.toBeInTheDocument();
+    await screen.findByRole('region', { name: 'Current job' }); expect(h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(0);
+    act(() => FakeSource.all[0]?.emit('pager', { ...walking, version: 10 }));
+    expect(screen.queryByRole('button', { name: 'Accept job' })).not.toBeInTheDocument(); expect(screen.queryByRole('button', { name: 'Arrived' })).not.toBeInTheDocument();
     const source = FakeSource.all[0]; if (!source || !walking.job) throw new Error('Missing data');
     const waiting: PagerView = { ...walking, version: 11, job: { ...walking.job, work_order: { ...walking.job.work_order, status: 'awaiting_confirmation' }, actions: ['done'] } };
     act(() => source.emit('pager', waiting)); const done = await screen.findByRole('button', { name: 'Done' });
-    fireEvent.click(done); await waitFor(() => expect(h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(2));
+    fireEvent.click(done); fireEvent.click(done); await waitFor(() => expect(h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(1));
     const completed: PagerView = { ...waiting, version: 12, job: { ...waiting.job, ...(waiting.job ?? walking.job), work_order: { ...walking.job.work_order, status: 'done', cost: { labor: 75, parts: 10, mitigation: 0, total: 85 } }, actions: [] } };
     await act(async () => finish?.(response(completed)));
     await waitFor(() => expect(screen.getByText('done', { selector: 'span' })).toBeInTheDocument()); expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument(); expect(qc.getQueryData<PagerView>(pagerKey('tech-03'))?.version).toBe(12);
-    view.unmount(); expect(h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(2);
+    view.unmount(); expect(h.fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(1);
   });
   it('claims and releases only on explicit input and refetches stale 409 actions with request IDs', async () => {
     const uncontrolled = { ...paged, technician: { ...paged.technician, device_controlled: false }, version: 1 };
@@ -115,7 +114,9 @@ describe('Approved pager and floor', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Take control' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Release control' }));
     await screen.findByRole('button', { name: 'Take control' });
-    fireEvent.click(screen.getByRole('button', { name: 'Accept job' })); await screen.findByText(/pager-rid/);
+    if (!walking.job) throw new Error('Missing job');
+    act(() => FakeSource.all[0]?.emit('pager', { ...walking, version: 21, job: { ...walking.job, actions: ['done'] } }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Done$/ })); await screen.findByText(/pager-rid/);
     expect(h.fetch.mock.calls.filter(([u, i]) => u.endsWith('/tech-03') && i?.method !== 'POST').length).toBeGreaterThan(1);
   });
   it('keeps crew streams site-isolated and does not continuously poll', async () => {
@@ -139,7 +140,7 @@ describe('Approved pager and floor', () => {
     let finish: ((r: Response) => void) | undefined;
     h.fetch.mockImplementation(async (_url: string, init?: RequestInit) => init?.method === 'POST' ? new Promise<Response>((r) => { finish = r; }) : response(paged));
     const { qc } = mount(<PagerPage onTechnicianChange={vi.fn()} />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Accept job' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Release control' }));
     await waitFor(() => expect(finish).toBeDefined());
     const source = FakeSource.all[0]; if (!source) throw new Error('No source');
     act(() => source.emit('pager', { ...walking, version: 40 }));

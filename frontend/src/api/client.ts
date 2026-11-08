@@ -207,7 +207,7 @@ export function createFixtureClient(): ApiClient {
     incidentWhatIf: (id) => id === opsFixtures.whatif.incident_id ? later(opsFixtures.whatif) : id === gpuFixtures.whatif.incident_id ? later(gpuFixtures.whatif) : Promise.reject(notFound(`What-if for ${id} (no approved fixture)`)),
     opsTechnicians: (site) => later({ ...opsFixtures.technicians, technicians: opsFixtures.technicians.technicians.filter((t) => t.site_id === site), work_orders: opsFixtures.technicians.work_orders.filter((w) => w.site_id === site) }),
     opsFloor: (site) => site === facilityFixtures.floor.site_id ? later(facilityFixtures.floor) : Promise.reject(notFound(`Floor for ${site} (no approved fixture)`)),
-    opsPager: (id) => id === pagerFixtures.paged.technician.technician_id ? later(pagerFixtures.paged) : Promise.reject(notFound(`Pager ${id} (no approved fixture)`)),
+    opsPager: (id) => id === pagerFixtures.autoaccepted.technician.technician_id ? later(pagerFixtures.autoaccepted) : Promise.reject(notFound(`Pager ${id} (no approved fixture)`)),
     claimPager: disabled, releasePager: disabled, pagerAction: disabled, setAutoDispatch: disabled,
     opsPlan: (site) => site === opsFixtures.plan.site_id ? later(opsFixtures.plan) : Promise.reject(notFound(`Plan for ${site} (no approved fixture)`)),
     dispatch: disabled,
