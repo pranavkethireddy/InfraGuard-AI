@@ -19,12 +19,12 @@ def test_chaos_faults_are_dispatched_to_the_rack(client, settings):
     client.post("/api/v1/fleet/chaos", json={"enabled": False})
     client.post("/api/v1/fleet/live/stop")
     assert status["protected_technicians"] == []
-    assert len(run.chaos_assets) >= 3 and all(a.startswith("srv-") for a in run.chaos_assets)
+    assert len(run.chaos_assets) >= 3
     with store.lock:
         st = ops.state(store, settings)
         chaos_orders = [o for o in st.orders.values() if o.asset_id in run.chaos_assets]
         assert chaos_orders and all(o.option == "fix_now" for o in chaos_orders)  # they set off at once
-        assert {o.spot.hall_id for o in chaos_orders} <= {"hall-a", "hall-b"}  # they walk to the rack
+        assert all(o.spot is not None for o in chaos_orders)  # they walk to the machine, wherever it is
 
 
 def test_reprioritize_changes_only_the_queue(client, settings):
@@ -124,3 +124,18 @@ def test_dispatch_spreads_work_across_technicians(client, settings):
     with store.lock:
         who = [o.technician_id for o in ops.state(store, settings).orders.values() if o.asset_id in servers]
     assert len(set(who)) >= 3, who  # not all on one person
+
+
+def test_chaos_reaches_every_kind_of_equipment(client, settings):
+    """Over many draws chaos hits facility equipment and server parts, not only GPU servers."""
+    import random
+
+    from backend.app.services.live import LiveRun
+
+    store = client.app.state.store
+    run = LiveRun(run_id="r", seed=1, tick_seconds=1, started_at=None, profiles={}, rngs={})
+    picks = [chaos._any_equipment(store, run, "datacenter", random.Random(i)) for i in range(300)]
+    types = {a.split("-")[0] for a, _ in picks}
+    kinds = {k for _, k in picks}
+    assert {"ups", "gen", "pdu", "tor", "chiller", "cdu", "smoke", "door", "srv", "cooling"} <= types
+    assert {"memory_fault", "nic_failure", "server_fan_failure", "ups_on_battery", "door_forced"} <= kinds

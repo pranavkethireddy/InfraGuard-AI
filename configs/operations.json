@@ -7,9 +7,35 @@
   "walk_cells_per_demo_minute": 2.0,
   "_parts_store_note": "Parts cabinets where technicians pick up parts and tools before a repair (hall-local floor cells, by each hall's door). A repair walk goes by the cabinet that makes the shortest trip. Demo assumption.",
   "parts_store": {
-    "datacenter": [{"hall_id": "hall-a", "x": 1.0, "y": 11.5}, {"hall_id": "hall-b", "x": 1.0, "y": 11.5},
-                   {"hall_id": "electrical", "x": 1.0, "y": 5.5}],
-    "mining": [{"hall_id": "container-1", "x": 1.0, "y": 7.5}, {"hall_id": "container-2", "x": 1.0, "y": 7.5}]
+    "datacenter": [
+      {
+        "hall_id": "hall-a",
+        "x": 1.0,
+        "y": 11.5
+      },
+      {
+        "hall_id": "hall-b",
+        "x": 1.0,
+        "y": 11.5
+      },
+      {
+        "hall_id": "electrical",
+        "x": 1.0,
+        "y": 5.5
+      }
+    ],
+    "mining": [
+      {
+        "hall_id": "container-1",
+        "x": 1.0,
+        "y": 7.5
+      },
+      {
+        "hall_id": "container-2",
+        "x": 1.0,
+        "y": 7.5
+      }
+    ]
   },
   "walk_note": "demo pace: walking plus collecting tools and parts, in floor cells per demo minute",
   "overtime_multiplier": 1.5,
@@ -213,17 +239,10 @@
     }
   ],
   "chaos": {
-    "note": "Demo chaos mode (POST /fleet/chaos): random GPU server faults and random priority changes, dispatched to the closest qualified technician. protected_technicians never get chaos work. While chaos is on, faults injected by hand go to demo_technician first.",
+    "note": "Demo chaos mode (POST /fleet/chaos): random faults on any equipment (kinds 'all': a random equipment type, a healthy machine of it, any of its faults, server parts included; or a list of kinds) and random priority changes, dispatched to the closest qualified technician. protected_technicians never get chaos work. While chaos is on, faults injected by hand go to demo_technician first.",
     "protected_technicians": [],
     "site": "datacenter",
-    "kinds": [
-      "gpu_fault",
-      "server_crash",
-      "psu_failure",
-      "memory_fault",
-      "nic_failure",
-      "server_fan_failure"
-    ],
+    "kinds": "all",
     "fault_every_ticks": 20,
     "max_active_faults": 6,
     "reprioritize_every_ticks": 10,

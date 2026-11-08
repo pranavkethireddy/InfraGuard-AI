@@ -1,7 +1,9 @@
-"""Demo chaos mode: random GPU server faults and random priority changes, run by the live loop.
+"""Demo chaos mode: random faults on any equipment and random priority changes, run by the live loop.
 
-- Every `fault_every_ticks`, while fewer than `max_active_faults` chaos faults are running, one random GPU
-  server at `site` gets a random fault from `kinds` (a GPU fails, or the whole server goes down). The new
+- Every `fault_every_ticks`, while fewer than `max_active_faults` chaos faults are running, one random piece of
+  equipment at `site` gets a random fault it can have: first a random equipment type (so racks full of servers
+  and drives do not crowd out the UPS, chillers or door access), then a healthy machine of that type, then any of
+  its fault kinds, server parts included. `kinds` set to a list limits chaos to those kinds instead. The new
   incident is dispatched automatically to the closest qualified technician, never a protected one.
 - Every `reprioritize_every_ticks`, one open chaos incident gets a new random priority (1-5). Only the order of
   technicians' queues changes; the job a technician is doing now is never interrupted, and work assigned to a
@@ -90,15 +92,44 @@ def _new_fault(store: Store, run, settings: Settings, cfg: dict, rng: random.Ran
         active = sum(1 for a in run.chaos_assets if a in run.faults)
     if active >= cfg.get("max_active_faults", 4):
         return
-    kind = rng.choice(cfg.get("kinds", ["gpu_fault", "server_crash"]))
+    site = cfg.get("site", "datacenter")
+    kinds = cfg.get("kinds", "all")
     try:
-        res = live.inject(store, FaultRequest(count=1, site=cfg.get("site", "datacenter"), kind=kind), settings)
+        if kinds == "all":
+            pick = _any_equipment(store, run, site, rng)
+            if pick is None:
+                log.info("chaos: no healthy equipment left")
+                return
+            asset_id, kind = pick
+            res = live.inject(store, FaultRequest(asset_ids=[asset_id], kind=kind), settings)
+        else:
+            kind = rng.choice(kinds)
+            res = live.inject(store, FaultRequest(count=1, site=site, kind=kind), settings)
     except ApiError as e:  # e.g. every server is already busy
         log.info("chaos: no new fault (%s)", e.code)
         return
     with store.lock:
         run.chaos_assets.update(f.asset_id for f in res.injected)
     log.info("chaos: %s on %s", kind, ", ".join(f.asset_id for f in res.injected))
+
+
+def _any_equipment(store: Store, run, site: str, rng: random.Random) -> tuple[str, str] | None:
+    """(asset_id, fault kind): a random equipment type, a healthy machine of it, one of its faults."""
+    from . import live
+    from .layout import get_layout
+
+    fleet = live._fleet()
+    lay = get_layout(site)
+    with store.lock:
+        busy = set(run.faults) | {i.asset_id for i in store.incidents.values() if i.status != "resolved"}
+    by_type: dict[str, list[str]] = {}
+    for a, x in lay.assets.items():
+        if a not in busy and live._kinds(fleet, x.asset_type):
+            by_type.setdefault(x.asset_type, []).append(a)
+    if not by_type:
+        return None
+    t = rng.choice(sorted(by_type))
+    return rng.choice(sorted(by_type[t])), rng.choice(live._kinds(fleet, t))
 
 
 def _reprioritize(store: Store, run, settings: Settings, rng: random.Random) -> None:
