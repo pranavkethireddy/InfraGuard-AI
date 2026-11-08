@@ -1,0 +1,42 @@
+{
+  "site_id": "datacenter",
+  "demo_time": "2026-11-07T20:34:00-06:00",
+  "items": [
+    {
+      "incident_id": "inc-000955",
+      "asset_id": "cooling-02",
+      "asset_name": "CRAC Unit 2",
+      "title": "Sustained high temperature on CRAC Unit 2",
+      "risk_level": "high",
+      "status": "ready",
+      "recommended_option": "fix_now",
+      "technician_id": "tech-03",
+      "technician_name": "Sam Rivera",
+      "move_from": null,
+      "action": "Fix now: Sam Rivera to CRAC Unit 2.",
+      "savings": 50600.0,
+      "repair_hours": 3.0,
+      "savings_per_tech_hour": 16866.67,
+      "work_order_id": null
+    },
+    {
+      "incident_id": "inc-000009",
+      "asset_id": "drive-05",
+      "asset_name": "Rack A1-03, Drive Bay 1",
+      "title": "Predicted drive failure within 30 days: Rack A1-03, Drive Bay 1",
+      "risk_level": "high",
+      "status": "ready",
+      "recommended_option": "fix_now",
+      "technician_id": "tech-02",
+      "technician_name": "Dev Patel",
+      "move_from": "Firmware update, Row A1 drives",
+      "action": "Fix now: Dev Patel to Rack A1-03, Drive Bay 1, moving off \"Firmware update, Row A1 drives\".",
+      "savings": 3000.0,
+      "repair_hours": 1.0,
+      "savings_per_tech_hour": 3000.0,
+      "work_order_id": null
+    }
+  ],
+  "total_savings": 53600.0,
+  "assumptions_source": "demo assumption (configs/operations.json), not measured"
+}

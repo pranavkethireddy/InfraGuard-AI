@@ -113,6 +113,7 @@ describe('Backend business case and investigation refresh', () => {
     expect(investigationPollInterval('queued')).toBe(1000); expect(investigationPollInterval('running')).toBe(1000); expect(investigationPollInterval('completed')).toBe(false); expect(investigationPollInterval('failed')).toBe(false);
     let calls = 0;
     h.fetch.mockImplementation(async (url: string) => {
+      if (url.endsWith('/whatif')) return json({ error: { code: 'NOT_FOUND', message: 'No what-if mock', request_id: 'whatif-test' } }, 404);
       if (url.includes('/incidents/')) { calls++; return json({ ...f.minerIncident, investigation_status: calls === 1 ? 'queued' : 'completed', problem: calls === 1 ? null : 'Returned miner problem', likely_cause: calls === 1 ? null : 'Returned miner cause' }); }
       if (url.includes('/models')) return json(fixtures.modelsList);
       return json({ ...fixtures.assetReadings, asset_id: f.minerIncident.asset_id });

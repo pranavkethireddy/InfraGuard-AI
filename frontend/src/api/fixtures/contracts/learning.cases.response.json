@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "case_id": "lc-0001",
+      "site_id": "datacenter",
+      "asset_id": "cooling-02",
+      "asset_type": "cooling_unit",
+      "detector_id": "cooling-rule-v1",
+      "symptom": "high temperature",
+      "cause": "High temperature alarm on CRAC Unit 1. Refrigerant pressure low from a leak at a brazed joint. Leak repaired and unit recharged. Unit was down 6 h, repair about $3,800. Portable cooling was used for Hall A.",
+      "fix": "Inspect the unit's air filter and fan (human review required).",
+      "repair_hours": 3.0,
+      "cost": 1490.83,
+      "outcome": "fixed_before_failure",
+      "learned_at": "2026-11-08T01:54:09.835738Z",
+      "source": "technician"
+    }
+  ],
+  "total": 1
+}

@@ -1,0 +1,61 @@
+{
+  "work_order": {
+    "work_order_id": "wo-0006",
+    "kind": "repair",
+    "title": "CRAC Unit 2: Inspect the unit's air filter and fan (human review required).",
+    "site_id": "datacenter",
+    "hall_id": "hall-a",
+    "asset_id": "cooling-02",
+    "incident_id": "inc-000955",
+    "technician_id": "tech-03",
+    "status": "traveling",
+    "option": "buy_time",
+    "mitigation_active": true,
+    "hours_total": 3.0,
+    "hours_done": 0.0,
+    "progress": 0.0,
+    "eta_minutes": 190.0,
+    "scheduled_start": null,
+    "created_at": "2026-11-07T20:34:00-06:00",
+    "completed_at": null,
+    "displaced_work_order_id": null,
+    "cost": null
+  },
+  "technician": {
+    "technician_id": "tech-03",
+    "name": "Sam Rivera",
+    "role": "Data center technician",
+    "site_id": "datacenter",
+    "skills": [
+      "storage_drive",
+      "cooling_unit"
+    ],
+    "rate_per_hour": 75.0,
+    "status": "traveling",
+    "location_hall_id": "hall-b",
+    "current_work_order": {
+      "work_order_id": "wo-0006",
+      "kind": "repair",
+      "title": "CRAC Unit 2: Inspect the unit's air filter and fan (human review required).",
+      "site_id": "datacenter",
+      "hall_id": "hall-a",
+      "asset_id": "cooling-02",
+      "incident_id": "inc-000955",
+      "technician_id": "tech-03",
+      "status": "traveling",
+      "option": "buy_time",
+      "mitigation_active": true,
+      "hours_total": 3.0,
+      "hours_done": 0.0,
+      "progress": 0.0,
+      "eta_minutes": 190.0,
+      "scheduled_start": null,
+      "created_at": "2026-11-07T20:34:00-06:00",
+      "completed_at": null,
+      "displaced_work_order_id": null,
+      "cost": null
+    },
+    "queued_work_order_ids": []
+  },
+  "displaced": null
+}
