@@ -156,3 +156,59 @@ def test_cooling_fault_shuts_racks_down_and_a_repair_brings_them_back(client, se
         assert client.get(f"/api/v1/incidents/{inc}").json()["resolved_by"] == "technician"
     finally:
         client.post("/api/v1/fleet/live/stop")
+
+
+def test_projection_counts_sensor_wobble_against_the_limit(client, settings):
+    """Flat at 41.2 C but swinging about 1 C: the next swing touches 42 C, so it must not be called safe."""
+    import math
+    fix_clock(client, settings)
+    rows = [{"observed_at": (T0 + timedelta(seconds=i)).isoformat(),
+             "values": {"temperature_c": round(41.2 + math.sin(i / 6), 2)}} for i in range(38)]
+    client.post("/api/v1/readings", json={"asset_id": "cooling-01", "data_origin": "simulated", "readings": rows})
+    for r in rows[-3:]:
+        client.post("/api/v1/predictions", json={"asset_id": "cooling-01", "observed_at": r["observed_at"],
+                    "data_origin": "simulated", "detector_id": "cooling-rule-v1", "readings": r["values"]})
+    inc = client.get("/api/v1/incidents").json()["items"][0]["incident_id"]
+    w = client.get(f"/api/v1/incidents/{inc}/whatif").json()
+    assert w["shutdown_in_hours"] is not None and w["shutdown_in_hours"] < 0.5
+
+
+def test_buy_time_promise_holds_in_the_live_simulation(client, settings):
+    """The what-if's buy_time promise matches the live simulation: racks stay on when it says they will,
+    and shut down when it says they will."""
+    # 0.1 s ticks: fast, but slow enough that request latency does not leave the fault unmitigated for long.
+    settings.live_tick_seconds = 0.1  # below the API minimum of 0.2, so set through settings
+    store = client.app.state.store
+    promises = []
+    try:
+        for seed, unit in ((42, "cooling-03"), (7, "cooling-01")):
+            client.post("/api/v1/fleet/live/stop")
+            client.post("/api/v1/fleet/clear")
+            assert client.post("/api/v1/fleet/live/start", json={"seed": seed}).status_code == 200
+            client.post("/api/v1/fleet/faults", json={"asset_ids": [unit]})
+            inc = until(lambda: next((i["incident_id"] for i in client.get("/api/v1/incidents").json()["items"]
+                                      if i["asset_id"] == unit), None))
+            start = store.live.ticks
+            until(lambda: store.live.ticks - start >= 40)  # trend window past the ramp
+            w = client.get(f"/api/v1/incidents/{inc}/whatif").json()
+            buy = next(o for o in w["options"] if o["option"] == "buy_time")
+            promised_safe = buy["shutdown_at_hours"] is None
+            promises.append(promised_safe)
+            assert client.post("/api/v1/ops/dispatch", json={"incident_id": inc, "option": "buy_time"}).status_code == 201
+            until(lambda: client.get(f"/api/v1/incidents/{inc}").json()["status"] == "resolved", 60)
+            case = client.get("/api/v1/learning/cases").json()["items"][0]
+            expected = "fixed_before_failure" if promised_safe else "fixed_after_shutdown"
+            assert case["outcome"] == expected, (seed, unit, buy["shutdown_at_hours"])
+        assert any(promises), "no scenario where buying time avoids the shutdown"
+    finally:
+        client.post("/api/v1/fleet/live/stop")
+
+
+def until(fn, timeout=30.0):
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        v = fn()
+        if v:
+            return v
+        time.sleep(0.02)
+    raise AssertionError("condition not met in time")

@@ -10,7 +10,7 @@
     "rack_shutdown_c": 42.0,
     "restart_hours": 1.0,
     "rise_c_per_hour": 3.0,
-    "mitigated_rise_factor": 0.25,
+    "mitigated_rise_factor": 0.1,
     "mitigation_cost_per_hour": 80.0,
     "mitigation": "Move workload off the affected racks and raise airflow on the neighbouring cooling unit"
   },

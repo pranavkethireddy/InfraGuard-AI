@@ -16,7 +16,7 @@
       "avg_cost": 1490.83,
       "fixed_before_failure_pct": 100.0,
       "best_fix": "Inspect the unit's air filter and fan (human review required).",
-      "last_learned_at": "2026-11-08T01:25:00.327216Z"
+      "last_learned_at": "2026-11-08T01:54:09.835738Z"
     }
   ]
 }

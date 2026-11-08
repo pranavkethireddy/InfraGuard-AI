@@ -3,19 +3,19 @@
   "asset_id": "cooling-02",
   "asset_name": "CRAC Unit 2",
   "site_id": "datacenter",
-  "generated_at": "2026-11-08T01:24:53.456819Z",
-  "demo_time": "2026-11-07T20:06:00-06:00",
+  "generated_at": "2026-11-08T01:54:02.008012Z",
+  "demo_time": "2026-11-07T20:32:00-06:00",
   "metric": "temperature_c",
   "unit": "C",
-  "current_value": 38.09,
-  "trend_per_hour": 4.843,
+  "current_value": 38.25,
+  "trend_per_hour": 12.9,
   "shutdown_threshold": 42.0,
-  "shutdown_in_hours": 0.8,
+  "shutdown_in_hours": 0.0,
   "window": {
     "kind": "maintenance_window",
     "label": "Nightly maintenance window",
-    "starts_in_hours": 5.92,
-    "ends_in_hours": 8.92,
+    "starts_in_hours": 5.5,
+    "ends_in_hours": 8.5,
     "breakeven_usd_per_mwh": null
   },
   "options": [
@@ -28,141 +28,141 @@
       "displaces": null,
       "start_in_hours": 0.17,
       "done_in_hours": 3.17,
-      "shutdown_at_hours": 0.8,
-      "downtime_hours": 3.4,
+      "shutdown_at_hours": 0.0,
+      "downtime_hours": 4.2,
       "costs": {
         "labor": 337.5,
         "parts": 3500.0,
-        "downtime_or_lost_revenue": 40800.0,
+        "downtime_or_lost_revenue": 50400.0,
         "mitigation": 0.0,
         "displaced_work": 0.0,
-        "total": 44637.5
+        "total": 54237.5
       },
       "risk_note": null,
       "curve": [
         {
           "hour": 0.0,
-          "value": 38.09,
+          "value": 38.25,
           "power_state": "on"
         },
         {
           "hour": 0.5,
-          "value": 40.51,
-          "power_state": "on"
+          "value": 44.7,
+          "power_state": "off"
         },
         {
           "hour": 1.0,
-          "value": 42.93,
+          "value": 51.15,
           "power_state": "off"
         },
         {
           "hour": 1.5,
-          "value": 45.35,
+          "value": 57.6,
           "power_state": "off"
         },
         {
           "hour": 2.0,
-          "value": 47.78,
+          "value": 64.05,
           "power_state": "off"
         },
         {
           "hour": 2.5,
-          "value": 50.2,
+          "value": 70.5,
           "power_state": "off"
         },
         {
           "hour": 3.0,
-          "value": 52.62,
+          "value": 76.95,
           "power_state": "off"
         },
         {
           "hour": 3.5,
-          "value": 51.79,
+          "value": 77.73,
           "power_state": "off"
         },
         {
           "hour": 4.0,
-          "value": 48.79,
+          "value": 74.73,
           "power_state": "off"
         },
         {
           "hour": 4.5,
-          "value": 45.79,
+          "value": 71.73,
           "power_state": "on"
         },
         {
           "hour": 5.0,
-          "value": 42.79,
+          "value": 68.73,
           "power_state": "on"
         },
         {
           "hour": 5.5,
-          "value": 39.79,
+          "value": 65.73,
           "power_state": "on"
         },
         {
           "hour": 6.0,
-          "value": 36.79,
+          "value": 62.73,
           "power_state": "on"
         },
         {
           "hour": 6.5,
-          "value": 33.79,
+          "value": 59.73,
           "power_state": "on"
         },
         {
           "hour": 7.0,
-          "value": 30.79,
+          "value": 56.73,
           "power_state": "on"
         },
         {
           "hour": 7.5,
-          "value": 27.79,
+          "value": 53.73,
           "power_state": "on"
         },
         {
           "hour": 8.0,
-          "value": 25.12,
+          "value": 50.73,
           "power_state": "on"
         },
         {
           "hour": 8.5,
-          "value": 25.12,
+          "value": 47.73,
           "power_state": "on"
         },
         {
           "hour": 9.0,
-          "value": 25.12,
+          "value": 44.73,
           "power_state": "on"
         },
         {
           "hour": 9.5,
-          "value": 25.12,
+          "value": 41.73,
           "power_state": "on"
         },
         {
           "hour": 10.0,
-          "value": 25.12,
+          "value": 38.73,
           "power_state": "on"
         },
         {
           "hour": 10.5,
-          "value": 25.12,
+          "value": 35.73,
           "power_state": "on"
         },
         {
           "hour": 11.0,
-          "value": 25.12,
+          "value": 32.73,
           "power_state": "on"
         },
         {
           "hour": 11.5,
-          "value": 25.12,
+          "value": 29.73,
           "power_state": "on"
         },
         {
           "hour": 12.0,
-          "value": 25.12,
+          "value": 26.73,
           "power_state": "on"
         }
       ]
@@ -170,147 +170,147 @@
     {
       "option": "wait_for_window",
       "label": "Wait for the nightly maintenance window",
-      "description": "Repair in the nightly maintenance window, starting in 5.9 h.",
+      "description": "Repair in the nightly maintenance window, starting in 5.5 h.",
       "technician_id": "tech-03",
       "technician_name": "Sam Rivera",
       "displaces": null,
-      "start_in_hours": 5.92,
-      "done_in_hours": 8.92,
-      "shutdown_at_hours": 0.8,
-      "downtime_hours": 9.15,
+      "start_in_hours": 5.5,
+      "done_in_hours": 8.5,
+      "shutdown_at_hours": 0.0,
+      "downtime_hours": 9.5,
       "costs": {
         "labor": 225.0,
         "parts": 3500.0,
-        "downtime_or_lost_revenue": 109800.0,
+        "downtime_or_lost_revenue": 114000.0,
         "mitigation": 0.0,
         "displaced_work": 0.0,
-        "total": 113525.0
+        "total": 117725.0
       },
       "risk_note": null,
       "curve": [
         {
           "hour": 0.0,
-          "value": 38.09,
+          "value": 38.25,
           "power_state": "on"
         },
         {
           "hour": 0.5,
-          "value": 40.51,
-          "power_state": "on"
+          "value": 44.7,
+          "power_state": "off"
         },
         {
           "hour": 1.0,
-          "value": 42.93,
+          "value": 51.15,
           "power_state": "off"
         },
         {
           "hour": 1.5,
-          "value": 45.35,
+          "value": 57.6,
           "power_state": "off"
         },
         {
           "hour": 2.0,
-          "value": 47.78,
+          "value": 64.05,
           "power_state": "off"
         },
         {
           "hour": 2.5,
-          "value": 50.2,
+          "value": 70.5,
           "power_state": "off"
         },
         {
           "hour": 3.0,
-          "value": 52.62,
+          "value": 76.95,
           "power_state": "off"
         },
         {
           "hour": 3.5,
-          "value": 55.04,
+          "value": 83.4,
           "power_state": "off"
         },
         {
           "hour": 4.0,
-          "value": 57.46,
+          "value": 89.85,
           "power_state": "off"
         },
         {
           "hour": 4.5,
-          "value": 59.88,
+          "value": 96.3,
           "power_state": "off"
         },
         {
           "hour": 5.0,
-          "value": 62.3,
+          "value": 102.75,
           "power_state": "off"
         },
         {
           "hour": 5.5,
-          "value": 64.73,
+          "value": 109.2,
           "power_state": "off"
         },
         {
           "hour": 6.0,
-          "value": 67.15,
+          "value": 115.65,
           "power_state": "off"
         },
         {
           "hour": 6.5,
-          "value": 69.57,
+          "value": 122.1,
           "power_state": "off"
         },
         {
           "hour": 7.0,
-          "value": 71.99,
+          "value": 128.55,
           "power_state": "off"
         },
         {
           "hour": 7.5,
-          "value": 74.41,
+          "value": 135.0,
           "power_state": "off"
         },
         {
           "hour": 8.0,
-          "value": 76.83,
+          "value": 141.45,
           "power_state": "off"
         },
         {
           "hour": 8.5,
-          "value": 79.25,
+          "value": 147.9,
           "power_state": "off"
         },
         {
           "hour": 9.0,
-          "value": 81.13,
+          "value": 145.84,
           "power_state": "off"
         },
         {
           "hour": 9.5,
-          "value": 78.13,
+          "value": 142.84,
           "power_state": "off"
         },
         {
           "hour": 10.0,
-          "value": 75.13,
+          "value": 139.84,
           "power_state": "on"
         },
         {
           "hour": 10.5,
-          "value": 72.13,
+          "value": 136.84,
           "power_state": "on"
         },
         {
           "hour": 11.0,
-          "value": 69.13,
+          "value": 133.84,
           "power_state": "on"
         },
         {
           "hour": 11.5,
-          "value": 66.13,
+          "value": 130.84,
           "power_state": "on"
         },
         {
           "hour": 12.0,
-          "value": 63.13,
+          "value": 127.84,
           "power_state": "on"
         }
       ]
@@ -324,81 +324,81 @@
       "displaces": null,
       "start_in_hours": 0.17,
       "done_in_hours": 3.17,
-      "shutdown_at_hours": null,
-      "downtime_hours": 0.0,
+      "shutdown_at_hours": 0.0,
+      "downtime_hours": 4.2,
       "costs": {
         "labor": 337.5,
-        "parts": 900.0,
-        "downtime_or_lost_revenue": 0.0,
+        "parts": 3500.0,
+        "downtime_or_lost_revenue": 50400.0,
         "mitigation": 253.33,
         "displaced_work": 0.0,
-        "total": 1490.83
+        "total": 54490.83
       },
       "risk_note": null,
       "curve": [
         {
           "hour": 0.0,
-          "value": 38.09,
+          "value": 38.25,
           "power_state": "on"
         },
         {
           "hour": 0.5,
-          "value": 38.7,
-          "power_state": "on"
+          "value": 38.9,
+          "power_state": "off"
         },
         {
           "hour": 1.0,
-          "value": 39.3,
-          "power_state": "on"
+          "value": 39.54,
+          "power_state": "off"
         },
         {
           "hour": 1.5,
-          "value": 39.91,
-          "power_state": "on"
+          "value": 40.19,
+          "power_state": "off"
         },
         {
           "hour": 2.0,
-          "value": 40.51,
-          "power_state": "on"
+          "value": 40.83,
+          "power_state": "off"
         },
         {
           "hour": 2.5,
-          "value": 41.12,
-          "power_state": "on"
+          "value": 41.48,
+          "power_state": "off"
         },
         {
           "hour": 3.0,
-          "value": 41.72,
-          "power_state": "on"
+          "value": 42.12,
+          "power_state": "off"
         },
         {
           "hour": 3.5,
-          "value": 40.16,
-          "power_state": "on"
+          "value": 40.58,
+          "power_state": "off"
         },
         {
           "hour": 4.0,
-          "value": 37.16,
-          "power_state": "on"
+          "value": 37.58,
+          "power_state": "off"
         },
         {
           "hour": 4.5,
-          "value": 34.16,
+          "value": 34.58,
           "power_state": "on"
         },
         {
           "hour": 5.0,
-          "value": 31.16,
+          "value": 31.58,
           "power_state": "on"
         },
         {
           "hour": 5.5,
-          "value": 28.16,
+          "value": 28.58,
           "power_state": "on"
         },
         {
           "hour": 6.0,
-          "value": 25.16,
+          "value": 25.58,
           "power_state": "on"
         },
         {
@@ -464,8 +464,8 @@
       ]
     }
   ],
-  "recommended": "buy_time",
-  "reason": "Lowest total cost: $1,491 (vs fix now $44,638, wait for the nightly maintenance window $113,525). It avoids the shutdown the other choices hit after 0.8 h.",
-  "savings_vs_worst": 112034.17,
+  "recommended": "fix_now",
+  "reason": "Lowest total cost: $54,238 (vs wait for the nightly maintenance window $117,725, buy time and fix now $54,491).",
+  "savings_vs_worst": 63487.5,
   "assumptions_source": "demo assumption (configs/operations.json), not measured; demo assumption (configs/impact_assumptions.json), not measured"
 }
