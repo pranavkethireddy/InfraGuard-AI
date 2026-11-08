@@ -14,12 +14,14 @@
     "rise_c_per_hour": 3.0,
     "mitigated_rise_factor": 0.1,
     "mitigation_cost_per_hour": 80.0,
+    "promise_margin_c": 0.75,
     "mitigation": "Move workload off the affected racks and raise airflow on the neighbouring cooling unit"
   },
   "miner": {
     "chip_shutdown_c": 95.0,
     "fan_fault_rise_c_per_hour": 6.0,
     "mitigated_rise_factor": 0.2,
+    "promise_margin_c": 2.0,
     "underclock_hashrate_factor": 0.7,
     "mitigation": "Underclock the miner to cut heat until the fan is replaced"
   },
