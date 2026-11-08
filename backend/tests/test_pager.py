@@ -65,23 +65,28 @@ def test_technician_walks_along_the_path(client, settings):
     assert sam["status"] == "working" and sam["position"] == d["work_order"]["spot"] and sam["path"] == []
 
 
-def test_pager_accept_walk_and_confirm_done(client, settings):
+def until(fn, timeout=30.0):
+    import time
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        v = fn()
+        if v:
+            return v
+        time.sleep(0.02)
+    raise AssertionError("condition not met in time")
+
+
+def test_pager_job_is_accepted_automatically_then_confirmed_done(client, settings):
     v = PagerView.model_validate(client.post("/api/v1/ops/pager/tech-03/claim").json())
     assert v.technician.device_controlled and v.job is None
     inc = server_incident(client)
     client.post("/api/v1/ops/dispatch", json={"incident_id": inc, "option": "fix_now"})
     v = PagerView.model_validate(client.get("/api/v1/ops/pager/tech-03").json())
-    assert v.job.work_order.status == "paged" and v.job.actions == ["accept", "decline"]
+    # No accept or decline: the job is taken at once and the walk starts (by the parts cabinet).
+    assert v.job.work_order.status in ("traveling", "in_progress") and "accept" not in v.job.actions
     assert "Closest qualified technician" in v.job.why_you and v.job.steps and v.job.cost_per_hour_while_down > 0
-    run_ticks(client, settings, 5)  # nothing happens until the pager accepts
-    assert client.get("/api/v1/ops/pager/tech-03").json()["job"]["work_order"]["status"] == "paged"
     wo = v.job.work_order.work_order_id
-    bad = client.post("/api/v1/ops/pager/tech-03/action", json={"action": "done", "work_order_id": wo})
-    assert bad.status_code == 409 and bad.json()["error"]["code"] == "NOT_STARTED"
-    v = PagerView.model_validate(client.post("/api/v1/ops/pager/tech-03/action",
-                                             json={"action": "accept", "work_order_id": wo}).json())
-    assert v.job.work_order.status in ("traveling", "in_progress")
-    run_ticks(client, settings, 80)  # 2 h repair: waits for the pager instead of finishing alone
+    run_ticks(client, settings, 90)  # walk + 2 h repair: waits for the pager instead of finishing alone
     v = PagerView.model_validate(client.get("/api/v1/ops/pager/tech-03").json())
     assert v.job.work_order.status == "awaiting_confirmation" and v.job.actions == ["done"]
     v = PagerView.model_validate(client.post("/api/v1/ops/pager/tech-03/action",
@@ -93,20 +98,36 @@ def test_pager_accept_walk_and_confirm_done(client, settings):
     assert not client.post("/api/v1/ops/pager/tech-03/release").json()["technician"]["device_controlled"]
 
 
-def test_declined_page_goes_to_the_next_closest(client, settings):
-    client.post("/api/v1/ops/pager/tech-03/claim")
-    inc = server_incident(client)
-    client.post("/api/v1/ops/dispatch", json={"incident_id": inc, "option": "fix_now"})
-    wo = client.get("/api/v1/ops/pager/tech-03").json()["job"]["work_order"]["work_order_id"]
-    v = client.post("/api/v1/ops/pager/tech-03/action", json={"action": "decline", "work_order_id": wo}).json()
-    assert v["job"] is None
-    detail = client.get(f"/api/v1/incidents/{inc}").json()
-    techs = client.get("/api/v1/ops/technicians").json()
-    new = next(w for w in techs["work_orders"] if w["work_order_id"] == detail["work_order_id"])
-    # The next closest GPU-server technician (Maya, Dev or Ana), never Sam again.
-    assert new["technician_id"] in {"tech-01", "tech-02", "tech-04"} and new["work_order_id"] != wo
-    old = next(w for w in techs["work_orders"] if w["work_order_id"] == wo)
-    assert old["status"] == "done" and "declined by Sam Rivera" in old["title"]
+def test_higher_risk_repair_takes_over_from_a_lower_risk_one(client, settings):
+    settings.live_tick_seconds = 0.05
+    try:
+        client.post("/api/v1/fleet/live/start", json={"seed": 1})  # seed 1: srv-B2-02-1 gets psu_failure (medium)
+        client.post("/api/v1/fleet/faults", json={"asset_ids": ["srv-B2-02-1"]})
+        client.post("/api/v1/fleet/faults", json={"asset_ids": ["srv-B1-01-1"], "kind": "server_crash"})
+        incs = until(lambda: (x := {i["asset_id"]: i for i in client.get("/api/v1/incidents").json()["items"]})
+                     .keys() >= {"srv-B2-02-1", "srv-B1-01-1"} and x)
+        assert incs["srv-B2-02-1"]["risk_level"] == "medium" and incs["srv-B1-01-1"]["risk_level"] == "high"
+        low = client.post("/api/v1/ops/dispatch", json={"incident_id": incs["srv-B2-02-1"]["incident_id"],
+                                                       "option": "fix_now", "technician_id": "tech-03"}).json()
+        high = client.post("/api/v1/ops/dispatch", json={"incident_id": incs["srv-B1-01-1"]["incident_id"],
+                                                        "option": "fix_now", "technician_id": "tech-03"})
+        assert high.status_code == 201, high.text
+        h = high.json()
+        assert h["displaced"]["work_order_id"] == low["work_order"]["work_order_id"] and h["displaced"]["status"] == "paused"
+        assert h["work_order"]["status"] in ("traveling", "in_progress") and "Moved off" in client.get("/api/v1/ops/pager/tech-03").json()["job"]["why_you"]
+    finally:
+        client.post("/api/v1/fleet/live/stop")
+
+
+def test_repair_walk_goes_by_the_parts_cabinet():
+    from backend.app.core.config import Settings
+    from backend.app.services import floor, ops
+
+    s = Settings()
+    a, b = ops.asset_spot("srv-A1-01-1"), ops.asset_spot("cooling-03")
+    walk, direct = ops.repair_path("datacenter", a, b, s), floor.path("datacenter", a, b)
+    cabinets = {(p.x, p.y) for p in ops.parts_spots("datacenter", s)}
+    assert any((p.x, p.y) in cabinets for p in walk) and floor.length(walk) >= floor.length(direct)
 
 
 def test_pager_errors(client):
