@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     live_tick_seconds: float = 1.0
     # Start the live fleet loop when the server boots (deployed demo); off for local dev and tests.
     live_autostart: bool = False
+    # Folder with the built frontend (index.html); when set, the API also serves the app on the same origin.
+    static_dir: str | None = None
     live_history_limit: int = 300
     auto_investigate: bool = True
     # Page the closest qualified technician as soon as an incident opens (can be switched at /ops/auto-dispatch).

@@ -5,14 +5,16 @@
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from .api.v1 import health
 from .api.v1.router import api_router
 from .core.config import APP_VERSION, Settings, get_settings
-from .core.errors import REQUEST_ID_HEADER, install_error_handlers
+from .core.errors import REQUEST_ID_HEADER, ApiError, install_error_handlers
 from .services.store import Store
 
 
@@ -54,7 +56,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.include_router(health.router)
     app.include_router(api_router)
+    if settings.static_dir:
+        _serve_frontend(app, Path(settings.static_dir))
     return app
+
+
+def _serve_frontend(app: FastAPI, root: Path) -> None:
+    """Serve the built single-page app: real files as they are, any other path gets index.html."""
+    root = root.resolve()
+    index = root / "index.html"
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> FileResponse:
+        f = (root / path).resolve()
+        if path and f.is_file() and f.is_relative_to(root):
+            return FileResponse(f)
+        if path.startswith(("api/", "docs", "openapi.json")):
+            raise ApiError(404, "NOT_FOUND", "Not Found", {})
+        return FileResponse(index)
 
 
 app = create_app()
