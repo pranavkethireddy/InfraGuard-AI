@@ -31,12 +31,19 @@ class Settings(BaseSettings):
     # Learned repair cases; survives restarts and /fleet/clear. Not committed.
     learned_cases_path: str = "backend/var/learned_cases.json"
     live_tick_seconds: float = 1.0
+    # Start the live fleet loop when the server boots (deployed demo); off for local dev and tests.
+    live_autostart: bool = False
     live_history_limit: int = 300
     auto_investigate: bool = True
     # Page the closest qualified technician as soon as an incident opens (can be switched at /ops/auto-dispatch).
     auto_dispatch: bool = True
     impact_assumptions_path: str = "configs/impact_assumptions.json"
     maintenance_records_path: str = "data/maintenance/records.json"
+    # Vultr Serverless Inference (OpenAI-style chat API). When set, it writes incident explanations and Gemini
+    # becomes the backup. Empty vultr_model picks the first chat model the account offers.
+    vultr_inference_api_key: str | None = None
+    vultr_inference_url: str = "https://api.vultrinference.com/v1"
+    vultr_model: str = ""
     gemini_api_key: str | None = None
     # Optional second key: when one key is rate limited, requests move to the other.
     gemini_api_key_2: str | None = None

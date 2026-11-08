@@ -1,0 +1,22 @@
+# SITE_ADDRESS is ":80" for plain http on the server IP, or a domain name for automatic HTTPS.
+{$SITE_ADDRESS::80} {
+	encode gzip
+	# API and the server-sent event streams (/api/v1/ops/stream) go to the backend unbuffered.
+	handle /api/* {
+		reverse_proxy backend:8000 {
+			flush_interval -1
+		}
+	}
+	handle /docs* {
+		reverse_proxy backend:8000
+	}
+	handle /openapi.json {
+		reverse_proxy backend:8000
+	}
+	# Everything else is the single-page app.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
