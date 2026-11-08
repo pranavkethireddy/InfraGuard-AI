@@ -65,7 +65,7 @@ def _job(store: Store, settings: Settings, st: ops.OpsState, t: ops.Tech, o: ops
     asset = all_assets().get(o.asset_id) if o.asset_id else None
     imp = impact_service.for_asset(settings.impact_assumptions_path, asset.asset_id, asset.asset_type) if asset else None
     business = impact_service.compute(imp) if imp else None
-    actions = {"paged": ["accept", "decline"], "traveling": ["done"], "in_progress": ["done"],
+    actions = {"traveling": ["done"], "in_progress": ["done"],
                "awaiting_confirmation": ["done"]}.get(o.status, [])
     steps = list(inc.recommended_actions) if inc else [o.title]
     return PagerJob(

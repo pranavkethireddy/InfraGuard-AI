@@ -4,8 +4,10 @@ Time runs on a demo clock: every live tick advances it by configs/operations.jso
 demo_minutes_per_tick, so a 3 h repair takes 90 ticks at 2 minutes per tick. Technicians travel,
 work, pause routine jobs when moved to a repair, and resume them afterwards. Technicians walk the floor
 plan (services/floor.py) at a demo pace, so travel time is walking distance and the closest qualified
-technician is the one who can start soonest. A technician claimed by a pager (an iPad) is
-device-controlled: their repairs wait on the pager to accept and to confirm done. When a repair work order
+technician is the one who can start soonest. A repair walk goes by the parts store first (configs/operations.json
+parts_store) to pick up parts and tools, then to the machine. A technician on a lower-risk repair is moved to a
+higher-risk one sent to them (the first is paused and resumed after). A technician claimed by a pager (an iPad)
+is device-controlled: jobs are accepted automatically, and the pager confirms the work done. When a repair work order
 finishes, the incident is resolved by the technician, the fault on the machine is repaired (readings
 recover), and the repair becomes a learned case shared with every site.
 """
@@ -69,6 +71,7 @@ class Order:
     cost: WorkOrderCost | None = None
     spot: FloorPoint | None = None
     declined_by: list[str] = field(default_factory=list)
+    risk_level: str | None = None  # the incident's risk, kept current each tick
     why: str | None = None
 
 
@@ -133,6 +136,21 @@ def asset_spot(asset_id: str) -> FloorPoint:
 def walk_hours(site: str, a: FloorPoint, b: FloorPoint, settings: Settings) -> float:
     pace = config(settings)["walk_cells_per_demo_minute"]
     return floor.length(floor.path(site, a, b)) / pace / 60
+
+
+def parts_spots(site: str, settings: Settings) -> list[FloorPoint]:
+    return [floor.to_floor(site, floor.Spot(p["hall_id"], p["x"], p["y"]))
+            for p in config(settings).get("parts_store", {}).get(site, [])]
+
+
+def repair_path(site: str, a: FloorPoint, b: FloorPoint, settings: Settings) -> list[FloorPoint]:
+    """Walk for a repair: by the parts cabinet that makes the shortest trip, then to the machine."""
+    trips = [floor.path(site, a, c) + floor.path(site, c, b)[1:] for c in parts_spots(site, settings)]
+    return min(trips, key=floor.length) if trips else floor.path(site, a, b)
+
+
+def repair_walk_hours(site: str, a: FloorPoint, b: FloorPoint, settings: Settings) -> float:
+    return floor.length(repair_path(site, a, b, settings)) / config(settings)["walk_cells_per_demo_minute"] / 60
 
 
 def _new(st: OpsState, settings: Settings, **kw) -> Order:
@@ -212,12 +230,12 @@ def candidates(st: OpsState, settings: Settings, site: str, asset_type: str, hal
         cur = st.orders.get(t.current) if t.current else None
         backlog = queued_repair_hours(st, t)  # repairs already waiting for them come first
         if cur is None:
-            out.append(Candidate(t, backlog + walk_hours(site, t.pos, target, settings), None))
+            out.append(Candidate(t, backlog + repair_walk_hours(site, t.pos, target, settings), None))
         elif cur.kind == "routine":
-            out.append(Candidate(t, backlog + walk_hours(site, t.pos, target, settings), cur))
+            out.append(Candidate(t, backlog + repair_walk_hours(site, t.pos, target, settings), cur))
         else:
             left = cur.travel_left + max(0.0, cur.hours_total - cur.hours_done)
-            out.append(Candidate(t, backlog + left + walk_hours(site, cur.spot or t.pos, target, settings), None))
+            out.append(Candidate(t, backlog + left + repair_walk_hours(site, cur.spot or t.pos, target, settings), None))
     out.sort(key=lambda c: (c.start_in_hours, c.displaces is not None, c.tech.cfg["rate_per_hour"]))
     return out
 
@@ -330,7 +348,8 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest, exclude: tu
             raise ApiError(409, "NO_TECHNICIAN", "No qualified technician at this site.", {"asset_type": asset.asset_type})
         tech = cand.tech
         cur = st.orders.get(tech.current) if tech.current else None
-        if req.technician_id and cur is not None and cur.kind == "repair":
+        if req.technician_id and cur is not None and cur.kind == "repair" and \
+                RISK_RANK.get(inc.risk_level, 0) <= _risk(cur):
             raise ApiError(409, "TECHNICIAN_BUSY", f"{tech.cfg['name']} is on another repair.",
                            {"technician_id": tech.cfg["technician_id"], "work_order_id": cur.work_order_id})
         imp = impact_service.for_asset(settings.impact_assumptions_path, asset.asset_id, asset.asset_type)
@@ -341,9 +360,12 @@ def dispatch(store: Store, settings: Settings, req: DispatchRequest, exclude: tu
         o = _new(st, settings, kind="repair", title=f"{asset.name}: {action}", site_id=lay.site_id, hall_id=hall,
                  technician_id=tech.cfg["technician_id"], hours_total=hours, asset_id=asset.asset_id,
                  incident_id=inc.incident_id, option=option, mitigation_active=option == "buy_time",
-                 spot=asset_spot(asset.asset_id), declined_by=list(exclude))
+                 spot=asset_spot(asset.asset_id), declined_by=list(exclude), risk_level=inc.risk_level)
         mins = cand.start_in_hours * 60
-        o.why = ("You were picked by the operator." if req.technician_id else
+        if cur is not None and cur.kind == "repair" and _worse(st, o, cur):
+            mins = repair_walk_hours(lay.site_id, tech.pos, o.spot, settings) * 60
+        o.why = (f"Moved off \"{cur.title}\" ({cur.risk_level} risk): this one is {inc.risk_level} risk. " if
+                 cur is not None and cur.kind == "repair" and _worse(st, o, cur) else "") + ("You were picked by the operator." if req.technician_id else
                  f"Closest qualified technician: about {mins:.0f} demo minutes away." if not cand.displaces else
                  f"Closest qualified technician (about {mins:.0f} demo minutes away); your routine job "
                  f"\"{cand.displaces.title}\" is paused.")
@@ -367,7 +389,7 @@ def _start_now(st: OpsState, settings: Settings, tech: Tech, o: Order) -> Order 
     """Put the technician on o at once. A routine job is paused and queued; a repair stays and o waits behind it."""
     cur = st.orders.get(tech.current) if tech.current else None
     displaced = None
-    if cur is not None and cur.kind == "repair":
+    if cur is not None and cur.kind == "repair" and not _worse(st, o, cur):
         o.status = "scheduled"
         tech.queue.insert(0, o.work_order_id)
         return None
@@ -378,17 +400,27 @@ def _start_now(st: OpsState, settings: Settings, tech: Tech, o: Order) -> Order 
         displaced = st.orders[displaced_id]
     o.overtime = not in_window(o.site_id, 0.0, st, settings)
     tech.current = o.work_order_id
-    if tech.device and o.kind == "repair":
-        o.status = "paged"  # the pager accepts before they set off
-        return displaced
-    _set_off(st, settings, tech, o)
+    _set_off(st, settings, tech, o)  # accepted automatically, pager or not
     return displaced
+
+
+RISK_RANK = {"low": 0, "medium": 1, "high": 2}
+
+
+def _risk(o: Order) -> int:
+    return RISK_RANK.get(o.risk_level, 0) if o.risk_level else -1
+
+
+def _worse(st: OpsState, new: Order, cur: Order) -> bool:
+    """True when new is a repair at a higher risk level than the repair cur the technician is on."""
+    return new.kind == "repair" and cur.kind == "repair" and _risk(new) > _risk(cur)
 
 
 def _set_off(st: OpsState, settings: Settings, tech: Tech, o: Order) -> None:
     """Start walking to the job (or start work if already there)."""
     target = o.spot or hall_spot(o.site_id, o.hall_id)
-    tech.path = floor.path(o.site_id, tech.pos, target)
+    tech.path = repair_path(o.site_id, tech.pos, target, settings) if o.kind == "repair" and o.hours_done == 0 \
+        else floor.path(o.site_id, tech.pos, target)
     o.travel_left = floor.length(tech.path) / config(settings)["walk_cells_per_demo_minute"] / 60
     o.status = "traveling" if o.travel_left > 1e-6 else "in_progress"
     if o.status == "in_progress":
@@ -405,6 +437,10 @@ def _urgency(store: Store, o: Order) -> tuple:
 def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Order]:
     """One tick of crew work. Called by the live loop under store.lock. Returns repairs finished this tick."""
     st = state(store, settings)
+    for o in st.orders.values():  # risk can change every tick
+        inc = store.incidents.get(o.incident_id) if o.incident_id else None
+        if inc is not None:
+            o.risk_level = inc.risk_level
     st.ticks += 1
     h = tick_hours(settings)
     t_now = demo_now(st, settings)
@@ -421,6 +457,14 @@ def advance(store: Store, settings: Settings, powered_off: set[str]) -> list[Ord
         due = next((st.orders[i] for i in tech.queue if st.orders[i].status == "scheduled"
                     and st.orders[i].scheduled_start is not None and st.orders[i].scheduled_start <= t_now), None)
         cur = st.orders.get(tech.current) if tech.current else None
+        # A higher-risk repair waiting for this technician takes over from a lower-risk one.
+        top = next((st.orders[i] for i in tech.queue if st.orders[i].kind == "repair"
+                    and st.orders[i].status in ("scheduled", "paused") and st.orders[i].scheduled_start is None), None)
+        if top is not None and cur is not None and cur.kind == "repair" and cur.status not in ("awaiting_confirmation",) \
+                and _worse(st, top, cur):
+            tech.queue.remove(top.work_order_id)
+            _start_now(st, settings, tech, top)
+            cur = top
         if due is not None and (cur is None or cur.kind == "routine"):
             tech.queue.remove(due.work_order_id)
             _start_now(st, settings, tech, due)
