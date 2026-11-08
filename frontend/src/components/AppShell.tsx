@@ -7,6 +7,7 @@ import { ConsoleButton } from "./ui-kit";
 const nav = [
   { to: "/", label: "Overview", icon: LayoutList, exact: true },
   { to: "/fleet", label: "Live fleet", icon: Boxes, exact: false },
+  { to: "/operations", label: "Operations", icon: LayoutList, exact: false },
   { to: "/assets", label: "Assets", icon: Boxes, exact: false },
   { to: "/incidents", label: "Incidents", icon: AlertTriangle, exact: false },
   { to: "/simulate", label: "Simulate", icon: PlayCircle, exact: false },

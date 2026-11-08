@@ -6,6 +6,7 @@ import type { ExplanationSource, Impact, IncidentStatus } from "@/api/types";
 import { horizonLabel } from "@/components/ModelCard";
 import { AppLink } from "@/lib/router-adapter";
 import { ReadingsChart } from "@/components/ReadingsChart";
+import { IncidentWhatIf } from '@/components/OperationsWorkspace';
 import { NotFoundState } from "./AssetDetailPage";
 import {
   Badge, Empty, ErrorMessage, ErrorState, Fields, Loading, Mono, OriginBadge, PageHeader, RiskBadge, ScoreValue, Section,
@@ -226,6 +227,7 @@ export function IncidentDetailPage({ id }: { id: string }) {
           </Section>
         </div>
       </div>
+      <div className="mt-6"><IncidentWhatIf id={id} resolved={i.status === 'resolved'} workOrderId={i.work_order_id} /></div>
     </>
   );
 }

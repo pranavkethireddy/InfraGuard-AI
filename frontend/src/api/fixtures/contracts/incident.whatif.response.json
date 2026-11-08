@@ -1,0 +1,471 @@
+{
+  "incident_id": "inc-000955",
+  "asset_id": "cooling-02",
+  "asset_name": "CRAC Unit 2",
+  "site_id": "datacenter",
+  "generated_at": "2026-11-08T01:54:02.008012Z",
+  "demo_time": "2026-11-07T20:32:00-06:00",
+  "metric": "temperature_c",
+  "unit": "C",
+  "current_value": 38.25,
+  "trend_per_hour": 12.9,
+  "shutdown_threshold": 42.0,
+  "shutdown_in_hours": 0.0,
+  "window": {
+    "kind": "maintenance_window",
+    "label": "Nightly maintenance window",
+    "starts_in_hours": 5.5,
+    "ends_in_hours": 8.5,
+    "breakeven_usd_per_mwh": null
+  },
+  "options": [
+    {
+      "option": "fix_now",
+      "label": "Fix now",
+      "description": "Send Sam Rivera now.",
+      "technician_id": "tech-03",
+      "technician_name": "Sam Rivera",
+      "displaces": null,
+      "start_in_hours": 0.17,
+      "done_in_hours": 3.17,
+      "shutdown_at_hours": 0.0,
+      "downtime_hours": 4.2,
+      "costs": {
+        "labor": 337.5,
+        "parts": 3500.0,
+        "downtime_or_lost_revenue": 50400.0,
+        "mitigation": 0.0,
+        "displaced_work": 0.0,
+        "total": 54237.5
+      },
+      "risk_note": null,
+      "curve": [
+        {
+          "hour": 0.0,
+          "value": 38.25,
+          "power_state": "on"
+        },
+        {
+          "hour": 0.5,
+          "value": 44.7,
+          "power_state": "off"
+        },
+        {
+          "hour": 1.0,
+          "value": 51.15,
+          "power_state": "off"
+        },
+        {
+          "hour": 1.5,
+          "value": 57.6,
+          "power_state": "off"
+        },
+        {
+          "hour": 2.0,
+          "value": 64.05,
+          "power_state": "off"
+        },
+        {
+          "hour": 2.5,
+          "value": 70.5,
+          "power_state": "off"
+        },
+        {
+          "hour": 3.0,
+          "value": 76.95,
+          "power_state": "off"
+        },
+        {
+          "hour": 3.5,
+          "value": 77.73,
+          "power_state": "off"
+        },
+        {
+          "hour": 4.0,
+          "value": 74.73,
+          "power_state": "off"
+        },
+        {
+          "hour": 4.5,
+          "value": 71.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.0,
+          "value": 68.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.5,
+          "value": 65.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.0,
+          "value": 62.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.5,
+          "value": 59.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.0,
+          "value": 56.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.5,
+          "value": 53.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.0,
+          "value": 50.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.5,
+          "value": 47.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.0,
+          "value": 44.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.5,
+          "value": 41.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.0,
+          "value": 38.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.5,
+          "value": 35.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.0,
+          "value": 32.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.5,
+          "value": 29.73,
+          "power_state": "on"
+        },
+        {
+          "hour": 12.0,
+          "value": 26.73,
+          "power_state": "on"
+        }
+      ]
+    },
+    {
+      "option": "wait_for_window",
+      "label": "Wait for the nightly maintenance window",
+      "description": "Repair in the nightly maintenance window, starting in 5.5 h.",
+      "technician_id": "tech-03",
+      "technician_name": "Sam Rivera",
+      "displaces": null,
+      "start_in_hours": 5.5,
+      "done_in_hours": 8.5,
+      "shutdown_at_hours": 0.0,
+      "downtime_hours": 9.5,
+      "costs": {
+        "labor": 225.0,
+        "parts": 3500.0,
+        "downtime_or_lost_revenue": 114000.0,
+        "mitigation": 0.0,
+        "displaced_work": 0.0,
+        "total": 117725.0
+      },
+      "risk_note": null,
+      "curve": [
+        {
+          "hour": 0.0,
+          "value": 38.25,
+          "power_state": "on"
+        },
+        {
+          "hour": 0.5,
+          "value": 44.7,
+          "power_state": "off"
+        },
+        {
+          "hour": 1.0,
+          "value": 51.15,
+          "power_state": "off"
+        },
+        {
+          "hour": 1.5,
+          "value": 57.6,
+          "power_state": "off"
+        },
+        {
+          "hour": 2.0,
+          "value": 64.05,
+          "power_state": "off"
+        },
+        {
+          "hour": 2.5,
+          "value": 70.5,
+          "power_state": "off"
+        },
+        {
+          "hour": 3.0,
+          "value": 76.95,
+          "power_state": "off"
+        },
+        {
+          "hour": 3.5,
+          "value": 83.4,
+          "power_state": "off"
+        },
+        {
+          "hour": 4.0,
+          "value": 89.85,
+          "power_state": "off"
+        },
+        {
+          "hour": 4.5,
+          "value": 96.3,
+          "power_state": "off"
+        },
+        {
+          "hour": 5.0,
+          "value": 102.75,
+          "power_state": "off"
+        },
+        {
+          "hour": 5.5,
+          "value": 109.2,
+          "power_state": "off"
+        },
+        {
+          "hour": 6.0,
+          "value": 115.65,
+          "power_state": "off"
+        },
+        {
+          "hour": 6.5,
+          "value": 122.1,
+          "power_state": "off"
+        },
+        {
+          "hour": 7.0,
+          "value": 128.55,
+          "power_state": "off"
+        },
+        {
+          "hour": 7.5,
+          "value": 135.0,
+          "power_state": "off"
+        },
+        {
+          "hour": 8.0,
+          "value": 141.45,
+          "power_state": "off"
+        },
+        {
+          "hour": 8.5,
+          "value": 147.9,
+          "power_state": "off"
+        },
+        {
+          "hour": 9.0,
+          "value": 145.84,
+          "power_state": "off"
+        },
+        {
+          "hour": 9.5,
+          "value": 142.84,
+          "power_state": "off"
+        },
+        {
+          "hour": 10.0,
+          "value": 139.84,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.5,
+          "value": 136.84,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.0,
+          "value": 133.84,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.5,
+          "value": 130.84,
+          "power_state": "on"
+        },
+        {
+          "hour": 12.0,
+          "value": 127.84,
+          "power_state": "on"
+        }
+      ]
+    },
+    {
+      "option": "buy_time",
+      "label": "Buy time and fix now",
+      "description": "Move workload off the affected racks and raise airflow on the neighbouring cooling unit now so it holds while Sam Rivera repairs it (the window is too far away).",
+      "technician_id": "tech-03",
+      "technician_name": "Sam Rivera",
+      "displaces": null,
+      "start_in_hours": 0.17,
+      "done_in_hours": 3.17,
+      "shutdown_at_hours": 0.0,
+      "downtime_hours": 4.2,
+      "costs": {
+        "labor": 337.5,
+        "parts": 3500.0,
+        "downtime_or_lost_revenue": 50400.0,
+        "mitigation": 253.33,
+        "displaced_work": 0.0,
+        "total": 54490.83
+      },
+      "risk_note": null,
+      "curve": [
+        {
+          "hour": 0.0,
+          "value": 38.25,
+          "power_state": "on"
+        },
+        {
+          "hour": 0.5,
+          "value": 38.9,
+          "power_state": "off"
+        },
+        {
+          "hour": 1.0,
+          "value": 39.54,
+          "power_state": "off"
+        },
+        {
+          "hour": 1.5,
+          "value": 40.19,
+          "power_state": "off"
+        },
+        {
+          "hour": 2.0,
+          "value": 40.83,
+          "power_state": "off"
+        },
+        {
+          "hour": 2.5,
+          "value": 41.48,
+          "power_state": "off"
+        },
+        {
+          "hour": 3.0,
+          "value": 42.12,
+          "power_state": "off"
+        },
+        {
+          "hour": 3.5,
+          "value": 40.58,
+          "power_state": "off"
+        },
+        {
+          "hour": 4.0,
+          "value": 37.58,
+          "power_state": "off"
+        },
+        {
+          "hour": 4.5,
+          "value": 34.58,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.0,
+          "value": 31.58,
+          "power_state": "on"
+        },
+        {
+          "hour": 5.5,
+          "value": 28.58,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.0,
+          "value": 25.58,
+          "power_state": "on"
+        },
+        {
+          "hour": 6.5,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.0,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 7.5,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.0,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 8.5,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.0,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 9.5,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.0,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 10.5,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.0,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 11.5,
+          "value": 25.12,
+          "power_state": "on"
+        },
+        {
+          "hour": 12.0,
+          "value": 25.12,
+          "power_state": "on"
+        }
+      ]
+    }
+  ],
+  "recommended": "fix_now",
+  "reason": "Lowest total cost: $54,238 (vs wait for the nightly maintenance window $117,725, buy time and fix now $54,491).",
+  "savings_vs_worst": 63487.5,
+  "assumptions_source": "demo assumption (configs/operations.json), not measured; demo assumption (configs/impact_assumptions.json), not measured"
+}

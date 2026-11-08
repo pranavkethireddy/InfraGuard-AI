@@ -1,0 +1,22 @@
+{
+  "total_cases": 1,
+  "rows": [
+    {
+      "asset_type": "cooling_unit",
+      "symptom": "high temperature",
+      "cases": 1,
+      "sites_seen": [
+        "datacenter"
+      ],
+      "shared_with_sites": [
+        "datacenter",
+        "mining"
+      ],
+      "avg_repair_hours": 3.0,
+      "avg_cost": 1490.83,
+      "fixed_before_failure_pct": 100.0,
+      "best_fix": "Inspect the unit's air filter and fan (human review required).",
+      "last_learned_at": "2026-11-08T01:54:09.835738Z"
+    }
+  ]
+}
