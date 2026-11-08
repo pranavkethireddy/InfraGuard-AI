@@ -389,20 +389,24 @@ def _tick(store: Store, run: LiveRun, settings: Settings) -> None:
     with store.lock:
         ops.advance(store, settings, off)
     for incident_id in opened:  # page the closest technician (no-op when automatic dispatch is off)
-        pager.auto_dispatch(store, settings, incident_id, _exclude_for(store, run, incident_id, settings))
+        pager.auto_dispatch(store, settings, incident_id, *_route_for(store, run, incident_id, settings))
     with store.lock:
         escalated, store.escalated = [i for i in store.escalated if i not in opened], []
     for incident_id in escalated:  # got more urgent: page someone now or pull the repair forward
-        pager.escalate(store, settings, incident_id, _exclude_for(store, run, incident_id, settings))
+        pager.escalate(store, settings, incident_id, *_route_for(store, run, incident_id, settings))
 
 
-def _exclude_for(store: Store, run: LiveRun, incident_id: str, settings: Settings) -> tuple[str, ...]:
-    """Chaos incidents never go to protected technicians (the one demoed on the iPad)."""
+def _route_for(store: Store, run: LiveRun, incident_id: str, settings: Settings) -> tuple[tuple[str, ...], str | None]:
+    """(technicians to exclude, technician to try first). Chaos incidents never go to protected technicians (the
+    one demoed on the iPad); while chaos is on, every other incident goes to the protected technician first."""
+    keep = tuple(ops.config(settings).get("chaos", {}).get("protected_technicians", []))
     with store.lock:
         inc = store.incidents.get(incident_id)
-        if inc is None or inc.asset_id not in run.chaos_assets:
-            return ()
-    return tuple(ops.config(settings).get("chaos", {}).get("protected_technicians", []))
+        if inc is None or not keep:
+            return (), None
+        if inc.asset_id in run.chaos_assets:
+            return keep, None
+        return (), keep[0] if run.chaos else None
 
 
 def _maybe_queue(store: Store, incident_id: str, settings: Settings) -> None:

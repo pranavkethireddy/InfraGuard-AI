@@ -67,3 +67,22 @@ def test_escalation_moves_the_queue_not_the_current_job(client, settings):
         assert tech.current == routine.work_order_id  # the job in hand is not interrupted
         assert o.scheduled_start is None and o.option == "fix_now" and o.work_order_id in tech.queue
         assert o.why.startswith("Escalated to priority")
+
+
+def test_during_chaos_a_hand_injected_fault_goes_to_sam(client, settings):
+    store = client.app.state.store
+    settings.live_tick_seconds = 0.2
+    with store.lock:
+        ops.state(store, settings).auto_dispatch = True
+    client.post("/api/v1/fleet/chaos", json={"enabled": True})
+    with store.lock:
+        store.live.chaos_assets.discard("srv-B2-02-2")
+    assert client.post("/api/v1/fleet/faults", json={"asset_ids": ["srv-B2-02-2"], "kind": "server_crash"}).status_code == 201
+    deadline, order = time.monotonic() + 20, None
+    while time.monotonic() < deadline and order is None:
+        time.sleep(0.3)
+        with store.lock:
+            order = next((o for o in ops.state(store, settings).orders.values() if o.asset_id == "srv-B2-02-2"), None)
+    client.post("/api/v1/fleet/chaos", json={"enabled": False})
+    client.post("/api/v1/fleet/live/stop")
+    assert order is not None and order.technician_id == "tech-03"
