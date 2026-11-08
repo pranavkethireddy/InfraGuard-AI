@@ -177,14 +177,25 @@ def facility(info: ModelInfo, readings: dict[str, ReadingValue], state: RuleStat
     ev = [e.model_copy(update={"consecutive_readings": n}) for _, e, _ in broken] or (
         [Evidence(type="sensor_rule", field=first[0], value=v[first[0]], threshold=first[1], unit=units.get(first[0]),
                   consecutive_readings=0)] if first else [])
+    from . import anomaly
+
+    a = anomaly.score(info.asset_types[0], v)
+    note = ""
+    if a is not None:
+        unusual = a[0] < a[1]
+        ev.append(Evidence(type="model_feature", field="anomaly_score", value=a[0], threshold=a[1], unit=None))
+        note = (" Anomaly model: reading is unlike healthy " if unusual else " Anomaly model: reading looks like healthy ") + \
+            f"{name.lower()} readings (score {a[0]}, alert below {a[1]})."
+        if unusual and not broken:
+            return Result(0.4, "medium", False, f"{name} within rule limits, but the pattern is unusual.{note}", ev)
     if not broken:
-        return Result(0.1, "low", False, f"{name} within limits.", ev)
+        return Result(0.1, "low", False, f"{name} within limits.{note}", ev)
     what = "; ".join(t for _, _, t in broken)
     high = any(h for h, _, _ in broken)
     if n >= need:
         return Result(0.85 if high else 0.55, "high" if high else "medium", state.cooldown_remaining == 0,
-                      f"{name} fault for {n} consecutive readings: {what}.", ev)
-    return Result(0.5, "medium", False, f"{name} reading out of limits ({n} of {need} consecutive readings needed): {what}.", ev)
+                      f"{name} fault for {n} consecutive readings: {what}.{note}", ev)
+    return Result(0.5, "medium", False, f"{name} reading out of limits ({n} of {need} consecutive readings needed): {what}.{note}", ev)
 
 
 @lru_cache(maxsize=4)
