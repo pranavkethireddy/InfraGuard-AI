@@ -5,6 +5,7 @@ import { api, DATA_MODE, FIXTURE_MUTATION_MESSAGE, ApiError } from '@/api/client
 import { isPagerView, newerPager, pagerKey, usePagerStream } from '@/api/ops-stream';
 import type { PagerAction, PagerView } from '@/api/ops-types';
 import { AppLink } from '@/lib/router-adapter';
+import { PriorityRank } from '@/components/PriorityRank';
 import { StreamStatus } from '@/components/StreamStatus';
 import { Badge, ConsoleButton, Empty, ErrorState, Fields, Loading, PageHeader, Section, SourceDetails, inputCls } from '@/components/ui-kit';
 
@@ -28,6 +29,7 @@ function PagerWorkspace({ id, onTechnicianChange }: { id: string; onTechnicianCh
   });
   const fixture = DATA_MODE === 'fixture';
   const data = pager.data; const job = data?.job;
+  const queue = data?.technician.queued_work_order_ids.map((id) => ({ id, order: data.queue.find((w) => w.work_order_id === id) })) ?? [];
   const execute = (command: 'claim' | 'release' | PagerAction) => {
     if (fixture || lock.current || mutation.isPending || !data) return;
     if (command !== 'claim' && command !== 'release' && !job?.actions.includes(command)) return;
@@ -48,7 +50,7 @@ function PagerWorkspace({ id, onTechnicianChange }: { id: string; onTechnicianCh
       <Section title="Current job">
         {job ? <div className="space-y-5">
           <SourceDetails><p>Fictional demo crew; prototype repair workflow. Scenario repair/revenue estimates, not actual billing.</p></SourceDetails><h2 className="text-xl font-semibold leading-relaxed">{job.asset_name ?? job.work_order.title}</h2><Badge tone="accent">{job.work_order.status}</Badge>
-          <Fields rows={[["Task", job.work_order.title], ["Work order", job.work_order.work_order_id], ["Location", job.location ?? 'Not reported'], ["Work spot", job.work_order.spot ? `${job.work_order.spot.x}, ${job.work_order.spot.y}` : 'Not reported'], ["Position", data.technician.position ? `${data.technician.position.x}, ${data.technician.position.y}` : 'Coordinates unavailable'], ["Walking remaining", `${job.walking_minutes_left ?? 'Not reported'} DEMO minutes`], ["Progress (fraction)", job.work_order.progress], ["ETA", `${job.work_order.eta_minutes ?? 'Not reported'} DEMO minutes`], ["Risk", job.risk_level ?? 'Not reported'], ["Problem", job.problem ?? 'Not reported'], ["Likely cause", job.likely_cause ?? 'Not reported'], ["Why you", job.why_you], ["Savings if fixed now", `${job.savings_if_fixed_now ?? 'Not reported'} USD`], ["Cost per hour while down", `${job.cost_per_hour_while_down ?? 'Not reported'} USD/h`]]} />
+          <Fields rows={[["Priority rank", <PriorityRank incidentId={job.incident_id ?? job.work_order.incident_id} />], ["Task", job.work_order.title], ["Work order", job.work_order.work_order_id], ["Location", job.location ?? 'Not reported'], ["Work spot", job.work_order.spot ? `${job.work_order.spot.x}, ${job.work_order.spot.y}` : 'Not reported'], ["Position", data.technician.position ? `${data.technician.position.x}, ${data.technician.position.y}` : 'Coordinates unavailable'], ["Walking remaining", `${job.walking_minutes_left ?? 'Not reported'} DEMO minutes`], ["Progress (fraction)", job.work_order.progress], ["ETA", `${job.work_order.eta_minutes ?? 'Not reported'} DEMO minutes`], ["Risk", job.risk_level ?? 'Not reported'], ["Problem", job.problem ?? 'Not reported'], ["Likely cause", job.likely_cause ?? 'Not reported'], ["Why you", job.why_you], ["Savings if fixed now", `${job.savings_if_fixed_now ?? 'Not reported'} USD`], ["Cost per hour while down", `${job.cost_per_hour_while_down ?? 'Not reported'} USD/h`]]} />
           {!!data.technician.path?.length && <p className="font-mono text-xs">Returned route: {data.technician.path.map((p) => `${p.x},${p.y} (${p.hall_id ?? 'corridor'})`).join(' → ')}</p>}
           <ol className="list-decimal space-y-3 pl-6">{job.steps.map((step, i) => <li key={i}>{step}</li>)}</ol>
           <div className="flex flex-wrap gap-4">{job.asset_id && <AppLink className="inline-flex min-h-11 items-center text-primary underline" to={`/assets/${encodeURIComponent(job.asset_id)}`}>Asset</AppLink>}{job.incident_id && <AppLink className="inline-flex min-h-11 items-center text-primary underline" to={`/incidents/${encodeURIComponent(job.incident_id)}`}>Incident investigation</AppLink>}</div>
@@ -57,7 +59,7 @@ function PagerWorkspace({ id, onTechnicianChange }: { id: string; onTechnicianCh
           {!job.actions.length && <p className="text-muted-foreground">No actions currently allowed by the backend.</p>}
         </div> : <Empty>No current job returned.</Empty>}
       </Section>
-      <Section title="Queued jobs">{data.queue.length ? <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Work order / task</th><th>Asset</th><th>Status</th><th>Scheduled / ETA</th></tr></thead><tbody>{data.queue.map((w) => <tr key={w.work_order_id}><td>{w.work_order_id}<p>{w.title}</p></td><td>{w.asset_name ?? w.asset_id ?? 'Not reported'}</td><td>{w.status}</td><td>{w.scheduled_start ?? 'Not reported'} · {w.eta_minutes ?? 'Not reported'} DEMO minutes</td></tr>)}</tbody></table></div> : <Empty>No queued jobs returned.</Empty>}</Section>
+      <Section title="Queued jobs">{queue.length ? <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Work order / task</th><th>Asset</th><th>Priority rank</th><th>Status</th><th>Scheduled / ETA</th></tr></thead><tbody>{queue.map(({ id, order: w }) => <tr key={id}><td>{id}<p>{w?.title ?? 'Work order not reported'}</p></td><td>{w?.asset_name ?? w?.asset_id ?? 'Not reported'}</td><td><PriorityRank incidentId={w?.incident_id} /></td><td>{w?.status ?? 'Not reported'}</td><td>{w?.scheduled_start ?? 'Not reported'} · {w?.eta_minutes ?? 'Not reported'} DEMO minutes</td></tr>)}</tbody></table></div> : <Empty>No queued jobs returned.</Empty>}</Section>
     </div>}
   </>;
 }

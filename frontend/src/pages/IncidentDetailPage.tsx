@@ -7,6 +7,7 @@ import { horizonLabel } from "@/components/ModelCard";
 import { AppLink } from "@/lib/router-adapter";
 import { ReadingsChart } from "@/components/ReadingsChart";
 import { IncidentWhatIf } from '@/components/OperationsWorkspace';
+import { RankValue } from '@/components/PriorityRank';
 import { NotFoundState } from "./AssetDetailPage";
 import {
   Badge, Empty, ErrorMessage, ErrorState, Fields, Loading, Mono, OriginBadge, PageHeader, RiskBadge, ScoreValue, Section,
@@ -171,6 +172,8 @@ export function IncidentDetailPage({ id }: { id: string }) {
           </Section>
 
           <Section title="Priority">
+            <p>Priority rank: <RankValue rank={i.priority_rank} /></p>
+            <p className="text-xs text-muted-foreground">1 — fix first · 5 — can wait</p>
             <p className="font-mono text-base font-semibold">{val(i.priority_index)}</p>
             <p className="text-xs text-muted-foreground">Priority index calculated by the backend.</p>
             {i.priority_weights && (

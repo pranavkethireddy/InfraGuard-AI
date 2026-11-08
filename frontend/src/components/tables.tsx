@@ -1,6 +1,7 @@
 import type { Asset, IncidentSummary } from "@/api/types";
 import { AppLink } from "@/lib/router-adapter";
 import { Badge, Mono, OriginBadge, RiskBadge, SCORE_KIND_LABEL, StatusBadge, dt, val } from "./ui-kit";
+import { RankValue } from './PriorityRank';
 
 export function EquipmentTable({ assets }: { assets: Asset[] }) {
   return (
@@ -42,7 +43,7 @@ export function IncidentQueue({ incidents, compact = false }: { incidents: Incid
         <div className="flex flex-wrap items-center gap-2"><RiskBadge level={i.risk_level} /><StatusBadge status={i.status} /></div>
         <AppLink to={`/incidents/${i.incident_id}`} className="block text-sm font-semibold leading-relaxed hover:text-primary">{i.title}</AppLink>
         <p className="break-all font-mono text-[11px] text-muted-foreground">{i.incident_id} · {i.asset_id}</p>
-        <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"><span>Priority <Mono>{val(i.priority_index)}</Mono></span><span>{dt(i.opened_at)}</span></div>
+        <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"><span>Priority rank <RankValue rank={i.priority_rank} /></span><span>{dt(i.opened_at)}</span></div>
       </li>)}
     </ul>
   );
@@ -52,7 +53,7 @@ export function IncidentQueue({ incidents, compact = false }: { incidents: Incid
         <caption className="sr-only">Incident queue</caption>
         <thead>
           <tr>
-            <th className="text-right">Priority idx</th><th>Incident</th><th>Status</th><th>Risk</th>
+            <th>Priority rank</th><th className="text-right">Priority idx</th><th>Incident</th><th>Status</th><th>Risk</th>
             {!compact && <><th>Score type</th><th>Detector</th><th>Data</th><th className="text-right">Predictions</th></>}
             <th>Opened</th>
           </tr>
@@ -60,6 +61,7 @@ export function IncidentQueue({ incidents, compact = false }: { incidents: Incid
         <tbody>
           {incidents.map((i) => (
             <tr key={i.incident_id}>
+              <td><RankValue rank={i.priority_rank} /></td>
               <td className="text-right"><Mono>{val(i.priority_index)}</Mono></td>
               <td className="min-w-[14rem]">
                 <AppLink to={`/incidents/${i.incident_id}`} className="font-medium text-foreground underline-offset-2 hover:text-primary hover:underline">{i.title}</AppLink>

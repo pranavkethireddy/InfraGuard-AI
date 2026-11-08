@@ -13,6 +13,13 @@ function renderAt(path: string) {
 }
 
 describe("routes (react-router-dom)", () => {
+  it('removes only Simulate and Models sidebar links, preserving other navigation', () => {
+    renderAt('/');
+    const nav = screen.getByRole('navigation', { name: 'Main' });
+    expect(nav.querySelector('a[href="/simulate"]')).toBeNull();
+    expect(nav.querySelector('a[href="/models"]')).toBeNull();
+    expect(nav.querySelector('a[href="/fleet"]')).not.toBeNull();
+  });
   it.each([
     ["/", "Overview"], ["/fleet", "Live fleet"], ["/assets", "Assets"], ["/simulate", "Simulate"], ["/incidents", "Incidents"], ["/models", "Models"],
     ["/assets/cooling-01", "CRAC Unit 1"], ["/incidents/inc-demo-001", "Sustained high temperature on CRAC Unit 1"],

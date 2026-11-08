@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { AlertTriangle, Boxes, ChevronRight, Cpu, LayoutList, Menu, PlayCircle, ShieldCheck, X } from "lucide-react";
+import { AlertTriangle, Boxes, ChevronRight, LayoutList, Menu, ShieldCheck, X } from "lucide-react";
 import { API_BASE_URL, DATA_MODE } from "@/api/client";
 import { AppLink } from "@/lib/router-adapter";
 import { ConsoleButton } from "./ui-kit";
@@ -11,8 +11,6 @@ const nav = [
   { to: "/pager", label: "Technician pager", icon: ShieldCheck, exact: false },
   { to: "/assets", label: "Assets", icon: Boxes, exact: false },
   { to: "/incidents", label: "Incidents", icon: AlertTriangle, exact: false },
-  { to: "/simulate", label: "Simulate", icon: PlayCircle, exact: false },
-  { to: "/models", label: "Models", icon: Cpu, exact: false },
 ] as const;
 
 function Nav({ onNavigate }: { onNavigate?: () => void }) {

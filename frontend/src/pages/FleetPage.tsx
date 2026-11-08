@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, FIXTURE_MUTATION_MESSAGE } from '@/api/client';
 import { fleetMapQuery, fleetRackQuery, fleetSitesQuery, fleetStatusQuery } from '@/api/fleet-queries';
 import type { SiteId } from '@/api/fleet-types';
 import { FleetButton, FleetFloor, FleetMachines, FleetMetrics, FleetRackPane } from '@/components/FleetWorkspace';
 import { Empty, ErrorMessage, ErrorState, Loading, PageHeader, Section, SourceDetails } from '@/components/ui-kit';
 import { GpuJobs } from '@/components/GpuJobs';
+import { ServerFaultControl } from '@/components/ServerFaultControl';
 
 export function FleetPage({ site, onSiteChange }: { site: SiteId; onSiteChange: (site: SiteId) => void }) {
   return <FleetSiteWorkspace key={site} site={site} onSiteChange={onSiteChange} />;
@@ -23,6 +24,7 @@ function ClearConfirmation({ children, onCancel }: { children: ReactNode; onCanc
 }
 function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange: (site: SiteId) => void }) {
   const qc = useQueryClient();
+  const actionPending = useIsMutating({ mutationKey: ['fleet', 'action'] }) > 0;
   const sites = useQuery(fleetSitesQuery());
   const map = useQuery(fleetMapQuery(site));
   const status = useQuery(fleetStatusQuery(site));
@@ -30,7 +32,7 @@ function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange
   const [confirm, setConfirm] = useState(false);
   const rack = useQuery({ ...fleetRackQuery(site, selected ?? ''), enabled: selected !== null });
   const refresh = () => { for (const key of ['fleet', 'assets', 'incidents', 'incident', 'simulation', 'simulations']) void qc.invalidateQueries({ queryKey: [key] }); };
-  const mutation = useMutation({ mutationFn: async (action: 'start' | 'stop' | 'fault' | 'clear') => {
+  const mutation = useMutation({ mutationKey: ['fleet', 'action', site], mutationFn: async (action: 'start' | 'stop' | 'fault' | 'clear') => {
     if (api.mode === 'fixture') throw new Error(FIXTURE_MUTATION_MESSAGE);
     if (action === 'start') return api.startFleet({ seed: 42, tick_seconds: 1 });
     if (action === 'stop') return api.stopFleet();
@@ -39,7 +41,7 @@ function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange
   }, onSettled: refresh, onSuccess: (_data, action) => { if (action === 'clear') { setSelected(null); setConfirm(false); } } });
   const live = status.data?.live ?? map.data?.live ?? sites.data?.live;
   const current = sites.data?.sites.find((s) => s.site_id === site);
-  const blocked = api.mode === 'fixture' || mutation.isPending || !live;
+  const blocked = api.mode === 'fixture' || actionPending || !live;
   const run = (action: 'start' | 'stop' | 'fault' | 'clear') => { if (!blocked) mutation.mutate(action); };
   return <>
     <PageHeader title="Live fleet" meta={`${current?.name ?? (site === 'mining' ? 'Crypto mining site' : 'Data center')}`} actions={<span className="font-mono text-xs">Loop: {live?.status ?? 'No data'} · {live?.ticks ?? '—'} ticks</span>} />
@@ -51,6 +53,7 @@ function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange
       <FleetButton disabled={blocked} onClick={() => setConfirm(true)}>Clear fleet</FleetButton>
       <span className="text-xs text-muted-foreground">Live loop covers BOTH sites · Faults target {site === 'mining' ? 'Crypto mining site' : 'Data center'}.</span>
     </div>
+    <ServerFaultControl servers={status.data?.machines ?? []} loading={status.isLoading} error={status.error} disabled={mutation.isPending} />
     {api.mode === 'fixture' && <p className="mb-3 text-xs text-muted-foreground">{FIXTURE_MUTATION_MESSAGE}</p>}
     {mutation.isPending && <p role="status" className="mb-3 text-sm">Backend action pending…</p>}
     {mutation.error && <div role="alert" className="mb-3"><ErrorMessage error={mutation.error} /></div>}
