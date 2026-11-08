@@ -1,6 +1,8 @@
 {
-  "demo_time": "2026-11-07T20:42:00-06:00",
+  "demo_time": "2026-11-07T21:35:00-06:00",
   "demo_minutes_per_tick": 2.0,
+  "auto_dispatch": false,
+  "walk_cells_per_demo_minute": 2.0,
   "technicians": [
     {
       "technician_id": "tech-01",
@@ -26,16 +28,30 @@
         "option": null,
         "mitigation_active": false,
         "hours_total": 6.0,
-        "hours_done": 2.6,
-        "progress": 0.433,
-        "eta_minutes": 204.0,
+        "hours_done": 1.967,
+        "progress": 0.328,
+        "eta_minutes": 242.0,
         "scheduled_start": null,
-        "created_at": "2026-11-07T19:54:00-06:00",
+        "created_at": "2026-11-07T21:25:00-06:00",
         "completed_at": null,
         "displaced_work_order_id": null,
-        "cost": null
+        "cost": null,
+        "spot": {
+          "x": 22.0,
+          "y": 6.0,
+          "hall_id": "hall-b"
+        },
+        "asset_name": null
       },
-      "queued_work_order_ids": []
+      "queued_work_order_ids": [],
+      "position": {
+        "x": 22.0,
+        "y": 6.0,
+        "hall_id": "hall-b"
+      },
+      "path": [],
+      "walking_minutes_left": null,
+      "device_controlled": false
     },
     {
       "technician_id": "tech-02",
@@ -43,7 +59,8 @@
       "role": "Data center technician",
       "site_id": "datacenter",
       "skills": [
-        "storage_drive"
+        "storage_drive",
+        "gpu_server"
       ],
       "rate_per_hour": 70.0,
       "status": "working",
@@ -61,16 +78,30 @@
         "option": null,
         "mitigation_active": false,
         "hours_total": 4.0,
-        "hours_done": 2.0,
-        "progress": 0.5,
-        "eta_minutes": 120.0,
+        "hours_done": 1.367,
+        "progress": 0.342,
+        "eta_minutes": 158.0,
         "scheduled_start": null,
-        "created_at": "2026-11-07T19:54:00-06:00",
+        "created_at": "2026-11-07T21:25:00-06:00",
         "completed_at": null,
         "displaced_work_order_id": null,
-        "cost": null
+        "cost": null,
+        "spot": {
+          "x": 2.0,
+          "y": 6.0,
+          "hall_id": "hall-a"
+        },
+        "asset_name": null
       },
-      "queued_work_order_ids": []
+      "queued_work_order_ids": [],
+      "position": {
+        "x": 2.0,
+        "y": 6.0,
+        "hall_id": "hall-a"
+      },
+      "path": [],
+      "walking_minutes_left": null,
+      "device_controlled": false
     },
     {
       "technician_id": "tech-03",
@@ -79,6 +110,7 @@
       "site_id": "datacenter",
       "skills": [
         "storage_drive",
+        "gpu_server",
         "cooling_unit"
       ],
       "rate_per_hour": 75.0,
@@ -87,26 +119,51 @@
       "current_work_order": {
         "work_order_id": "wo-0006",
         "kind": "repair",
-        "title": "CRAC Unit 2: Inspect the unit's air filter and fan (human review required).",
+        "title": "Rack B2-04, GPU Server 1: Check the server's GPUs, power supplies and logs, then reseat or swap the failed part (human review required).",
         "site_id": "datacenter",
-        "hall_id": "hall-a",
-        "asset_id": "cooling-02",
-        "incident_id": "inc-000955",
+        "hall_id": "hall-b",
+        "asset_id": "srv-B2-04-1",
+        "incident_id": "inc-000635",
         "technician_id": "tech-03",
         "status": "traveling",
-        "option": "buy_time",
-        "mitigation_active": true,
-        "hours_total": 3.0,
+        "option": "fix_now",
+        "mitigation_active": false,
+        "hours_total": 2.0,
         "hours_done": 0.0,
         "progress": 0.0,
-        "eta_minutes": 182.0,
+        "eta_minutes": 120.3,
         "scheduled_start": null,
-        "created_at": "2026-11-07T20:34:00-06:00",
+        "created_at": "2026-11-07T21:29:00-06:00",
         "completed_at": null,
         "displaced_work_order_id": null,
-        "cost": null
+        "cost": null,
+        "spot": {
+          "x": 31.0,
+          "y": 9.5,
+          "hall_id": "hall-b"
+        },
+        "asset_name": "Rack B2-04, GPU Server 1"
       },
-      "queued_work_order_ids": []
+      "queued_work_order_ids": [],
+      "position": {
+        "x": 30.5,
+        "y": 9.5,
+        "hall_id": "hall-b"
+      },
+      "path": [
+        {
+          "x": 30.5,
+          "y": 9.5,
+          "hall_id": "hall-b"
+        },
+        {
+          "x": 31.0,
+          "y": 9.5,
+          "hall_id": "hall-b"
+        }
+      ],
+      "walking_minutes_left": 0.2,
+      "device_controlled": true
     },
     {
       "technician_id": "tech-04",
@@ -132,16 +189,30 @@
         "option": null,
         "mitigation_active": false,
         "hours_total": 3.0,
-        "hours_done": 1.7,
-        "progress": 0.567,
-        "eta_minutes": 78.0,
+        "hours_done": 1.067,
+        "progress": 0.356,
+        "eta_minutes": 116.0,
         "scheduled_start": null,
-        "created_at": "2026-11-07T19:54:00-06:00",
+        "created_at": "2026-11-07T21:25:00-06:00",
         "completed_at": null,
         "displaced_work_order_id": null,
-        "cost": null
+        "cost": null,
+        "spot": {
+          "x": 40.0,
+          "y": 3.0,
+          "hall_id": "plant"
+        },
+        "asset_name": null
       },
-      "queued_work_order_ids": []
+      "queued_work_order_ids": [],
+      "position": {
+        "x": 40.0,
+        "y": 3.0,
+        "hall_id": "plant"
+      },
+      "path": [],
+      "walking_minutes_left": null,
+      "device_controlled": false
     }
   ],
   "work_orders": [
@@ -158,14 +229,20 @@
       "option": null,
       "mitigation_active": false,
       "hours_total": 6.0,
-      "hours_done": 2.6,
-      "progress": 0.433,
-      "eta_minutes": 204.0,
+      "hours_done": 1.967,
+      "progress": 0.328,
+      "eta_minutes": 242.0,
       "scheduled_start": null,
-      "created_at": "2026-11-07T19:54:00-06:00",
+      "created_at": "2026-11-07T21:25:00-06:00",
       "completed_at": null,
       "displaced_work_order_id": null,
-      "cost": null
+      "cost": null,
+      "spot": {
+        "x": 22.0,
+        "y": 6.0,
+        "hall_id": "hall-b"
+      },
+      "asset_name": null
     },
     {
       "work_order_id": "wo-0002",
@@ -180,14 +257,20 @@
       "option": null,
       "mitigation_active": false,
       "hours_total": 4.0,
-      "hours_done": 2.0,
-      "progress": 0.5,
-      "eta_minutes": 120.0,
+      "hours_done": 1.367,
+      "progress": 0.342,
+      "eta_minutes": 158.0,
       "scheduled_start": null,
-      "created_at": "2026-11-07T19:54:00-06:00",
+      "created_at": "2026-11-07T21:25:00-06:00",
       "completed_at": null,
       "displaced_work_order_id": null,
-      "cost": null
+      "cost": null,
+      "spot": {
+        "x": 2.0,
+        "y": 6.0,
+        "hall_id": "hall-a"
+      },
+      "asset_name": null
     },
     {
       "work_order_id": "wo-0003",
@@ -202,36 +285,48 @@
       "option": null,
       "mitigation_active": false,
       "hours_total": 3.0,
-      "hours_done": 1.7,
-      "progress": 0.567,
-      "eta_minutes": 78.0,
+      "hours_done": 1.067,
+      "progress": 0.356,
+      "eta_minutes": 116.0,
       "scheduled_start": null,
-      "created_at": "2026-11-07T19:54:00-06:00",
+      "created_at": "2026-11-07T21:25:00-06:00",
       "completed_at": null,
       "displaced_work_order_id": null,
-      "cost": null
+      "cost": null,
+      "spot": {
+        "x": 40.0,
+        "y": 3.0,
+        "hall_id": "plant"
+      },
+      "asset_name": null
     },
     {
       "work_order_id": "wo-0006",
       "kind": "repair",
-      "title": "CRAC Unit 2: Inspect the unit's air filter and fan (human review required).",
+      "title": "Rack B2-04, GPU Server 1: Check the server's GPUs, power supplies and logs, then reseat or swap the failed part (human review required).",
       "site_id": "datacenter",
-      "hall_id": "hall-a",
-      "asset_id": "cooling-02",
-      "incident_id": "inc-000955",
+      "hall_id": "hall-b",
+      "asset_id": "srv-B2-04-1",
+      "incident_id": "inc-000635",
       "technician_id": "tech-03",
       "status": "traveling",
-      "option": "buy_time",
-      "mitigation_active": true,
-      "hours_total": 3.0,
+      "option": "fix_now",
+      "mitigation_active": false,
+      "hours_total": 2.0,
       "hours_done": 0.0,
       "progress": 0.0,
-      "eta_minutes": 182.0,
+      "eta_minutes": 120.3,
       "scheduled_start": null,
-      "created_at": "2026-11-07T20:34:00-06:00",
+      "created_at": "2026-11-07T21:29:00-06:00",
       "completed_at": null,
       "displaced_work_order_id": null,
-      "cost": null
+      "cost": null,
+      "spot": {
+        "x": 31.0,
+        "y": 9.5,
+        "hall_id": "hall-b"
+      },
+      "asset_name": "Rack B2-04, GPU Server 1"
     }
   ],
   "assumptions_source": "demo assumption (configs/operations.json), not measured"

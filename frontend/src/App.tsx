@@ -11,6 +11,7 @@ import { ModelsPage } from "@/pages/ModelsPage";
 import { FleetPage } from '@/pages/FleetPage';
 import { OperationsPage } from '@/pages/OperationsPage';
 import { ServerPage } from '@/pages/ServerPage';
+import { PagerPage } from '@/pages/PagerPage';
 
 function RRLink({ to, className = "", activeClassName, exact, onClick, children }: AppLinkProps) {
   return (
@@ -48,6 +49,10 @@ function ServerRoute() {
   const raw = search.get('gpu'); const index = raw == null ? undefined : Number(raw);
   return <ServerPage id={id} gpuIndex={index !== undefined && Number.isSafeInteger(index) && index >= 0 ? index : undefined} onGpuChange={(gpu) => setSearch((prev) => { const p = new URLSearchParams(prev); p.set('gpu', String(gpu)); return p; })} />;
 }
+function PagerRoute() {
+  const [search, setSearch] = useSearchParams();
+  return <PagerPage technicianId={search.get('technician') || 'tech-03'} onTechnicianChange={(id) => setSearch((prev) => { const p = new URLSearchParams(prev); p.set('technician', id); return p; })} />;
+}
 
 export function App() {
   return (
@@ -57,6 +62,7 @@ export function App() {
           <Route path="/" element={<OverviewRoute />} />
           <Route path="/fleet" element={<FleetRoute />} />
           <Route path="/operations" element={<OperationsRoute />} />
+          <Route path="/pager" element={<PagerRoute />} />
           <Route path="/servers/:id" element={<ServerRoute />} />
           <Route path="/assets" element={<AssetsPage />} />
           <Route path="/assets/:id" element={<AssetDetailRoute />} />

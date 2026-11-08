@@ -7,7 +7,8 @@ import { DEFAULT_DATA_MODE } from "./mode-default";
 import { fleetFixtures } from './fleet-fixtures';
 import { opsFixtures } from './ops-fixtures';
 import { gpuFixtures } from './gpu-fixtures';
-import type { DispatchRequest, DispatchResponse, LearningCases, LearningMatrix, PlanResponse, TechniciansResponse, WhatIfResponse } from './ops-types';
+import type { AutoDispatchResponse, DispatchRequest, DispatchResponse, FloorPlan, LearningCases, LearningMatrix, PagerActionRequest, PagerView, PlanResponse, TechniciansResponse, WhatIfResponse } from './ops-types';
+import { pagerFixtures } from './pager-fixtures';
 import type { ClearResponse, FaultRequest, FaultResponse, FleetMap, FleetStatus, LiveStartRequest, LiveStatus, RackDetail, ServerDetail, SiteId, SitesResponse } from './fleet-types';
 
 // VITE_* values are bundled into the browser. Never put secrets in them.
@@ -65,6 +66,12 @@ export interface ApiClient {
   clearFleet(): Promise<ClearResponse>;
   incidentWhatIf(id: string): Promise<WhatIfResponse>;
   opsTechnicians(site: SiteId): Promise<TechniciansResponse>;
+  opsFloor(site: SiteId): Promise<FloorPlan>;
+  opsPager(id: string): Promise<PagerView>;
+  claimPager(id: string): Promise<PagerView>;
+  releasePager(id: string): Promise<PagerView>;
+  pagerAction(id: string, body: PagerActionRequest): Promise<PagerView>;
+  setAutoDispatch(enabled: boolean): Promise<AutoDispatchResponse>;
   opsPlan(site: SiteId): Promise<PlanResponse>;
   dispatch(body: DispatchRequest): Promise<DispatchResponse>;
   learningMatrix(): Promise<LearningMatrix>;
@@ -137,6 +144,12 @@ export function createLiveClient(baseUrl = API_BASE_URL, fetchImpl: typeof fetch
     clearFleet: () => req('/fleet/clear', json('POST')),
     incidentWhatIf: (id) => req(`/incidents/${enc(id)}/whatif`),
     opsTechnicians: (site) => req(`/ops/technicians${qs({ site })}`),
+    opsFloor: (site) => req(`/ops/floor${qs({ site })}`),
+    opsPager: (id) => req(`/ops/pager/${enc(id)}`),
+    claimPager: (id) => req(`/ops/pager/${enc(id)}/claim`, json('POST')),
+    releasePager: (id) => req(`/ops/pager/${enc(id)}/release`, json('POST')),
+    pagerAction: (id, body) => req(`/ops/pager/${enc(id)}/action`, json('POST', body)),
+    setAutoDispatch: (enabled) => req('/ops/auto-dispatch', json('POST', { enabled })),
     opsPlan: (site) => req(`/ops/plan${qs({ site })}`),
     dispatch: (body) => req('/ops/dispatch', json('POST', body)),
     learningMatrix: () => req('/learning/matrix'),
@@ -178,6 +191,9 @@ export function createFixtureClient(): ApiClient {
     startFleet: disabled, stopFleet: disabled, injectFaults: disabled, clearFleet: disabled,
     incidentWhatIf: (id) => id === opsFixtures.whatif.incident_id ? later(opsFixtures.whatif) : id === gpuFixtures.whatif.incident_id ? later(gpuFixtures.whatif) : Promise.reject(notFound(`What-if for ${id} (no approved fixture)`)),
     opsTechnicians: (site) => later({ ...opsFixtures.technicians, technicians: opsFixtures.technicians.technicians.filter((t) => t.site_id === site), work_orders: opsFixtures.technicians.work_orders.filter((w) => w.site_id === site) }),
+    opsFloor: (site) => site === pagerFixtures.floor.site_id ? later(pagerFixtures.floor) : Promise.reject(notFound(`Floor for ${site} (no approved fixture)`)),
+    opsPager: (id) => id === pagerFixtures.paged.technician.technician_id ? later(pagerFixtures.paged) : Promise.reject(notFound(`Pager ${id} (no approved fixture)`)),
+    claimPager: disabled, releasePager: disabled, pagerAction: disabled, setAutoDispatch: disabled,
     opsPlan: (site) => site === opsFixtures.plan.site_id ? later(opsFixtures.plan) : Promise.reject(notFound(`Plan for ${site} (no approved fixture)`)),
     dispatch: disabled,
     learningMatrix: () => later(opsFixtures.matrix),

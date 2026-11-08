@@ -1,0 +1,30 @@
+{
+  "technician": {
+    "technician_id": "tech-03",
+    "name": "Sam Rivera",
+    "role": "Data center technician",
+    "site_id": "datacenter",
+    "skills": [
+      "storage_drive",
+      "gpu_server",
+      "cooling_unit"
+    ],
+    "rate_per_hour": 75.0,
+    "status": "idle",
+    "location_hall_id": "hall-b",
+    "current_work_order": null,
+    "queued_work_order_ids": [],
+    "position": {
+      "x": 22.0,
+      "y": 6.0,
+      "hall_id": "hall-b"
+    },
+    "path": [],
+    "walking_minutes_left": null,
+    "device_controlled": true
+  },
+  "job": null,
+  "queue": [],
+  "demo_time": "2026-11-07T21:25:00-06:00",
+  "version": 1
+}

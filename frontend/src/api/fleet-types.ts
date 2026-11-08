@@ -1,4 +1,5 @@
 import type { IncidentSummary, ReadingValues, RiskLevel } from './types';
+import type { WorkStatus } from './ops-types';
 
 export type SiteId = 'datacenter' | 'mining';
 export type HealthStatus = 'healthy' | 'warning' | 'critical' | 'no_data';
@@ -6,7 +7,7 @@ export type InvestigationStatus = 'queued' | 'running' | 'completed' | 'failed';
 export type PowerState = 'on' | 'at_risk' | 'off';
 export interface WorkOrder {
   work_order_id: string; technician_id: string; technician_name: string;
-  status: 'scheduled' | 'traveling' | 'in_progress' | 'paused' | 'done';
+  status: WorkStatus;
   option: 'fix_now' | 'wait_for_window' | 'buy_time' | null;
   progress: number; eta_minutes: number | null;
 }
