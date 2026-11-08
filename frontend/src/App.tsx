@@ -31,13 +31,18 @@ function FleetRoute() {
   const site = search.get('site') === 'mining' ? 'mining' : 'datacenter';
   return <FleetPage site={site} onSiteChange={(next) => setSearch((prev) => { const p = new URLSearchParams(prev); p.set('site', next); return p; })} />;
 }
+function OverviewRoute() {
+  const [search, setSearch] = useSearchParams();
+  const site = search.get('site') === 'mining' ? 'mining' : 'datacenter';
+  return <OverviewPage site={site} onSiteChange={(next) => setSearch((prev) => { const p = new URLSearchParams(prev); p.set('site', next); return p; })} />;
+}
 
 export function App() {
   return (
     <RouterAdapterProvider value={adapter}>
       <AppShell>
         <Routes>
-          <Route path="/" element={<OverviewPage />} />
+          <Route path="/" element={<OverviewRoute />} />
           <Route path="/fleet" element={<FleetRoute />} />
           <Route path="/assets" element={<AssetsPage />} />
           <Route path="/assets/:id" element={<AssetDetailRoute />} />

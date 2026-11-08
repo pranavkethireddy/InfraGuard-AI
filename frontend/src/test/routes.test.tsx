@@ -41,4 +41,12 @@ describe("routes (react-router-dom)", () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Data center' }));
     await waitFor(() => expect(screen.getByLabelText('Current URL')).toHaveTextContent('/fleet?site=datacenter'));
   });
+  it('defaults Overview to datacenter and persists its selected site in the URL', async () => {
+    renderAt('/');
+    expect(screen.getByRole('tab', { name: 'Data center' })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('group', { name: 'Hall A floor map' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Crypto mining site' }));
+    await waitFor(() => expect(screen.getByLabelText('Current URL')).toHaveTextContent('/?site=mining'));
+    expect(screen.queryByRole('group', { name: 'Hall A floor map' })).not.toBeInTheDocument();
+  });
 });

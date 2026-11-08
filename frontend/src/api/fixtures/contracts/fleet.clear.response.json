@@ -9,7 +9,7 @@
     "run_id": "live-000001",
     "seed": 42,
     "tick_seconds": 1.0,
-    "started_at": "2026-11-08T00:09:57.407433Z",
+    "started_at": "2026-11-08T01:25:01.245285Z",
     "stopped_at": null,
     "ticks": 12,
     "auto_investigate": true,

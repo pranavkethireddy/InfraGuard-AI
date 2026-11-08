@@ -3,6 +3,13 @@ import type { IncidentSummary, ReadingValues, RiskLevel } from './types';
 export type SiteId = 'datacenter' | 'mining';
 export type HealthStatus = 'healthy' | 'warning' | 'critical' | 'no_data';
 export type InvestigationStatus = 'queued' | 'running' | 'completed' | 'failed';
+export type PowerState = 'on' | 'at_risk' | 'off';
+export interface WorkOrder {
+  work_order_id: string; technician_id: string; technician_name: string;
+  status: 'scheduled' | 'traveling' | 'in_progress' | 'paused' | 'done';
+  option: 'fix_now' | 'wait_for_window' | 'buy_time' | null;
+  progress: number; eta_minutes: number | null;
+}
 export interface Placement { hall_id: string; row: string | null; rack_id: string | null; slot: number | null; x: number; y: number }
 export interface HistoryPoint { observed_at: string; values: ReadingValues }
 export interface IncidentBrief {
@@ -19,10 +26,12 @@ export interface MachineStatus {
   placement: Placement; status: HealthStatus; risk_level: RiskLevel | null; risk_score: number | null;
   latest_values: ReadingValues | null; last_reading_at: string | null; chart_fields: string[];
   active_incident: IncidentBrief | null; simulated_fault: FaultInfo | null; history: HistoryPoint[];
+  power_state?: PowerState; power_reason?: string | null; shutdown_eta_minutes?: number | null; work_order?: WorkOrder | null;
 }
 export interface RackStatus {
   rack_id: string; hall_id: string; row: string; label: string; x: number; y: number; width: number; depth: number;
   status: HealthStatus; reasons: string[]; cooled_by: string[]; machine_ids: string[]; open_incident_ids: string[];
+  power_state?: PowerState; power_reason?: string | null; shutdown_eta_minutes?: number | null;
 }
 export interface HallMap {
   hall_id: string; name: string; kind: 'data_hall' | 'plant_room' | 'mining_container'; width: number; depth: number;
@@ -32,6 +41,7 @@ export interface FleetSummary {
   machines: number; racks: number; healthy: number; warning: number; critical: number; no_data: number;
   open_incidents: number; racks_affected: number; downtime_cost_per_day_at_risk: number; currency: string;
   assumptions_source: string | null; cost_if_all_fail: number; cost_to_fix_all_now: number; savings_if_fixed_now: number;
+  machines_powered_off?: number; machines_at_risk_of_shutdown?: number;
 }
 export interface SiteMetric { key: string; label: string; value: number | null; unit: string; source: string }
 export interface LiveStatus {
