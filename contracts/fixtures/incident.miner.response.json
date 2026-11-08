@@ -1,0 +1,165 @@
+{
+  "incident_id": "inc-001573",
+  "asset_id": "miner-05",
+  "detector_id": "miner-rule-v1",
+  "status": "open",
+  "risk_level": "high",
+  "score_kind": "heuristic",
+  "data_origin": "simulated",
+  "title": "ASIC miner fault: Rack M1-01, Slot 5",
+  "opened_at": "2026-11-08T00:10:05.630393Z",
+  "last_seen_at": "2026-11-08T00:10:08.645635Z",
+  "acknowledged_at": null,
+  "resolved_at": null,
+  "resolved_by": null,
+  "prediction_count": 4,
+  "simulation_id": "live-000001",
+  "priority_index": 0.6522,
+  "latest_prediction": {
+    "prediction_id": "pred-002145",
+    "asset_id": "miner-05",
+    "detector_id": "miner-rule-v1",
+    "observed_at": "2026-11-08T00:10:08.645635Z",
+    "generated_at": "2026-11-08T00:10:08.708986Z",
+    "data_origin": "simulated",
+    "model_name": "miner-rule",
+    "model_version": "1.0.0",
+    "target": "sustained ASIC miner fault: hashrate drop, chip overheat, fan failure or hardware errors",
+    "risk_score": 0.8,
+    "score_kind": "heuristic",
+    "risk_level": "high",
+    "prediction_horizon_hours": null,
+    "explanation": "Miner fault for 6 consecutive readings: hashrate is 74% of rated; chip temperature 94.7 C is above 85.0 C; fan speed 438 rpm is below 1500 rpm.",
+    "explanation_source": "rule",
+    "evidence": [
+      {
+        "type": "sensor_rule",
+        "field": "hashrate_ths",
+        "value": 147.0,
+        "threshold": 170.0,
+        "unit": "TH/s",
+        "consecutive_readings": 6
+      },
+      {
+        "type": "sensor_rule",
+        "field": "chip_temp_c",
+        "value": 94.7,
+        "threshold": 85.0,
+        "unit": "C",
+        "consecutive_readings": 6
+      },
+      {
+        "type": "sensor_rule",
+        "field": "fan_speed_rpm",
+        "value": 438.0,
+        "threshold": 1500.0,
+        "unit": "rpm",
+        "consecutive_readings": 6
+      }
+    ],
+    "maintenance_sources": [],
+    "limitations": [
+      "No public labelled ASIC failure dataset exists; this is a transparent rule, not a trained model.",
+      "Thresholds are demo assumptions, not vendor limits."
+    ],
+    "incident_id": "inc-001573",
+    "simulation_id": "live-000001"
+  },
+  "evidence": [
+    {
+      "type": "sensor_rule",
+      "field": "hashrate_ths",
+      "value": 147.0,
+      "threshold": 170.0,
+      "unit": "TH/s",
+      "consecutive_readings": 6
+    },
+    {
+      "type": "sensor_rule",
+      "field": "chip_temp_c",
+      "value": 94.7,
+      "threshold": 85.0,
+      "unit": "C",
+      "consecutive_readings": 6
+    },
+    {
+      "type": "sensor_rule",
+      "field": "fan_speed_rpm",
+      "value": 438.0,
+      "threshold": 1500.0,
+      "unit": "rpm",
+      "consecutive_readings": 6
+    }
+  ],
+  "maintenance_sources": [
+    {
+      "record_id": "mr-0401",
+      "asset_id": "miner-01",
+      "recorded_at": "2026-03-04T11:20:00Z",
+      "source_name": "Demo maintenance log (synthetic)",
+      "excerpt": "ASIC miner reported one fan at 0 rpm and chip temperature 92 C; the unit throttled to about 150 TH/s. Replaced the fan, about $35 and 20 min. Hashrate back to rated within 10 minutes.",
+      "score": 0.3061
+    },
+    {
+      "record_id": "mr-0412",
+      "asset_id": "miner-07",
+      "recorded_at": "2026-07-22T09:40:00Z",
+      "source_name": "Demo maintenance log (synthetic)",
+      "excerpt": "Dust buildup on miner intake; chip temperature creeping up to 84 C and fan speed at maximum. Cleaned with compressed air, 10 min, no parts. Preventive cleaning avoided a hashboard failure.",
+      "score": 0.178
+    }
+  ],
+  "explanation": "Miner fault for 3 consecutive readings: hashrate is 73% of rated; chip temperature 92.9 C is above 85.0 C; fan speed 432 rpm is below 1500 rpm. Downtime costs $0.27 per hour ($6.49 per day). If it fails: about $569 (downtime plus unplanned repair); fixing it now: about $60.00, saving $509 (assumptions; repair about 1.0 h). Most similar past record: mr-0401: ASIC miner reported one fan at 0 rpm and chip temperature 92 C; the unit throttled to about 150 TH/s. Replaced the fan, about $35 and 20 min. Hashrate back to rated within 10 minutes.",
+  "explanation_source": "rag",
+  "recommended_actions": [
+    "Check the miner's fans and intake for dust or blockage (human review required).",
+    "If one hashboard is down, schedule a hashboard swap and move the unit to repair."
+  ],
+  "impact": {
+    "currency": "USD",
+    "estimated_downtime_hours": 72.0,
+    "cost_per_hour": 0.2702,
+    "estimated_repair_cost": 550.0,
+    "assumptions_source": "demo assumption (configs/impact_assumptions.json), not measured; lost revenue = rated hashrate x hashprice $0.0324/TH/day on 2026-11-07 (CloudMineCrypto open data (CC BY 4.0), https://cloudminecrypto.com/data)",
+    "cost_per_day": 6.49,
+    "estimated_repair_hours": 1.0,
+    "planned_repair_cost": 60.0,
+    "estimated_downtime_cost": 19.45,
+    "estimated_total_impact": 569.45,
+    "cost_if_it_fails": 569.45,
+    "cost_to_fix_now": 60.0,
+    "savings_if_fixed_now": 509.45,
+    "return_on_repair": 8.49
+  },
+  "priority_weights": {
+    "risk": 0.5,
+    "criticality": 0.3,
+    "impact": 0.2
+  },
+  "notes": [],
+  "agent_steps": [
+    {
+      "tool": "get_incident",
+      "summary": "Read incident inc-001573 (high risk)"
+    },
+    {
+      "tool": "get_recent_readings",
+      "summary": "Read 8 recent readings"
+    },
+    {
+      "tool": "estimate_impact",
+      "summary": "Impact: $0.27/h, $6.49/day down; $569 if it fails vs $60.00 to fix now"
+    },
+    {
+      "tool": "search_maintenance",
+      "summary": "Searched maintenance records for 'ASIC miner fault: Rack M1-01, Slot 5 hashrate ths chip temp c fan speed rpm': mr-0401, mr-0412, mr-0405"
+    },
+    {
+      "tool": "get_model_card",
+      "summary": "Read model card for miner-rule-v1 (not_applicable)"
+    }
+  ],
+  "investigation_status": "completed",
+  "problem": "ASIC miner fault: Rack M1-01, Slot 5 (Container 1, Row M1, Rack M1-01, Slot 5).",
+  "likely_cause": "ASIC miner reported one fan at 0 rpm and chip temperature 92 C; the unit throttled to about 150 TH/s. Replaced the fan, about $35 and 20 min. Hashrate back to rated within 10 minutes."
+}

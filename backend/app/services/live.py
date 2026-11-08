@@ -27,7 +27,7 @@ from .incidents import now
 from .store import Store
 
 log = logging.getLogger(__name__)
-TYPE_ORDER = ("cooling_unit", "storage_drive", "industrial_machine")
+TYPE_ORDER = ("cooling_unit", "storage_drive", "asic_miner", "industrial_machine")
 
 
 def _fleet():
@@ -144,12 +144,17 @@ def inject(store: Store, req: FaultRequest, settings: Settings) -> FaultResponse
                 raise ApiError(409, "FAULT_ALREADY_ACTIVE", "A fault is already running on these assets.", {"asset_ids": busy})
             chosen = list(dict.fromkeys(req.asset_ids))
         else:
-            chosen = _pick(store, run, assets, req.count)
+            pool = assets
+            if req.site is not None:
+                from .layout import get_layout
+                pool = {a: assets[a] for a in get_layout(req.site).assets}
+            chosen = _pick(store, run, pool, req.count)
             if not chosen:
                 raise ApiError(409, "NO_HEALTHY_ASSETS", "Every machine already has a fault or an open incident; clear first.", {})
         at = now()
+        rng = random.Random(f"{run.seed}:kinds:{run.injections}")
         for asset_id in chosen:
-            kind = fleet.FAULT_KINDS[assets[asset_id].asset_type]
+            kind = fleet.fault_kind(assets[asset_id].asset_type, rng)
             run.faults[asset_id] = Fault(asset_id=asset_id, kind=kind, injected_tick=run.ticks, injected_at=at)
         run.injections += 1
         injected = [_fault_info(run, run.faults[a]) for a in chosen]
@@ -223,7 +228,8 @@ def _tick(store: Store, run: LiveRun, settings: Settings) -> None:
                 phase, progress = fleet.fault_phase(fault.kind, run.ticks - fault.injected_tick)
                 if phase == "ended":
                     del run.faults[asset.asset_id]
-        values = fleet.sample(asset.asset_type, run.profiles[asset.asset_id], run.ticks, run.rngs[asset.asset_id], progress)
+        values = fleet.sample(asset.asset_type, run.profiles[asset.asset_id], run.ticks, run.rngs[asset.asset_id], progress,
+                              fault.kind if fault is not None else None)
         predictions.store_readings(store, ReadingsRequest(
             asset_id=asset.asset_id, data_origin="simulated", simulation_id=run.run_id,
             readings=[Reading(observed_at=ts, values=values)]))
@@ -245,8 +251,9 @@ def _maybe_queue(store: Store, incident_id: str, settings: Settings) -> None:
             return
         inc.investigation_status = "queued"
         if store.investigator is None:
-            # One at a time: each investigation makes several Gemini requests, and requests are paced anyway.
-            store.investigator = ThreadPoolExecutor(max_workers=1, thread_name_prefix="investigate")
+            # One worker per Gemini key: each investigation is one request, and each (model, key) is paced on its own.
+            workers = max(1, len(settings.gemini_keys))
+            store.investigator = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="investigate")
         pool = store.investigator
     pool.submit(_investigate, store, incident_id, settings)
 
