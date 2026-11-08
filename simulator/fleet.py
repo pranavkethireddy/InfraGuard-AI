@@ -16,6 +16,9 @@ ramps one machine toward a failure signature over a few ticks, holds it, then en
   Server parts (2 CPUs, 16 memory DIMMs, 6 fans, 2 PSUs, 2 NICs, 2 NVMe drives) report too. memory_fault: one
   DIMM's ECC errors climb. nic_failure: one network port's CRC errors climb, then its link drops.
   server_fan_failure: one chassis fan slows and stops, so the GPUs run a few degrees hotter.
+- Facility equipment (FACILITY below: UPS, generator, transfer switch, rack PDU, chiller, coolant distribution
+  unit, hall environment sensor, network switch, smoke detector, fire suppression, door access): each reading
+  wobbles around a healthy baseline; a fault moves its listed readings toward the fault's target values.
 Values are demo assumptions, not facility specifications. No risk scores or costs are produced here.
 """
 
@@ -37,6 +40,50 @@ FAULT_CHOICES = {t: (k,) for t, k in FAULT_KINDS.items()} | {"asic_miner": ("has
                                                           "gpu_server": ("gpu_fault", "psu_failure", "server_crash")}
 # Faults that only happen when asked for by kind (kept out of FAULT_CHOICES so seeded random draws stay the same).
 FAULT_EXPLICIT = {"gpu_server": ("memory_fault", "nic_failure", "server_fan_failure")}
+# Facility equipment: healthy baseline per reading as (value, wobble), and per fault the readings it moves and
+# where to. Flags (0/1) and counts are rounded. Readings and thresholds match configs/failure_catalog.json.
+FACILITY: dict[str, dict] = {
+    "ups": {"base": {"load_pct": (55, 3), "runtime_min": (14, 0.4), "battery_charge_pct": (100, 0), "battery_temp_c": (25, 0.6),
+                     "input_voltage_v": (480, 2), "output_voltage_v": (480, 0.5), "on_battery": (0, 0)},
+            "faults": {"ups_battery_fade": {"runtime_min": 5.0, "battery_temp_c": 34.0, "battery_charge_pct": 93.0},
+                       "ups_on_battery": {"on_battery": 1, "input_voltage_v": 0.0, "battery_charge_pct": 55.0, "runtime_min": 9.0}}},
+    "generator": {"base": {"fuel_pct": (92, 0.3), "start_battery_v": (26, 0.15), "coolant_temp_c": (45, 1), "last_test_ok": (1, 0),
+                           "running": (0, 0), "output_kw": (0, 0)},
+                  "faults": {"gen_start_battery": {"start_battery_v": 21.5, "last_test_ok": 0},
+                             "gen_low_fuel": {"fuel_pct": 24.0}}},
+    "ats": {"base": {"utility_voltage_v": (480, 2), "source": (0, 0), "transfer_ok": (1, 0), "transfer_time_ms": (0, 0)},
+            "faults": {"ats_transfer_fail": {"utility_voltage_v": 0.0, "transfer_ok": 0},
+                       "ats_utility_sag": {"utility_voltage_v": 405.0}}},
+    "pdu": {"base": {"phase_a_amps": (18, 0.6), "phase_b_amps": (17.5, 0.6), "phase_c_amps": (18.2, 0.6), "breaker_rating_amps": (32, 0)},
+            "faults": {"pdu_overload": {"phase_a_amps": 29.5, "phase_b_amps": 28.0, "phase_c_amps": 27.5},
+                       "pdu_imbalance": {"phase_a_amps": 24.5, "phase_b_amps": 12.0, "phase_c_amps": 11.0}}},
+    "chiller": {"base": {"supply_water_c": (7, 0.2), "return_water_c": (12.5, 0.3), "compressor_amps": (180, 4), "flow_lps": (32, 0.5)},
+                "faults": {"chiller_trip": {"supply_water_c": 15.5, "return_water_c": 17.0, "compressor_amps": 15.0},
+                           "chiller_low_flow": {"flow_lps": 12.0, "supply_water_c": 9.5}}},
+    "cdu": {"base": {"flow_lps": (2.5, 0.05), "pressure_kpa": (250, 3), "coolant_supply_c": (32, 0.3), "coolant_return_c": (42, 0.4),
+                     "leak_detected": (0, 0)},
+            "faults": {"cdu_leak": {"leak_detected": 1, "pressure_kpa": 110.0, "flow_lps": 1.2},
+                       "cdu_pump_failure": {"flow_lps": 0.6, "coolant_supply_c": 41.0, "coolant_return_c": 55.0}}},
+    "env_sensor": {"base": {"temperature_c": (23, 0.4), "humidity_pct": (45, 1.5), "dew_point_c": (10.6, 0.4), "water_under_floor": (0, 0)},
+                   "faults": {"env_water_leak": {"water_under_floor": 1, "humidity_pct": 62.0},
+                              "env_high_humidity": {"humidity_pct": 78.0, "dew_point_c": 19.0}}},
+    "network_switch": {"base": {"temperature_c": (42, 1), "cpu_pct": (25, 3), "optic_rx_dbm": (-3.0, 0.2), "port_errors_per_min": (0, 0),
+                                "links_down": (0, 0), "packet_loss_pct": (0.0, 0)},
+                       "faults": {"switch_optic_degraded": {"optic_rx_dbm": -15.0, "port_errors_per_min": 400, "packet_loss_pct": 1.5},
+                                  "switch_link_down": {"links_down": 4, "packet_loss_pct": 6.0}}},
+    "smoke_detector": {"base": {"obscuration_pct_per_m": (0.01, 0.003), "alarm_level": (0, 0)},
+                       "faults": {"smoke_alarm": {"obscuration_pct_per_m": 1.4, "alarm_level": 2}}},
+    "fire_suppression": {"base": {"agent_pressure_pct": (100, 0.2), "armed": (1, 0)},
+                         "faults": {"suppression_pressure_loss": {"agent_pressure_pct": 78.0},
+                                    "suppression_disarmed": {"armed": 0}}},
+    "access_control": {"base": {"door_held_open_s": (0, 0), "badge_failures_per_min": (0, 0), "forced_open": (0, 0)},
+                       "faults": {"door_forced": {"forced_open": 1, "door_held_open_s": 120.0},
+                                  "badge_reader_failure": {"badge_failures_per_min": 14}}},
+}
+FLAGS = {"on_battery", "last_test_ok", "running", "source", "transfer_ok", "leak_detected", "water_under_floor", "links_down",
+         "port_errors_per_min", "alarm_level", "armed", "forced_open", "badge_failures_per_min", "breaker_rating_amps"}
+FAULT_KINDS |= {t: next(iter(f["faults"])) for t, f in FACILITY.items()}
+FAULT_CHOICES |= {t: tuple(f["faults"]) for t, f in FACILITY.items()}
 # (ramp, hold, recover) in ticks.
 FAULT_TICKS = {
     "cooling_failure": (6, 30, 6),
@@ -50,7 +97,7 @@ FAULT_TICKS = {
     "memory_fault": (4, 36, 0),
     "nic_failure": (3, 37, 0),
     "server_fan_failure": (3, 37, 0),
-}
+} | {k: (3, 33, 4) for f in FACILITY.values() for k in f["faults"]}
 # Faults that keep getting worse while nobody fixes them: degrees added per unit of progress above 1.
 # Progress may go up to MAX_ESCALATION for these (the backend drives it from configs/operations.json).
 ESCALATING = {"cooling_failure": 13.0, "fan_failure": 28.0}
@@ -86,6 +133,8 @@ def profile(asset_type: str, asset_id: str, seed: int) -> dict:
                        "torque_nm": r.uniform(36, 44), "wear0": r.uniform(10, 60)}
     if asset_type == "asic_miner":
         return base | {"eff": r.uniform(0.97, 1.02), "chip_c": r.uniform(64, 74), "fan_rpm": r.uniform(4200, 5400)}
+    if asset_type in FACILITY:
+        return base | {k: v + r.uniform(-1, 1) * w * 0.3 for k, (v, w) in FACILITY[asset_type]["base"].items()}
     if asset_type == "gpu_server":
         prof = base | {"load": r.uniform(0.86, 0.96), "offsets": [r.uniform(-3, 5) for _ in range(GPUS_PER_SERVER)],
                        "faulty_gpu": r.randrange(GPUS_PER_SERVER)}
@@ -126,6 +175,8 @@ def sample(asset_type: str, prof: dict, tick: int, rng: random.Random, progress:
         return {"temperature_c": round(prof["setpoint_c"] + 0.8 * wave + rng.uniform(-0.3, 0.3) + 13.0 * p, 2),
                 "fan_speed_rpm": round(max(0.0, prof["fan_rpm"] + 25 * wave + rng.uniform(-20, 20) - 380 * p), 1)}
     p = min(p, 1.0) if asset_type != "asic_miner" else p
+    if asset_type in FACILITY:
+        return facility_sample(asset_type, prof, wave, rng, p, kind or FAULT_KINDS[asset_type])
     if asset_type == "storage_drive":
         return {"reallocated_sectors": prof["reallocated_sectors"] + round(5000 * p),
                 "reported_uncorrectable": round(300 * p), "command_timeout": 0,
@@ -145,6 +196,27 @@ def sample(asset_type: str, prof: dict, tick: int, rng: random.Random, progress:
                 # Fault pulls wear toward 230 min; with high torque this crosses AI4I's overstrain limit.
                 "tool_wear_min": round((1 - p) * (prof["wear0"] + (tick // 10) % 90) + p * 230)}
     raise ValueError(f"unknown asset_type {asset_type!r}")
+
+
+def facility_sample(asset_type: str, prof: dict, wave: float, rng: random.Random, p: float, kind: str) -> dict:
+    """Facility equipment reading: healthy wobble, pulled toward the fault's targets by p."""
+    spec = FACILITY[asset_type]
+    target = spec["faults"].get(kind, {}) if p > 0 else {}
+    out: dict = {}
+    for k, (_, w) in spec["base"].items():
+        v = prof[k] if k in FLAGS else prof[k] + w * wave + rng.uniform(-0.3, 0.3) * w
+        if k in target:
+            v = (1 - p) * v + p * target[k]
+        out[k] = round(v) if k in FLAGS else round(v, 2)
+    if asset_type == "pdu":
+        ph = [out["phase_a_amps"], out["phase_b_amps"], out["phase_c_amps"]]
+        mean = sum(ph) / 3
+        out["max_phase_pct"] = round(100 * max(ph) / out["breaker_rating_amps"], 1)
+        out["imbalance_pct"] = round(100 * (max(ph) - min(ph)) / mean, 1) if mean else 0.0
+        out["power_kw"] = round(sum(ph) * 0.23, 2)  # 230 V per phase
+    if asset_type == "ats" and out["transfer_ok"] == 1 and out["utility_voltage_v"] < 300:
+        out["source"] = 1  # on generator
+    return out
 
 
 def miner_sample(prof: dict, wave: float, rng: random.Random, p: float, kind: str) -> dict:
