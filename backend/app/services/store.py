@@ -45,6 +45,9 @@ class Store:
     live: Any = None
     # Background pool for automatic AI investigations, created on first use.
     investigator: Any = None
+    # services.ops.OpsState (crew and work orders) and services.learning cases, created on first use.
+    ops: Any = None
+    learning: Any = None
     _ids: itertools.count = field(default_factory=lambda: itertools.count(1))
 
     def next_id(self, prefix: str) -> str:

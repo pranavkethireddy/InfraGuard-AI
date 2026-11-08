@@ -15,10 +15,10 @@ from __future__ import annotations
 from ..core.config import Settings
 from ..core.errors import not_found
 from ..schemas.fleet import (FleetMap, FleetStatus, FleetSummary, HallMap, HistoryPoint, IncidentBrief,
-                             MachineStatus, RackDetail, RackStatus, SiteInfo, SiteMetric, SitesResponse)
+                             MachineStatus, RackDetail, RackStatus, SiteInfo, SiteMetric, SitesResponse, WorkOrderBrief)
 from ..schemas.incidents import IncidentDetail
 from . import impact as impact_service
-from . import live, mining
+from . import live, mining, ops, whatif
 from .incidents import now, summary
 from .layout import Layout, Rack, all_layouts, get_layout
 from .store import Store
@@ -36,6 +36,7 @@ class Snapshot:
 
     def __init__(self, store: Store, layout: Layout, history: int, settings: Settings):
         self.layout = layout
+        self.settings = settings
         with store.lock:
             self.latest = dict(store.latest_prediction)
             self.readings = {a: [r.reading for r in rows[-max(history, 1):]] for a, rows in store.readings.items()}
@@ -47,6 +48,24 @@ class Snapshot:
                 if cur is None or _RISK_RANK[inc.risk_level] > _RISK_RANK[cur.risk_level]:
                     self.open[inc.asset_id] = inc.model_copy()
             self.faults = {a: live.fault_for(store, a) for a in layout.assets}
+            self.power_off = live.power_off(store)
+            st = ops.state(store, settings)
+            names = {t: x.cfg["name"] for t, x in st.techs.items()}
+            self.orders = {}
+            for o in st.orders.values():
+                if o.asset_id in layout.assets and o.status != "done":
+                    self.orders[o.asset_id] = WorkOrderBrief(
+                        work_order_id=o.work_order_id, technician_id=o.technician_id,
+                        technician_name=names.get(o.technician_id, o.technician_id), status=o.status, option=o.option,
+                        progress=round(min(1.0, o.hours_done / o.hours_total) if o.hours_total else 1.0, 3),
+                        eta_minutes=ops.work_order(o, st, settings).eta_minutes)
+            self.techs_busy = sum(1 for t in st.techs.values() if t.cfg["site"] == layout.site_id and t.current
+                                  and st.orders[t.current].kind == "repair")
+            self.techs_total = sum(1 for t in st.techs.values() if t.cfg["site"] == layout.site_id)
+            self.in_window = ops.in_window(layout.site_id, 0.0, st, settings)
+            trend_rows = {a: [r.reading for r in store.readings.get(a, [])[-whatif.TREND_READINGS:]]
+                          for a, x in layout.assets.items() if x.asset_type in ("cooling_unit", "asic_miner")}
+        self.eta = self._etas(trend_rows)
         self.live = live.status(store, settings)
         self.history = history
         self.settings = settings
@@ -69,7 +88,13 @@ class Snapshot:
                 incident_id=inc.incident_id, title=inc.title, status=inc.status, risk_level=inc.risk_level,
                 opened_at=inc.opened_at, estimated_total_impact=inc.impact.estimated_total_impact if inc.impact else None,
                 cost_per_day=inc.impact.cost_per_day if inc.impact else None, investigation_status=inc.investigation_status)
+        off = self.power_off.get(asset_id)
+        eta = self.eta.get(asset_id)
+        if off:
+            st = "critical"
         return MachineStatus(
+            power_state="off" if off else ("at_risk" if eta is not None else "on"), power_reason=off,
+            shutdown_eta_minutes=None if off else eta, work_order=self.orders.get(asset_id),
             asset_id=asset_id, name=asset.name, asset_type=asset.asset_type, criticality=asset.criticality,
             detector_id=asset.compatible_detector, location=asset.location, placement=self.layout.placements[asset_id],
             status=st, risk_level=pred.risk_level if pred else None, risk_score=pred.risk_score if pred else None,
@@ -79,11 +104,50 @@ class Snapshot:
             history=[HistoryPoint(observed_at=r.observed_at, values=r.values) for r in rows[-self.history:]] if self.history else [],
         )
 
+    def _etas(self, rows: dict) -> dict[str, float]:
+        """Demo minutes until thermal shutdown from the observed trend, if within the projection horizon.
+        A cooling unit's ETA also applies to every machine in the racks it cools."""
+        cfg = ops.config(self.settings)
+        horizon_min = cfg["projection_hours"] * 60
+        out: dict[str, float] = {}
+
+        alert = {"cooling_unit": 32.0, "asic_miner": 85.0}  # only machines already past their alert level
+
+        def eta(vals: list[float], limit: float, floor: float) -> float | None:
+            if len(vals) < 3 or vals[-1] >= limit or vals[-1] <= floor:
+                return None
+            rise = whatif.trend_per_hour(vals, self.settings)
+            if rise <= 0.05:
+                return None
+            m = (limit - vals[-1]) / rise * 60
+            return round(m, 1) if m <= horizon_min else None
+
+        for a, rs in rows.items():
+            t = self.layout.assets[a].asset_type
+            fld, limit = ("temperature_c", cfg["thermal"]["rack_shutdown_c"]) if t == "cooling_unit" else \
+                ("chip_temp_c", cfg["miner"]["chip_shutdown_c"])
+            v = eta([float(r.values[fld]) for r in rs if fld in r.values], limit, alert[t])
+            if v is None or a in self.power_off:
+                continue
+            if t == "cooling_unit":
+                for rack in self.layout.racks.values():
+                    if a in rack.cooled_by:
+                        for m in rack.asset_ids:
+                            out[m] = min(out.get(m, v), v)
+            else:
+                out[a] = min(out.get(a, v), v)
+        return out
+
     def rack(self, rack: Rack) -> RackStatus:
         ms = [self.machines[a] for a in rack.asset_ids]
         reasons, statuses = [], [m.status for m in ms]
+        if any(m.power_state == "off" for m in ms):
+            reasons.append(next(m.power_reason for m in ms if m.power_state == "off"))
+        etas = [m.shutdown_eta_minutes for m in ms if m.shutdown_eta_minutes is not None]
+        if etas:
+            reasons.append(f"Projected thermal shutdown in about {min(etas):.0f} min (demo time) unless fixed")
         for m in ms:
-            if m.status in ("warning", "critical"):
+            if m.status in ("warning", "critical") and m.power_state != "off":
                 # Incident titles already name the machine.
                 reasons.append(m.active_incident.title if m.active_incident else f"{m.name}: {m.risk_level} risk reading")
         for c in rack.cooled_by:
@@ -95,7 +159,9 @@ class Snapshot:
             rack_id=rack.rack_id, hall_id=rack.hall_id, row=rack.row, label=rack.label, x=rack.x, y=rack.y,
             width=rack.width, depth=rack.depth, status=worst(statuses), reasons=reasons, cooled_by=list(rack.cooled_by),
             machine_ids=list(rack.asset_ids),
-            open_incident_ids=[m.active_incident.incident_id for m in ms if m.active_incident])
+            open_incident_ids=[m.active_incident.incident_id for m in ms if m.active_incident],
+            power_state="off" if any(m.power_state == "off" for m in ms) else ("at_risk" if etas else "on"),
+            shutdown_eta_minutes=min(etas) if etas else None)
 
     def summary(self, racks: list[RackStatus]) -> FleetSummary:
         counts = {k: 0 for k in RANK}
@@ -118,6 +184,8 @@ class Snapshot:
             open_incidents=sum(1 for _ in self.open.values()),
             racks_affected=sum(1 for r in racks if r.status in ("warning", "critical")),
             downtime_cost_per_day_at_risk=round(per_day, 2), currency=currency, assumptions_source=source,
+            machines_powered_off=sum(m.power_state == "off" for m in self.machines.values()),
+            machines_at_risk_of_shutdown=sum(m.power_state == "at_risk" for m in self.machines.values()),
             cost_if_all_fail=round(sum(m.cost_if_it_fails or 0.0 for m in impacts), 2),
             cost_to_fix_all_now=round(sum(m.cost_to_fix_now or 0.0 for m in impacts), 2),
             savings_if_fixed_now=round(sum(m.savings_if_fixed_now or 0.0 for m in impacts), 2))
@@ -127,7 +195,12 @@ class Snapshot:
         scored = [m for m in ms if m.status != "no_data"]
         live_src = "live readings (simulated)"
         healthy = round(100 * sum(m.status == "healthy" for m in scored) / len(scored), 1) if scored else None
-        out = [SiteMetric(key="healthy_pct", label="Machines healthy", value=healthy, unit="%", source=live_src)]
+        ops_src = "crew model (configs/operations.json, demo assumption)"
+        out = [SiteMetric(key="healthy_pct", label="Machines healthy", value=healthy, unit="%", source=live_src),
+               SiteMetric(key="powered_off", label="Machines powered off", value=sum(m.power_state == "off" for m in ms),
+                          unit="machines", source=live_src),
+               SiteMetric(key="technicians_on_repairs", label="Technicians on repairs", value=self.techs_busy,
+                          unit=f"of {self.techs_total}", source=ops_src)]
         if self.layout.site_id == "mining":
             return out + self._mining(ms, live_src)
         drives = [m for m in ms if m.asset_type == "storage_drive"]
@@ -141,7 +214,10 @@ class Snapshot:
         ]
 
     def _mining(self, ms: list[MachineStatus], live_src: str) -> list[SiteMetric]:
-        miners = [m.latest_values for m in ms if m.asset_type == "asic_miner" and m.latest_values]
+        # A powered-off miner earns nothing; count it at zero hashrate and power.
+        miners = [m.latest_values if m.power_state != "off" else
+                  {"hashrate_ths": 0.0, "rated_hashrate_ths": m.latest_values["rated_hashrate_ths"], "power_w": 0.0}
+                  for m in ms if m.asset_type == "asic_miner" and m.latest_values]
         hp = mining.hashprice(self.settings.hashprice_data_path)
         actual = sum(float(v["hashrate_ths"]) for v in miners)
         rated = sum(float(v["rated_hashrate_ths"]) for v in miners)
@@ -166,6 +242,12 @@ class Snapshot:
             SiteMetric(key="power_kw", label="Power draw", value=round(power_w / 1000, 1) if have else None,
                        unit="kW", source=live_src),
             SiteMetric(key="hashprice_usd_per_th_day", label="Hashprice", value=price, unit="USD/TH/day", source=hp_src),
+            SiteMetric(key="breakeven_power_usd_per_mwh", label="Break-even power price",
+                       value=ops.breakeven_usd_per_mwh(self.settings), unit="USD/MWh",
+                       source=f"hashprice x rated hashrate / rated power ({hp_src})"),
+            SiteMetric(key="curtailed_now", label="In curtailment window (power costs more than mining earns)",
+                       value=1.0 if self.in_window else 0.0, unit="bool",
+                       source=ops.config(self.settings)["sites"]["mining"]["power_price_source"]),
         ]
 
 
