@@ -1,7 +1,9 @@
-"""Data-center layout from configs/datacenter_layout.json: halls, rows, racks and the machines in them.
+"""Site layouts from configs/: halls, rows, racks and the machines in them.
 
-Rows are expanded into racks, and each rack into its monitored drives, so the config stays short.
-Drive ids run drive-01, drive-02, ... in hall, row and rack order.
+Two sites: the data center (configs/datacenter_layout.json) and the crypto mining farm
+(configs/mining_layout.json). Rows are expanded into racks, and each rack into its devices
+(drives or ASIC miners), so the configs stay short. Device ids run <prefix>-01, <prefix>-02, ...
+in hall, row and rack order.
 """
 
 from __future__ import annotations
@@ -44,6 +46,7 @@ class Hall:
 
 @dataclass
 class Layout:
+    site_id: str
     site_name: str
     grid_unit: str
     halls: list[Hall]
@@ -51,6 +54,7 @@ class Layout:
     assets: dict[str, AssetDetail]
     placements: dict[str, Placement]
     chart_fields: dict[str, list[str]] = field(default_factory=dict)
+    specs: dict[str, dict] = field(default_factory=dict)
 
 
 def _resolve(path: str) -> Path:
@@ -64,7 +68,8 @@ def load(path: str) -> Layout:
     types = raw["asset_types"]
     rack_cfg = raw["rack"]
     halls, racks, assets, placements = [], {}, {}, {}
-    drive_no = 0
+    device_type, prefix = rack_cfg["device_type"], rack_cfg["device_prefix"]
+    device_no = 0
 
     def add(asset_id, name, asset_type, criticality, location, placement):
         assets[asset_id] = AssetDetail(
@@ -84,26 +89,41 @@ def load(path: str) -> Layout:
             for i in range(row["racks"]):
                 rack_id = f"{row['row']}-{i + 1:02d}"
                 x, y = row["x0"] + i * rack_cfg["width"], row["y"]
-                drive_ids = []
-                for bay in range(1, row["drives_per_rack"] + 1):
-                    drive_no += 1
-                    asset_id = f"drive-{drive_no:02d}"
-                    add(asset_id, f"Rack {rack_id}, Drive Bay {bay}", "storage_drive", rack_cfg["drive_criticality"],
-                        f"{h['name']}, Row {row['row']}, Rack {rack_id}, Bay {bay}",
-                        Placement(hall_id=h["hall_id"], row=row["row"], rack_id=rack_id, slot=bay, x=x, y=y))
-                    drive_ids.append(asset_id)
+                device_ids = []
+                for slot in range(1, row["devices_per_rack"] + 1):
+                    device_no += 1
+                    asset_id = f"{prefix}-{device_no:02d}"
+                    label = f"{rack_cfg['device_label']} {slot}"
+                    add(asset_id, f"Rack {rack_id}, {label}", device_type, rack_cfg["device_criticality"],
+                        f"{h['name']}, Row {row['row']}, Rack {rack_id}, {label}",
+                        Placement(hall_id=h["hall_id"], row=row["row"], rack_id=rack_id, slot=slot, x=x, y=y))
+                    device_ids.append(asset_id)
                 racks[rack_id] = Rack(rack_id=rack_id, hall_id=h["hall_id"], row=row["row"], label=f"Rack {rack_id}",
                                       x=x, y=y, width=rack_cfg["width"], depth=rack_cfg["depth"],
-                                      cooled_by=tuple(row["cooled_by"]), asset_ids=tuple(drive_ids))
+                                      cooled_by=tuple(row["cooled_by"]), asset_ids=tuple(device_ids))
                 rack_ids.append(rack_id)
         halls.append(Hall(hall_id=h["hall_id"], name=h["name"], kind=h["kind"], width=h["width"], depth=h["depth"],
                           rack_ids=tuple(rack_ids), unit_ids=tuple(unit_ids)))
-    return Layout(site_name=raw["site"]["name"], grid_unit=raw["site"]["grid_unit"], halls=halls, racks=racks,
+    return Layout(site_id=raw["site"]["site_id"], site_name=raw["site"]["name"], grid_unit=raw["site"]["grid_unit"], halls=halls, racks=racks,
                   assets=assets, placements=placements,
-                  chart_fields={t: list(v["chart_fields"]) for t, v in types.items()})
+                  chart_fields={t: list(v["chart_fields"]) for t, v in types.items()},
+                  specs={t: dict(v.get("spec", {})) for t, v in types.items()})
 
 
-def get_layout() -> Layout:
+def site_paths() -> dict[str, str]:
     from ..core.config import get_settings
 
-    return load(get_settings().datacenter_layout_path)
+    s = get_settings()
+    return {"datacenter": s.datacenter_layout_path, "mining": s.mining_layout_path}
+
+
+def get_layout(site: str = "datacenter") -> Layout:
+    return load(site_paths()[site])
+
+
+def all_layouts() -> list[Layout]:
+    return [load(p) for p in site_paths().values()]
+
+
+def site_of(asset_id: str) -> Layout | None:
+    return next((lay for lay in all_layouts() if asset_id in lay.assets), None)

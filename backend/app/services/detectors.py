@@ -63,6 +63,47 @@ def cooling(info: ModelInfo, readings: dict[str, ReadingValue], state: RuleState
     return Result(0.1, "low", False, f"Temperature {temp} C is at or below the configured {thr} C threshold.", ev)
 
 
+def miner(info: ModelInfo, readings: dict[str, ReadingValue], state: RuleState) -> Result:
+    """Any rule broken for N consecutive readings is high risk; broken now but not yet sustained is medium."""
+    cfg = info.rule_config
+    need = cfg["consecutive_readings"]
+    v = {k: _num(k, readings[k]) for k in readings}
+    if v["rated_hashrate_ths"] <= 0:
+        raise invalid("'rated_hashrate_ths' must be positive.", field="rated_hashrate_ths")
+    ratio = v["hashrate_ths"] / v["rated_hashrate_ths"]
+    checks = [  # (broken, evidence, what it means)
+        (ratio < cfg["min_hashrate_ratio"],
+         Evidence(type="sensor_rule", field="hashrate_ths", value=v["hashrate_ths"],
+                  threshold=round(cfg["min_hashrate_ratio"] * v["rated_hashrate_ths"], 2), unit="TH/s"),
+         f"hashrate is {ratio:.0%} of rated"),
+        (v["chip_temp_c"] > cfg["max_chip_temp_c"],
+         Evidence(type="sensor_rule", field="chip_temp_c", value=v["chip_temp_c"], threshold=cfg["max_chip_temp_c"], unit="C"),
+         f"chip temperature {v['chip_temp_c']} C is above {cfg['max_chip_temp_c']} C"),
+        (v["fan_speed_rpm"] < cfg["min_fan_speed_rpm"],
+         Evidence(type="sensor_rule", field="fan_speed_rpm", value=v["fan_speed_rpm"], threshold=cfg["min_fan_speed_rpm"], unit="rpm"),
+         f"fan speed {v['fan_speed_rpm']:.0f} rpm is below {cfg['min_fan_speed_rpm']:.0f} rpm"),
+    ]
+    if "hw_error_pct" in v:
+        checks.append((v["hw_error_pct"] > cfg["max_hw_error_pct"],
+                       Evidence(type="sensor_rule", field="hw_error_pct", value=v["hw_error_pct"],
+                                threshold=cfg["max_hw_error_pct"], unit="%"),
+                       f"hardware error rate {v['hw_error_pct']}% is above {cfg['max_hw_error_pct']}%"))
+    broken = [c for c in checks if c[0]]
+    if broken:
+        state.consecutive_above += 1
+    else:
+        state.consecutive_above = 0
+        state.cooldown_remaining = max(0, state.cooldown_remaining - 1)
+    n = state.consecutive_above
+    ev = [e.model_copy(update={"consecutive_readings": n}) for ok, e, _ in (broken or checks[:1])]
+    if not broken:
+        return Result(0.1, "low", False, f"Miner within limits (hashrate {ratio:.0%} of rated).", ev)
+    what = "; ".join(t for _, _, t in broken)
+    if n >= need:
+        return Result(0.8, "high", state.cooldown_remaining == 0, f"Miner fault for {n} consecutive readings: {what}.", ev)
+    return Result(0.5, "medium", False, f"Miner reading out of limits ({n} of {need} consecutive readings needed): {what}.", ev)
+
+
 @lru_cache(maxsize=4)
 def _load(path: str):
     import joblib

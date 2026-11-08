@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     simulation_tick_seconds: float = 2.0
     # Live fleet demo (services/live.py).
     datacenter_layout_path: str = "configs/datacenter_layout.json"
+    mining_layout_path: str = "configs/mining_layout.json"
+    # Daily Bitcoin hashprice (CloudMineCrypto open data, CC BY 4.0); prices lost mining revenue.
+    hashprice_data_path: str = "data/market/hashprice_daily.csv"
     live_tick_seconds: float = 1.0
     live_history_limit: int = 300
     auto_investigate: bool = True

@@ -27,13 +27,16 @@ def _index(path: str):
 
 
 def _same_kind(asset_id: str) -> set[str | None]:
-    """The asset itself, site-wide records (None) and other assets of the same type: a CRAC unit can
-    learn from another CRAC unit's repairs. Each hit keeps its own asset_id, so citations stay honest."""
-    from .assets import all_assets
+    """The asset itself, site-wide records (None) and other assets of the same type at the same site: a CRAC
+    unit can learn from another CRAC unit's repairs, but not from a mining fan wall. Each hit keeps its own
+    asset_id, so citations stay honest."""
+    from .layout import site_of
 
-    assets = all_assets()
-    kind = assets[asset_id].asset_type if asset_id in assets else None
-    return {asset_id, None} | {a for a, x in assets.items() if kind and x.asset_type == kind}
+    lay = site_of(asset_id)
+    if lay is None:
+        return {asset_id, None}
+    kind = lay.assets[asset_id].asset_type
+    return {asset_id, None} | {a for a, x in lay.assets.items() if x.asset_type == kind}
 
 
 def search(req: MaintenanceSearchRequest, path: str) -> MaintenanceSearchResponse:

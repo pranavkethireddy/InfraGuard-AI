@@ -1,0 +1,35 @@
+{
+  "_note": "Demo crypto mining farm for InfraGuard AI, not a real facility. Rows expand into racks of ASIC miners. Miner specs are spec-sheet-class demo values (about 200 TH/s at 3.5 kW, like current SHA-256 air-cooled miners), not measurements.",
+  "site": {"site_id": "mining", "name": "InfraGuard Demo Mining Farm", "grid_unit": "floor tile (about 0.6 m)"},
+  "asset_types": {
+    "cooling_unit": {"detector_id": "cooling-rule-v1", "chart_fields": ["temperature_c", "fan_speed_rpm"]},
+    "asic_miner": {"detector_id": "miner-rule-v1", "chart_fields": ["hashrate_ths", "chip_temp_c", "fan_speed_rpm", "hw_error_pct"],
+                   "spec": {"rated_hashrate_ths": 200.0, "rated_power_w": 3500.0}}
+  },
+  "halls": [
+    {
+      "hall_id": "container-1", "name": "Container 1", "kind": "mining_container", "width": 18, "depth": 8,
+      "rows": [
+        {"row": "M1", "x0": 4, "y": 2, "racks": 6, "devices_per_rack": 6, "cooled_by": ["fanwall-m1"]},
+        {"row": "M2", "x0": 4, "y": 5, "racks": 6, "devices_per_rack": 6, "cooled_by": ["fanwall-m2"]}
+      ],
+      "units": [
+        {"asset_id": "fanwall-m1", "name": "Fan Wall M1", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 2},
+        {"asset_id": "fanwall-m2", "name": "Fan Wall M2", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 5}
+      ]
+    },
+    {
+      "hall_id": "container-2", "name": "Container 2", "kind": "mining_container", "width": 18, "depth": 8,
+      "rows": [
+        {"row": "M3", "x0": 4, "y": 2, "racks": 6, "devices_per_rack": 6, "cooled_by": ["fanwall-m3"]},
+        {"row": "M4", "x0": 4, "y": 5, "racks": 6, "devices_per_rack": 6, "cooled_by": ["fanwall-m4"]}
+      ],
+      "units": [
+        {"asset_id": "fanwall-m3", "name": "Fan Wall M3", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 2},
+        {"asset_id": "fanwall-m4", "name": "Fan Wall M4", "asset_type": "cooling_unit", "criticality": "high", "x": 1, "y": 5}
+      ]
+    }
+  ],
+  "rack": {"width": 2, "depth": 1, "device_type": "asic_miner", "device_prefix": "miner", "device_label": "Slot",
+           "device_criticality": "medium"}
+}
