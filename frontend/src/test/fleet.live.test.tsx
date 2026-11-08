@@ -55,7 +55,7 @@ describe('Fleet HTTP contracts and isolation', () => {
   });
   it('renders returned rack floor coordinates and selects with keyboard', () => {
     const select = vi.fn(); render(<FleetFloor halls={f.map.halls} gridUnit={f.map.grid_unit} selected={null} onSelect={select} />);
-    const target = screen.getByRole('button', { name: 'Rack A1-03: critical' });
+    const target = screen.getByRole('button', { name: /Rack A1-03: critical/ });
     expect(target).toHaveAttribute('x', '8'); expect(target).toHaveAttribute('y', '3');
     expect(target).toHaveAttribute('width', '2'); expect(target).toHaveAttribute('height', '1');
     fireEvent.keyDown(target, { key: 'Enter' }); expect(select).toHaveBeenCalledWith('A1-03');
@@ -67,7 +67,7 @@ describe('Fleet HTTP contracts and isolation', () => {
   });
   it('loads rack details, clears selection and feedback when switching sites', async () => {
     const { wrap } = wrapper(); const change = vi.fn(); const view = render(wrap(<FleetPage site="datacenter" onSiteChange={change} />));
-    fireEvent.click(await screen.findByRole('button', { name: 'Rack A1-03: critical' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Rack A1-03: critical/ }));
     expect(await screen.findByRole('region', { name: 'Rack investigation · A1-03' })).toBeInTheDocument();
     await waitFor(() => expect(h.fetch.mock.calls.some(([u]) => String(u).endsWith('/fleet/racks/A1-03?history=30'))).toBe(true));
     fireEvent.click(screen.getByRole('tab', { name: 'Crypto mining site' })); expect(change).toHaveBeenCalledWith('mining');

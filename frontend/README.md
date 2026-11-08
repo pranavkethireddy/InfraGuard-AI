@@ -37,10 +37,13 @@ The FastAPI backend must allow CORS from the dev origin (`http://localhost:5173`
 
 ## Routes
 
-`/`, `/fleet?site=datacenter|mining`, `/assets`, `/assets/:id`, `/simulate`, `/incidents`, `/incidents/:id`, `/models`.
+`/?site=datacenter|mining`, `/fleet?site=datacenter|mining`, `/assets`, `/assets/:id`, `/simulate`, `/incidents`, `/incidents/:id`, `/models`.
 
 ## Contract rules
 
+- Overview opens on the data center floor map; URL site selection, rack details, summary, affected machines and incidents use the same site-isolated 1-second fleet queries. The functional Start loop / inject faults link opens full controls on `/fleet` for the selected site. No automatic mutations.
+- Health and power are separate: optional backend `on`/`at_risk`/`off` power states, reasons, shutdown ETA and current work orders are displayed without inference. Missing old-fixture fields say Not reported; no readings never means all good. OFF uses dark markers with red outlines/text; at-risk uses amber. Shutdown/technician ETA is labelled DEMO minutes, progress is the returned fraction. Power test examples are test-only; approved production fixtures remain unchanged.
+- Injected faults hold until technician repair or operator incident resolution; the frontend does not promise automatic fault recovery. Operations/what-if/dispatch/learning controls are not implemented here.
 - Fleet sites share one backend live loop. Site tabs persist in `?site=`; switching clears rack selection and action feedback. Map/status/rack query keys include site and poll every 1 second with `history=30`. Site directory metrics also refresh every second. Backend machine ordering is preserved.
 - Floor-grid coordinates and hall dimensions are returned by the backend; racks support click, Enter and Space, with status labels and a legend. Rack detail renders returned reasons, cooling relationships, machines, incident links and each `chart_fields` history.
 - Start posts `{seed:42,tick_seconds:1}`; stop preserves data; faults post `{count:3,site:selectedSite}` and may start the shared loop. Nothing auto-starts on mount. Clear requires confirmation: all readings/predictions/incidents across BOTH sites are deleted, faults cleared and single-asset simulations reset, while the live loop continues.
