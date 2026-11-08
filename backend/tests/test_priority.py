@@ -1,5 +1,5 @@
-"""Priority levels drive the crew: queue order, takeover, life safety first, confirmation never blocks, and
-waiting repairs move to a free technician."""
+"""Priority levels drive each technician's own jobs: queue order, takeover, life safety first, and a job awaiting
+confirmation is paused (never lost). Jobs stay with the technician they were given."""
 
 from backend.app.services import ops
 from backend.app.services.assets import all_assets
@@ -51,7 +51,8 @@ def test_a_finished_job_awaiting_confirmation_does_not_block_a_more_urgent_one(c
     with store.lock:
         low.status, low.hours_done = "awaiting_confirmation", low.hours_total
         ops.advance(store, settings, set())
-        assert low.status == "done" and sam.current == high.work_order_id
+        assert sam.current == high.work_order_id
+        assert low.status == "paused" and low.work_order_id in sam.queue and low.hours_done == low.hours_total
 
 
 def test_queue_is_sorted_by_level_with_life_safety_first(client, settings):
@@ -64,13 +65,12 @@ def test_queue_is_sorted_by_level_with_life_safety_first(client, settings):
         assert sam.queue[0] == smoke.work_order_id
 
 
-def test_a_waiting_repair_moves_to_a_free_qualified_technician(client, settings):
+def test_jobs_stay_with_their_technician_even_when_others_are_free(client, settings):
     store, st, sam, low, high = _setup(client, settings)
     with store.lock:
         high.declined_by = []
         for t in _others(st):  # everyone else idle
             st.techs[t].current, st.techs[t].queue = None, []
         ops.advance(store, settings, set())
-        assert high.technician_id != SAM and high.work_order_id not in sam.queue
-        assert sam.current == low.work_order_id  # Sam keeps his job
-        assert high.why.startswith("Moved from Sam Rivera")
+        assert high.technician_id == SAM and sam.current == high.work_order_id
+        assert low.technician_id == SAM and low.work_order_id in sam.queue
