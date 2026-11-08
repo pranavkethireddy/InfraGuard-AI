@@ -18,7 +18,7 @@ export interface IncidentBrief {
   opened_at: string; estimated_total_impact: number | null; cost_per_day: number | null;
   investigation_status: InvestigationStatus | null;
 }
-export type FaultKind = 'cooling_failure' | 'drive_degradation' | 'machine_overstrain' | 'fan_failure' | 'hashboard_failure' | 'gpu_fault' | 'psu_failure' | 'server_crash' | 'memory_fault' | 'nic_failure' | 'server_fan_failure';
+export type FaultKind = 'cooling_failure' | 'drive_degradation' | 'machine_overstrain' | 'fan_failure' | 'hashboard_failure' | 'gpu_fault' | 'psu_failure' | 'server_crash' | 'memory_fault' | 'nic_failure' | 'server_fan_failure' | 'ups_battery_fade' | 'ups_on_battery' | 'gen_start_battery' | 'gen_low_fuel' | 'ats_transfer_fail' | 'ats_utility_sag' | 'pdu_overload' | 'pdu_imbalance' | 'chiller_trip' | 'chiller_low_flow' | 'cdu_leak' | 'cdu_pump_failure' | 'env_water_leak' | 'env_high_humidity' | 'switch_optic_degraded' | 'switch_link_down' | 'smoke_alarm' | 'suppression_pressure_loss' | 'suppression_disarmed' | 'door_forced' | 'badge_reader_failure';
 export interface FaultInfo {
   asset_id: string; kind: FaultKind;
   phase: 'ramping' | 'holding' | 'recovering' | 'ended'; injected_at: string; progress: number;
@@ -33,10 +33,11 @@ export interface MachineStatus {
 export interface RackStatus {
   rack_id: string; hall_id: string; row: string; label: string; x: number; y: number; width: number; depth: number;
   status: HealthStatus; reasons: string[]; cooled_by: string[]; machine_ids: string[]; open_incident_ids: string[];
+  pdu_id?: string | null; tor_id?: string | null;
   power_state?: PowerState; power_reason?: string | null; shutdown_eta_minutes?: number | null;
 }
 export interface HallMap {
-  hall_id: string; name: string; kind: 'data_hall' | 'plant_room' | 'mining_container'; width: number; depth: number;
+  hall_id: string; name: string; kind: 'data_hall' | 'plant_room' | 'mining_container' | 'electrical_room' | 'chiller_yard' | 'network_room'; width: number; depth: number;
   status: HealthStatus; racks: RackStatus[]; machines: MachineStatus[];
 }
 export interface FleetSummary {
@@ -54,7 +55,7 @@ export interface FleetMap { site_id: SiteId; site_name: string; grid_unit: strin
 export interface FleetStatus { site_id: SiteId; generated_at: string; live: LiveStatus; summary: FleetSummary; site_metrics: SiteMetric[]; machines: MachineStatus[] }
 export interface SiteInfo { site_id: SiteId; name: string; machines: number; racks: number; summary: FleetSummary; site_metrics: SiteMetric[] }
 export interface SitesResponse { generated_at: string; live: LiveStatus; sites: SiteInfo[] }
-export interface RackDetail extends RackStatus { machines: MachineStatus[]; cooling_units: MachineStatus[]; incidents: IncidentSummary[]; server_ids?: string[] }
+export interface RackDetail extends RackStatus { machines: MachineStatus[]; cooling_units: MachineStatus[]; incidents: IncidentSummary[]; server_ids?: string[]; pdu?: MachineStatus | null; tor?: MachineStatus | null }
 export interface LiveStartRequest { seed?: number; tick_seconds?: number }
 export interface ChaosStatus { enabled: boolean; protected_technicians: string[]; active_faults: string[] }
 export interface FaultRequest { count?: number; site?: SiteId | null; asset_ids?: string[] | null; kind?: FaultKind | null }

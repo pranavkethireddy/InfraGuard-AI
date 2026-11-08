@@ -8,6 +8,10 @@ import { Empty, ErrorMessage, ErrorState, Loading, PageHeader, Section, SourceDe
 import { GpuJobs } from '@/components/GpuJobs';
 import { ServerFaultControl } from '@/components/ServerFaultControl';
 import { ChaosControl } from '@/components/ChaosControl';
+import { EquipmentFaultControl } from '@/components/EquipmentFaultControl';
+import { SiteFloor } from '@/components/SiteFloor';
+import { useCrewStream } from '@/api/ops-stream';
+import { floorQuery } from '@/api/fleet-queries';
 
 export function FleetPage({ site, onSiteChange }: { site: SiteId; onSiteChange: (site: SiteId) => void }) {
   return <FleetSiteWorkspace key={site} site={site} onSiteChange={onSiteChange} />;
@@ -30,6 +34,9 @@ function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange
   const map = useQuery(fleetMapQuery(site));
   const status = useQuery(fleetStatusQuery(site));
   const [selected, setSelected] = useState<string | null>(null);
+  const [equipmentSelected, setEquipmentSelected] = useState<string | null>(null);
+  const crew = useCrewStream(site);
+  const floor = useQuery(floorQuery(site));
   const [confirm, setConfirm] = useState(false);
   const rack = useQuery({ ...fleetRackQuery(site, selected ?? ''), enabled: selected !== null });
   const refresh = () => { for (const key of ['fleet', 'assets', 'incidents', 'incident', 'simulation', 'simulations']) void qc.invalidateQueries({ queryKey: [key] }); };
@@ -55,6 +62,7 @@ function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange
       <span className="text-xs text-muted-foreground">Live loop covers BOTH sites · Faults target {site === 'mining' ? 'Crypto mining site' : 'Data center'}.</span>
     </div>
     <ServerFaultControl servers={status.data?.machines ?? []} loading={status.isLoading} error={status.error} disabled={mutation.isPending} />
+    <EquipmentFaultControl machines={status.data?.machines ?? []} loading={status.isLoading} error={status.error} />
     <ChaosControl />
     {api.mode === 'fixture' && <p className="mb-3 text-xs text-muted-foreground">{FIXTURE_MUTATION_MESSAGE}</p>}
     {mutation.isPending && <p role="status" className="mb-3 text-sm">Backend action pending…</p>}
@@ -68,10 +76,10 @@ function FleetSiteWorkspace({ site, onSiteChange }: { site: SiteId; onSiteChange
     </ClearConfirmation>}
     <div className="space-y-4">
       <Section title="Site summary">{status.isLoading ? <Loading /> : status.error ? <ErrorState error={status.error} /> : status.data ? <FleetMetrics metrics={status.data.site_metrics} summary={status.data.summary} /> : <Empty>No site status.</Empty>}{sites.error && <ErrorState error={sites.error} />}{sites.isLoading && <Loading label="Loading site directory…" />}{!sites.error && current && <details className="mt-3 text-xs"><summary>Site directory metrics and sources</summary><div className="mt-3"><FleetMetrics metrics={current.site_metrics} /></div></details>}</Section>
-      <Section title="Floor map">{map.isLoading ? <Loading /> : map.error ? <ErrorState error={map.error} /> : map.data?.halls.length ? <FleetFloor halls={map.data.halls} gridUnit={map.data.grid_unit} selected={selected} onSelect={setSelected} /> : <Empty>No halls returned.</Empty>}</Section>
-      {selected && <Section title={`Rack investigation · ${selected}`} aside={<FleetButton aria-label="Close rack details" onClick={() => setSelected(null)}>×</FleetButton>}>{rack.isLoading ? <Loading /> : rack.error ? <ErrorState error={rack.error} /> : rack.data ? <FleetRackPane rack={rack.data} /> : <Empty>No rack detail.</Empty>}</Section>}
+      <Section title="Floor map">{map.isLoading ? <Loading /> : map.error ? <ErrorState error={map.error} /> : map.data?.halls.length ? floor.data?.halls && Array.isArray(floor.data.halls) ? <SiteFloor floor={floor.data} halls={map.data.halls} technicians={crew.data?.technicians ?? []} selected={selected} onSelect={setSelected} equipmentSelected={equipmentSelected} onEquipmentSelect={setEquipmentSelected} site={site} /> : <FleetFloor halls={map.data.halls} gridUnit={map.data.grid_unit} selected={selected} onSelect={setSelected} equipmentSelected={equipmentSelected} onEquipmentSelect={setEquipmentSelected} site={site} /> : <Empty>No halls returned.</Empty>}{floor.error && <p className="mt-2 text-xs text-muted-foreground">Walking map not available; hall-local map shown.</p>}</Section>
+      {selected && <Section title={`Rack investigation · ${selected}`} aside={<FleetButton aria-label="Close rack details" onClick={() => setSelected(null)}>×</FleetButton>}>{rack.isLoading ? <Loading /> : rack.error ? <ErrorState error={rack.error} /> : rack.data ? <FleetRackPane rack={rack.data} site={site} /> : <Empty>No rack detail.</Empty>}</Section>}
       <Section title="GPU jobs">{map.isLoading ? <Loading /> : map.error ? <ErrorState error={map.error} /> : <GpuJobs jobs={map.data?.jobs} />}</Section>
-      <Section title="Machine queue — backend order" flush>{status.isLoading ? <Loading /> : status.error ? <ErrorState error={status.error} /> : <FleetMachines machines={status.data?.machines ?? []} />}</Section>
+      <Section title="Machine queue — backend order" flush>{status.isLoading ? <Loading /> : status.error ? <ErrorState error={status.error} /> : <FleetMachines machines={status.data?.machines ?? []} site={site} />}</Section>
     </div>
   </>;
 }

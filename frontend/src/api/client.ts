@@ -8,6 +8,7 @@ import { fleetFixtures } from './fleet-fixtures';
 import { opsFixtures } from './ops-fixtures';
 import { gpuFixtures } from './gpu-fixtures';
 import { partsFixtures } from './parts-fixtures';
+import { facilityFixtures } from './facility-fixtures';
 import type { ComponentDetail, ServerComponents } from './parts-types';
 import type { AutoDispatchResponse, DispatchRequest, DispatchResponse, FloorPlan, LearningCases, LearningMatrix, PagerActionRequest, PagerView, PlanResponse, TechniciansResponse, WhatIfResponse } from './ops-types';
 import { pagerFixtures } from './pager-fixtures';
@@ -194,9 +195,9 @@ export function createFixtureClient(): ApiClient {
     resetSimulation: disabled,
     listModels: () => later(f.modelsList),
     fleetSites: () => later(fleetFixtures.sites),
-    fleetMap: (site) => site === fleetFixtures.map.site_id ? later(fleetFixtures.map) : Promise.reject(notFound(`Map for ${site} (no approved fixture)`)),
-    fleetStatus: (site) => later(site === 'mining' ? fleetFixtures.mining : fleetFixtures.status),
-    fleetRack: (id) => id === fleetFixtures.rack.rack_id ? later(fleetFixtures.rack) : Promise.reject(notFound(`Rack ${id} (no approved fixture)`)),
+    fleetMap: (site) => site === facilityFixtures.map.site_id ? later(facilityFixtures.map) : Promise.reject(notFound(`Map for ${site} (no approved fixture)`)),
+    fleetStatus: (site) => later(site === 'mining' ? fleetFixtures.mining : facilityFixtures.status),
+    fleetRack: (id) => id === facilityFixtures.rack.rack_id ? later(facilityFixtures.rack) : id === fleetFixtures.rack.rack_id ? later(fleetFixtures.rack) : Promise.reject(notFound(`Rack ${id} (no approved fixture)`)),
     fleetServer: (id) => id === gpuFixtures.server.machine.asset_id ? later(gpuFixtures.server) : id === gpuFixtures.crashed.machine.asset_id ? later(gpuFixtures.crashed) : Promise.reject(notFound(`Server ${id} (no approved fixture)`)),
     fleetServerComponents: (id) => id === partsFixtures.components.server_id ? later(partsFixtures.components) : Promise.reject(new ApiError(`Server ${id} (no approved fixture) was not found.`, 404, 'SERVER_NOT_FOUND')),
     fleetServerComponent: (id, cid) => id !== partsFixtures.component.server_id ? Promise.reject(new ApiError(`Server ${id} (no approved fixture) was not found.`, 404, 'SERVER_NOT_FOUND')) : cid === partsFixtures.component.component.component_id ? later(partsFixtures.component) : Promise.reject(new ApiError(`Component ${cid} (no approved fixture) was not found.`, 404, 'COMPONENT_NOT_FOUND')),
@@ -205,7 +206,7 @@ export function createFixtureClient(): ApiClient {
     setFleetChaos: disabled,
     incidentWhatIf: (id) => id === opsFixtures.whatif.incident_id ? later(opsFixtures.whatif) : id === gpuFixtures.whatif.incident_id ? later(gpuFixtures.whatif) : Promise.reject(notFound(`What-if for ${id} (no approved fixture)`)),
     opsTechnicians: (site) => later({ ...opsFixtures.technicians, technicians: opsFixtures.technicians.technicians.filter((t) => t.site_id === site), work_orders: opsFixtures.technicians.work_orders.filter((w) => w.site_id === site) }),
-    opsFloor: (site) => site === pagerFixtures.floor.site_id ? later(pagerFixtures.floor) : Promise.reject(notFound(`Floor for ${site} (no approved fixture)`)),
+    opsFloor: (site) => site === facilityFixtures.floor.site_id ? later(facilityFixtures.floor) : Promise.reject(notFound(`Floor for ${site} (no approved fixture)`)),
     opsPager: (id) => id === pagerFixtures.paged.technician.technician_id ? later(pagerFixtures.paged) : Promise.reject(notFound(`Pager ${id} (no approved fixture)`)),
     claimPager: disabled, releasePager: disabled, pagerAction: disabled, setAutoDispatch: disabled,
     opsPlan: (site) => site === opsFixtures.plan.site_id ? later(opsFixtures.plan) : Promise.reject(notFound(`Plan for ${site} (no approved fixture)`)),
